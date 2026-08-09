@@ -40,14 +40,8 @@ jobs:
           TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
         run: |
           VERSION="${TAG#v}"
-          python3 - "$VERSION" <<'EOF'
-import re, pathlib, sys
-version = sys.argv[1]
-text = pathlib.Path("CHANGELOG.md").read_text()
-m = re.search(r"^## \[" + re.escape(version) + r"\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.S | re.M)
-notes = m.group(1).strip() if m else "See CHANGELOG.md for details."
-pathlib.Path("release-notes.md").write_text(notes + "\n")
-EOF
+          sed -n "/^## \[${VERSION}\]/,/^## \[/p" CHANGELOG.md | sed '1d;$d' > release-notes.md
+          if [ ! -s release-notes.md ]; then printf 'See CHANGELOG.md for details.\n' > release-notes.md; fi
 
       - name: Create or refresh GitHub Release
         env:
