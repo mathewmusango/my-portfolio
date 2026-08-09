@@ -1,0 +1,36 @@
+name: Bug report
+description: Report a problem with the site
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue.
+  - type: input
+    id: page
+    attributes:
+      label: Page / URL
+      description: Which page were you on?
+      placeholder: https://mathewmusango.github.io/my-portfolio/about/
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you expect, and what actually happened?
+    validations:
+      required: true
+  - type: dropdown
+    id: device
+    attributes:
+      label: Device
+      options:
+        - Desktop
+        - Mobile / Tablet
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Browser, screenshots, console errors, etc.
