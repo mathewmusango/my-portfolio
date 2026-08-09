@@ -1,0 +1,9 @@
+.venv/
+site/
+__pycache__/
+*.pyc
+.DS_Store
+.terraform/
+*.tfstate
+*.tfstate.*
+infra/lambda/*.zip

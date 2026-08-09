@@ -1,0 +1,20 @@
+services:
+  # Dev server with live reload (default: podman-compose up -d)
+  mkdocs:
+    build: .
+    container_name: my-portfolio
+    ports:
+      - "8000:8000"
+    # Bind-mount the source so edits on the host hot-reload in the container
+    volumes:
+      - ./mkdocs.yml:/app/mkdocs.yml
+      - ./docs:/app/docs
+      - ./overrides:/app/overrides
+      - ./scripts:/app/scripts
+    command: ["python", "/app/scripts/serve.py", "--dev-addr", "0.0.0.0:8000"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8000/health', timeout=3); sys.exit(0 if r.status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

@@ -1,0 +1,86 @@
+site_name: Mathew Musango Peter
+site_description: Platform Engineering & Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
+site_url: https://mathewmusango.github.io/my-portfolio/
+
+nav:
+  - Home: index.md
+  - About: about.md
+  - Professional Experience: experience.md
+  - Technical Expertise: skills.md
+  - Projects: projects.md
+  - Certifications: certifications.md
+  - Resume: resume.md
+  - Contact: contact.md
+
+theme:
+  name: material
+  language: en
+  custom_dir: overrides
+  favicon: assets/img/favicon.ico
+  logo: assets/img/logo.jpg
+  font:
+    text: Muli
+    code: Roboto Mono
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - content.code.copy
+  palette:
+    # Dark (slate, teal) is the default look
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/extra.css
+
+# Do not build the snippet fragment as a page (it is inlined via --8<--)
+exclude_docs: |
+  includes/*
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.superfences
+  - pymdownx.snippets:
+      base_path: docs
+  - pymdownx.tabbed
+  - toc:
+      permalink: true
+      toc_depth: "2-4"
+
+plugins:
+  - search
+
+extra_javascript:
+  - javascripts/resume-modal.js
+  - javascripts/cert-modal.js
+  - javascripts/hero-lightbox.js
+  - assets/js/pdf.min.js
+  - javascripts/pdf-viewer.js
+
+extra:
+  social:
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/mathew-musango/
+    - icon: fontawesome/solid/envelope
+      link: mailto:musangomathew@gmail.com

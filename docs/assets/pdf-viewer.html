@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resume — Mathew Musango Peter</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #1e2129; }
+  body { font-family: "Roboto", "Helvetica Neue", Arial, sans-serif; }
+
+  .toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.65rem 1rem;
+    background: rgba(30, 33, 41, 0.92);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  .toolbar a,
+  .toolbar button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: #ffffff;
+    background: #00897b;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .toolbar a:hover,
+  .toolbar button:hover { background: #00695c; }
+
+  .toolbar .toolbar__back { background: transparent; border: 1px solid rgba(255,255,255,0.3); }
+
+  #pdf-pages {
+    max-width: 900px;
+    margin: 1rem auto;
+    padding: 0 1rem 3rem;
+  }
+
+  .pdf-page {
+    position: relative;
+    margin-bottom: 0.6rem;
+    background: #ffffff;
+    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+  }
+
+  .pdf-page__canvas { display: block; width: 100%; height: auto; }
+
+  .pdf-link { position: absolute; display: block; cursor: pointer; }
+  .pdf-link:hover { background: rgba(0, 137, 123, 0.18); }
+
+  .pdf-loading,
+  .pdf-error {
+    color: #b0b7c3;
+    text-align: center;
+    padding: 4rem 1rem;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a class="toolbar__back" href="../resume/">← Back to site</a>
+  <a href="pdf/resume.pdf" download="Mathew-Musango-Resume.pdf">⬇ Download</a>
+</div>
+
+<div id="pdf-pages" data-pdf-url="pdf/resume.pdf" role="region" aria-label="Resume"></div>
+
+<script src="../assets/js/pdf.min.js"></script>
+<script src="../javascripts/pdf-viewer.js"></script>
+</body>
+</html>
