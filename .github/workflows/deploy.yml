@@ -22,7 +22,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build site
-        run: mkdocs build --strict
+        run: mkdocs build --strict -f mkdocs-prod.yml
 
       - name: Deploy to gh-pages
         env:
