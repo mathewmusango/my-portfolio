@@ -1,7 +1,7 @@
 # Mathew Musango Peter
 
 Personal cloud-resume site for **Mathew Musango Peter** — Platform Engineering & Infrastructure Leader.
-Built with **MkDocs + Material for MkDocs**, dark-teal theme, containerized with podman.
+Built with **MkDocs + Material for MkDocs**, dark-teal theme.
 
 Live: <https://mathewmusango.github.io/my-portfolio/>
 
@@ -11,22 +11,13 @@ Live: <https://mathewmusango.github.io/my-portfolio/>
 | ---------- | --------------------------------------------------------------------- |
 | Site       | [MkDocs](https://www.mkdocs.org/) 1.6.1 + [Material](https://squidfunk.github.io/mkdocs-material/) 9.7.7 |
 | Theme      | Material — dark slate (default), light toggle, teal `#00897b` accent   |
-| Container  | Podman + `podman-compose` (Dockerfile + compose.yaml)                  |
 | PDF viewer | pdf.js (self-hosted) with clickable, new-tab links overlays            |
 
-## Getting Started
+## Development
 
-Start the dev server (http://localhost:8000, live reload):
-
-```sh
-podman-compose -f compose.yaml up -d
-```
-
-After editing any content, restart the container to pick changes up:
-
-```sh
-podman restart my-portfolio
-```
+This repo is the **production mirror** — it exists so GitHub Actions can build and deploy the
+site. Local development (live-reload dev server with podman, `compose.yaml`) happens in the
+private source repo.
 
 ## Deployment & CI
 
