@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-08-10
+
+### Added
+- Search: suggest + highlight features and a custom tokenizer separator for technical terms.
+- Minified HTML output (`mkdocs-minify-plugin`).
+- Copyright footer line.
+- Abbreviation tooltips (`abbr` + `content.tooltips`), footnotes, and auto-linking of bare URLs (`pymdownx.magiclink`).
+
+### Changed
+- CI/CD: actions bumped to Node 24 majors; site artifact retention set to 7 days; deploy commits authored as `mathewmusango`.
+- Repo hygiene: `SECURITY.md`, `.gitattributes`, Dependabot (pip + Actions), issue templates; new `DEVOPS.md` in the source repo.
+
 ## [1.2.0] - 2026-08-10
 
 ### Changed
