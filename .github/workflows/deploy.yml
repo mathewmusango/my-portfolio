@@ -22,7 +22,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build site
-        run: mkdocs build --strict -f mkdocs-prod.yml
+        run: |
+          printf 'site_url: https://mathewmusango.github.io/my-portfolio/\n' >> mkdocs.yml
+          mkdocs build --strict
 
       - name: Deploy to gh-pages
         env:

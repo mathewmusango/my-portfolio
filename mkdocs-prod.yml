@@ -1,5 +1,0 @@
-# Prod build overrides — inherits the shared site config (mkdocs.yml),
-# adding the canonical production URL. Used by the deploy workflow only;
-# local dev and CI build the shared config as-is.
-INHERIT: mkdocs.yml
-site_url: https://mathewmusango.github.io/my-portfolio/
