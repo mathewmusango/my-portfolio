@@ -4,6 +4,11 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Tag to create or refresh the release for (e.g., v1.0.0)
+        required: true
 
 permissions:
   contents: write
@@ -30,10 +35,30 @@ jobs:
           zip -r ../site.zip .
           cd ..
 
-      - name: Create GitHub Release
+      - name: Extract changelog notes
+        env:
+          TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
+        run: |
+          VERSION="${TAG#v}"
+          python3 - "$VERSION" <<'EOF'
+import re, pathlib, sys
+version = sys.argv[1]
+text = pathlib.Path("CHANGELOG.md").read_text()
+m = re.search(r"^## \[" + re.escape(version) + r"\][^\n]*\n(.*?)(?=^## \[|\Z)", text, re.S | re.M)
+notes = m.group(1).strip() if m else "See CHANGELOG.md for details."
+pathlib.Path("release-notes.md").write_text(notes + "\n")
+EOF
+
+      - name: Create or refresh GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" site.zip \
-            --title "Release ${GITHUB_REF_NAME}" \
-            --notes "See CHANGELOG.md for details."
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release edit "${TAG}" --notes-file release-notes.md
+            gh release upload "${TAG}" site.zip --clobber
+          else
+            gh release create "${TAG}" site.zip \
+              --title "Release ${TAG}" \
+              --notes-file release-notes.md
+          fi

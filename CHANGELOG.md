@@ -16,3 +16,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI/CD: GitHub Actions CI + deploy workflow publishing the built site to GitHub Pages (`gh-pages` branch), and a release workflow creating a GitHub Release from `v*` tags.
 
 ## [Unreleased]
+
+### Changed
+- Release workflow now generates release notes from the CHANGELOG section for the tagged version.
