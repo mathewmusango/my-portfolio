@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -22,6 +24,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build site
+        env:
+          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
         run: |
           printf 'site_url: https://mathewmusango.github.io/my-portfolio/\n' >> mkdocs.yml
           mkdocs build --strict
