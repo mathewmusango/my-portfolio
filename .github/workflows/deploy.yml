@@ -25,6 +25,9 @@ jobs:
         run: mkdocs build --strict
 
       - name: Deploy to gh-pages
+        env:
+          # GITHUB_TOKEN is not a default env var in run steps — inject it explicitly
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd site
           git init -b gh-pages
