@@ -1,44 +1,36 @@
 name: Deploy site
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-  workflow_dispatch:
 
 permissions:
+  actions: read
   contents: write
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Download site artifact
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-
-      - name: Build site
-        env:
-          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          printf 'site_url: https://mathewmusango.github.io/my-portfolio/\n' >> mkdocs.yml
-          mkdocs build --strict
+          name: site
+          path: site
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
 
       - name: Deploy to gh-pages
         env:
-          # GITHUB_TOKEN is not a default env var in run steps — inject it explicitly
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd site
           git init -b gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "mathewmusango"
+          git config user.email "mathewmusango@gmail.com"
           git add -A
           git commit -m "Deploy ${GITHUB_SHA:0:7}"
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:gh-pages"

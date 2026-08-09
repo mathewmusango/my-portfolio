@@ -1,0 +1,48 @@
+name: Build site
+description: Install dependencies, build strict, and run the site checks (pip-audit, links, CSS).
+
+inputs:
+  site_url:
+    description: Production site URL to inject before building (optional).
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Inject site_url
+      if: inputs.site_url != ''
+      shell: bash
+      run: 'printf ''site_url: %s\n'' "${{ inputs.site_url }}" >> mkdocs.yml'
+
+    - name: Cache pip
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: "pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}"
+        restore-keys: |
+          pip-${{ runner.os }}-
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install -r requirements.txt
+
+    - name: Build site (strict)
+      shell: bash
+      env:
+        MKDOCS_GIT_COMMITTERS_APIKEY: "${{ github.token }}"
+      run: mkdocs build --strict
+
+    - name: Audit dependencies (pip-audit)
+      shell: bash
+      run: |
+        pip install pip-audit==2.10.1
+        pip-audit -r requirements.txt
+
+    - name: Check links
+      shell: bash
+      run: python3 scripts/check_links.py site/
+
+    - name: CSS sanity check
+      shell: bash
+      run: python3 -c "css=open('docs/stylesheets/extra.css').read(); assert css.count('{') == css.count('}')"

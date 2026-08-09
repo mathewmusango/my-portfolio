@@ -18,21 +18,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - uses: ./.github/actions/build-site
+        with:
+          site_url: https://mathewmusango.github.io/my-portfolio/
 
-      - name: Build site (strict)
-        env:
-          MKDOCS_GIT_COMMITTERS_APIKEY: ${{ secrets.GITHUB_TOKEN }}
-        run: mkdocs build --strict
-
-      - name: Audit dependencies (pip-audit)
-        run: |
-          pip install pip-audit==2.10.1
-          pip-audit -r requirements.txt
-
-      - name: Check links
-        run: python3 scripts/check_links.py site/
-
-      - name: CSS sanity check
-        run: python3 -c "css=open('docs/stylesheets/extra.css').read(); assert css.count('{') == css.count('}')"
+      - name: Upload site artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: site/
+          if-no-files-found: error
