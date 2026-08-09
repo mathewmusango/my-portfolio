@@ -39,6 +39,11 @@ jobs:
           zip -r ../site.zip .
           cd ..
 
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          pip install cyclonedx-bom==7.3.1
+          cyclonedx-py requirements -i requirements.txt -o sbom.cdx.json
+
       - name: Extract changelog notes
         env:
           TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
@@ -54,9 +59,9 @@ jobs:
         run: |
           if gh release view "${TAG}" >/dev/null 2>&1; then
             gh release edit "${TAG}" --notes-file release-notes.md
-            gh release upload "${TAG}" site.zip --clobber
+            gh release upload "${TAG}" site.zip sbom.cdx.json --clobber
           else
-            gh release create "${TAG}" site.zip \
+            gh release create "${TAG}" site.zip sbom.cdx.json \
               --title "Release ${TAG}" \
               --notes-file release-notes.md
           fi
