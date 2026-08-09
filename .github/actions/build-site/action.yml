@@ -16,7 +16,7 @@ runs:
       run: 'printf ''site_url: %s\n'' "${{ inputs.site_url }}" >> mkdocs.yml'
 
     - name: Cache pip
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.cache/pip
         key: "pip-${{ runner.os }}-${{ hashFiles('requirements.txt') }}"

@@ -14,8 +14,10 @@ import sys
 from pathlib import Path
 
 SCHEME = re.compile(r"^[a-z][a-z0-9+.-]*:", re.IGNORECASE)
-ATTR = re.compile(r'(?:href|src)=["\']([^"\']+)["\']', re.IGNORECASE)
-ID = re.compile(r'\bid=["\']([^"\']+)["\']')
+# href/src with double-quoted, single-quoted, or unquoted values (the minify
+# plugin strips attribute quotes, e.g. href=/assets/img/favicon.ico)
+ATTR = re.compile(r"""(?:href|src)=("[^"]*"|'[^']*'|[^\s>]+)""", re.IGNORECASE)
+ID = re.compile(r'\bid=["\']?([^\s>"\']+)["\']?')
 NAME = re.compile(r'\bname=["\']([^"\']+)["\']')
 
 
@@ -33,6 +35,7 @@ def main() -> int:
         text = page.read_text(encoding="utf-8", errors="replace")
 
         for raw in ATTR.findall(text):
+            raw = raw.strip('"\'')
             link = raw.split("#", 1)
             target = link[0].split("?", 1)[0]
             frag = link[1] if len(link) > 1 else ""

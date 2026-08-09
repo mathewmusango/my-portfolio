@@ -1,5 +1,6 @@
 site_name: Mathew Musango Peter
 site_description: Platform Engineering & Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
+copyright: Copyright &copy; 2026 Mathew Musango Peter
 
 # Git repository link (header GitHub button)
 repo_url: https://github.com/mathewmusango/my-portfolio
@@ -27,12 +28,15 @@ theme:
     text: Muli
     code: Roboto Mono
   features:
+    - content.code.copy
+    - content.tooltips
+    - navigation.footer
     - navigation.instant
     - navigation.sections
     - navigation.top
-    - navigation.footer
+    - search.highlight
+    - search.suggest
     - toc.follow
-    - content.code.copy
 
   palette:
     # Dark (slate, teal) is the default look
@@ -63,13 +67,19 @@ not_in_nav: |
   500.md
 
 markdown_extensions:
+  - abbr
   - admonition
   - attr_list
+  - footnotes
   - md_in_html
   - pymdownx.details
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: mathewmusango
+      repo: my-portfolio
   - pymdownx.superfences
   - pymdownx.snippets:
       base_path: docs
@@ -79,12 +89,15 @@ markdown_extensions:
       toc_depth: "2-4"
 
 plugins:
-  - search
+  - search:
+      separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - git-revision-date-localized:
       enable_creation_date: true
   - git-committers:
       repository: mathewmusango/my-portfolio
       branch: main
+  - minify:
+      minify_html: true
 
 
 extra_javascript:
