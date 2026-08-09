@@ -52,6 +52,10 @@ extra_css:
 exclude_docs: |
   includes/*
 
+# Custom error pages are built but intentionally not in the nav
+not_in_nav: |
+  500.md
+
 markdown_extensions:
   - admonition
   - attr_list
