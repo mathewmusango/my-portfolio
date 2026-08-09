@@ -27,3 +27,5 @@ Always open to discussing platform engineering, cloud architecture, and DevOps o
 </a>
 
 </div>
+
+---
