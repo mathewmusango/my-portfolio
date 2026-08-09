@@ -1,6 +1,10 @@
 site_name: Mathew Musango Peter
 site_description: Platform Engineering & Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
-# NOTE: site_url lives in the prod repo's mkdocs-prod.yml (INHERIT) so local dev stays at localhost:8000 root.
+
+# Git repository link (header GitHub button)
+repo_url: https://github.com/mathewmusango/my-portfolio
+repo_name: mathewmusango/my-portfolio
+# NOTE: site_url is injected by the prod deploy workflow at build time so local dev stays at localhost:8000 root.
 
 nav:
   - Home: index.md
