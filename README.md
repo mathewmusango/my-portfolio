@@ -1,4 +1,4 @@
-# Mathew Musango Peter — Cloud Resume
+# Mathew Musango Peter
 
 Personal cloud-resume site for **Mathew Musango Peter** — Platform Engineering & Infrastructure Leader.
 Built with **MkDocs + Material for MkDocs**, dark-teal theme, containerized with podman.
