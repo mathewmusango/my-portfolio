@@ -24,6 +24,7 @@ theme:
   logo: assets/img/logo.jpg
   icon:
     repo: fontawesome/brands/git-alt
+    alternate: material/earth
   font:
     text: Inter
     code: Roboto Mono
@@ -31,7 +32,6 @@ theme:
     - content.code.copy
     - content.tooltips
     - navigation.footer
-    - navigation.instant
     - navigation.sections
     - navigation.top
     - search.highlight
@@ -89,6 +89,23 @@ markdown_extensions:
       toc_depth: "2-4"
 
 plugins:
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          name: English
+          default: true
+        - locale: es
+          name: Español
+          nav_translations:
+            Home: Inicio
+            About: Sobre mí
+            Professional Experience: Experiencia Profesional
+            Technical Expertise: Competencias Técnicas
+            Projects: Proyectos
+            Certifications: Certificaciones
+            Resume: Currículum
+            Contact: Contacto
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - git-revision-date-localized:

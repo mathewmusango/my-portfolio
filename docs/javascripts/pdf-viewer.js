@@ -24,7 +24,13 @@
       return;
     }
 
-    pdfjsLib.GlobalWorkerOptions.workerSrc = "../assets/js/pdf.worker.min.js";
+    // Derive the worker path from the PDF URL, which already carries the
+    // correct depth for the current language (/resume/ vs /es/resume/ and the
+    // standalone viewer at /assets/pdf-viewer.html).
+    pdfjsLib.GlobalWorkerOptions.workerSrc = url.replace(
+      /pdf\/[^/]+$/,
+      "js/pdf.worker.min.js"
+    );
 
     var loading = document.createElement("p");
     loading.className = "pdf-loading";
