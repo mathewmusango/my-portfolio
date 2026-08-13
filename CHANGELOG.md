@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-08-13
+
+### Added
+- New "Away from the Keyboard" section on the About page.
+- Contact page redesigned with side-by-side Email / LinkedIn cards and refreshed copy.
+
+### Changed
+- Typography: Space Grotesk headings + Inter body (replacing Saira Extra Condensed + Muli).
+- Home page: refreshed About Me intro, Featured Project, and Connect sections (project stack chips kept).
+- About page: updated tagline, subtitle, "In a Nutshell" items, and language levels; streamlined "My Story".
+- Experience page: refreshed role descriptions and contributions.
+- Certifications: clearer stats line (25 · 23 Credly-verified · AWS ×2 · The Linux Foundation ×21).
+- Resume PDF: neutral heading colors, standard blue hyperlinks (no underline), refreshed narrative from the source resume, "Eclectics International" naming, and updated language levels.
+
 ## [1.3.0] - 2026-08-10
 
 ### Added
