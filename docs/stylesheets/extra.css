@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Saira+Extra+Condensed:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
 
 :root > * {
   /* Teal accent — professional, technical, and distinctive */
@@ -9,7 +9,7 @@
   --md-accent-fg-color--transparent: rgba(38, 166, 154, 0.15);
 }
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Saira Extra Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   font-weight: 700;
   letter-spacing: -0.05rem;
 }
@@ -90,7 +90,7 @@ h1, h2, h3, h4 {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: "Saira Extra Condensed", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   font-size: clamp(6rem, 18vw, 10rem);
   font-weight: 700;
   color: var(--md-primary-fg-color);
@@ -782,7 +782,7 @@ body.hero-lightbox-open {
   display: block;
   margin: 0;
   color: var(--md-primary-fg-color);
-  font-family: "Saira Extra Condensed", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: "Space Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 1rem;
@@ -1725,96 +1725,69 @@ body.hero-lightbox-open {
 }
 
 /* Contact page */
-.contact-list {
-  display: flex;
-  flex-direction: column;
-  border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 14px;
-  overflow: hidden;
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
   margin: 1.5rem 0;
-  background: var(--md-default-bg-color--lighter);
 }
 
-.contact-row {
+.contact-card {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 1.1rem 1.25rem;
+  padding: 1.4rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 16px;
+  background: var(--md-default-bg-color--lighter);
   text-decoration: none;
   color: inherit;
-  transition: background 0.15s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.contact-row + .contact-row {
-  border-top: 1px solid var(--md-default-fg-color--lightest);
+.contact-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 137, 123, 0.15);
+  border-color: var(--md-primary-fg-color);
 }
 
-.contact-row:hover {
-  background: rgba(0, 137, 123, 0.08);
-}
-
-.contact-row__icon {
+.contact-card__icon {
   display: flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  width: 44px;
-  height: 44px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
-  color: #fff;
-  background: var(--md-primary-fg-color);
+  background: rgba(0, 137, 123, 0.12);
+  color: var(--md-primary-fg-color);
 }
 
-.contact-row__icon svg {
-  width: 20px;
-  height: 20px;
+.contact-card__icon svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
 }
 
-.contact-row__body {
+.contact-card__body {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.contact-row__label {
-  font-size: 1.05rem;
+.contact-card__label {
+  font-size: 1.1rem;
   font-weight: 700;
-  color: var(--md-default-fg-color);
 }
 
-.contact-row__value {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--md-default-fg-color);
-  overflow-wrap: anywhere;
-}
-
-.contact-row__hint {
-  margin-left: auto;
+.contact-card__hint {
   font-size: 0.82rem;
   color: var(--md-default-fg-color--light);
-  text-align: right;
-  flex: 0 1 auto;
+  margin-top: 2px;
 }
 
-.contact-row__arrow {
-  flex: 0 0 auto;
-  color: var(--md-primary-fg-color);
-  font-size: 1.1rem;
-  transition: transform 0.15s ease;
-}
-
-.contact-row:hover .contact-row__arrow {
-  transform: translateX(4px);
-}
-
-@media (max-width: 560px) {
-  .contact-row {
-    flex-wrap: wrap;
-  }
-  .contact-row__hint {
-    width: 100%;
-    margin-left: 3.4rem;
-    text-align: left;
+@media (max-width: 720px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
   }
 }

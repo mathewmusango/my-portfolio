@@ -32,21 +32,21 @@ As Deputy IT Manager, I lead the engineering teams responsible for enterprise in
 
 ### DevSecOps & Automation
 
-- Integrate security, compliance, and quality controls throughout CI/CD pipelines.
-- Drive infrastructure automation to eliminate repetitive operational tasks and improve deployment consistency.
-- Champion DevSecOps practices that embed security into software delivery without slowing development.
+- Implement security, compliance, and quality practices in all CI/CD pipelines.
+- Encourage the automation of infrastructure processes to prevent any duplication of work and ensure consistency in deployments.
+- Support the adoption of DevSecOps practices that include security in software deployments without slowing down the development process.
 
 ### Observability & Reliability
 
-- Design centralized observability platforms using Prometheus, Grafana, Loki, OpenTelemetry, and related cloud-native technologies.
-- Improve operational visibility through proactive monitoring, alerting, logging, and distributed tracing.
-- Strengthen platform resilience by adopting reliability engineering practices, proactive incident management, and continuous performance optimization.
+- Develop central observability systems using such tools as Prometheus, Grafana, Loki, OpenTelemetry, and other cloud-native technologies.
+- Improve observability skills in operations through monitoring, alerting, logging, and distributed tracing.
+- Achieve robustness in your system by implementing the best practices of reliability engineering, proactive incident management, and performance optimization.
 
 ### Security & Business Continuity
 
-- Lead infrastructure security initiatives within PCI-DSS compliant environments.
-- Implement enterprise security controls, infrastructure hardening, vulnerability management, and governance frameworks.
-- Develop disaster recovery and business continuity strategies that improve organizational resilience and reduce operational risk.
+- Take the responsibility for the security of infrastructure projects in PCI-DSS architecture.
+- Implement enterprise security controls, hardening of infrastructure, vulnerability management, and governance.
+- Develop disaster recovery and business continuity plans.
 
 #### Career Highlights
 
@@ -123,18 +123,18 @@ This role established the technical foundation that would later evolve into Plat
 
 <p class="exp-meta"><span class="exp-company">Kenya Marine and Fisheries Research Institute (KMFRI)</span><span class="exp-meta-sep">·</span><span class="exp-dates">June 2015 – September 2017</span></p>
 
-My professional journey began in end-user support and enterprise IT operations, where I developed a strong understanding of hardware, networking, troubleshooting, and customer service.
+From working in end user support and enterprise IT operations, I have gained substantial experience in hardware, networking, troubleshooting, and customer support.
 
-Supporting researchers and administrative teams taught me that successful technology isn't just about systems—it's about enabling people to do their best work. That mindset continues to shape my approach to Platform Engineering today.
+I learned from my experience with researchers and administrators that technology is not only about the system but about allowing people to work at their best. This philosophy influences how I approach platform engineering now.
 
 ### Key Contributions
 
 <div class="exp-hl" markdown>
 
-- Installed, configured, and maintained desktop computers, laptops, printers, and peripheral devices.
-- Provided technical support for hardware, software, operating systems, and network connectivity.
-- Assisted with structured cabling, workstation deployments, and infrastructure maintenance.
-- Maintained IT asset inventory and supported day-to-day technology operations.
+- Setup, configuration, and maintenance of desktops, laptops, printers, and peripherals.
+- Support for hardware, software, operating systems, and network connectivity.
+- Helped with structured cabling, workstation deployment, and infrastructure maintenance.
+- Managed IT assets and operations.
 
 </div>
 

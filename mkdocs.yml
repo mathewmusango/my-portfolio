@@ -1,5 +1,5 @@
 site_name: Mathew Musango Peter
-site_description: Platform Engineering & Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
+site_description: Platform Engineering and Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
 copyright: Copyright &copy; 2026 Mathew Musango Peter
 
 # Git repository link (header GitHub button)
@@ -25,7 +25,7 @@ theme:
   icon:
     repo: fontawesome/brands/git-alt
   font:
-    text: Muli
+    text: Inter
     code: Roboto Mono
   features:
     - content.code.copy

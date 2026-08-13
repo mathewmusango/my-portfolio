@@ -13,9 +13,9 @@ icon: material/account
 </button>
 -->
 
-<p class="about-tagline">Platform Engineering &amp; Infrastructure Leader</p>
+<p class="about-tagline">Platform Engineering and Infrastructure Leader</p>
 
-<p class="about-subtitle">Over 10 years building secure, reliable, invisible infrastructure — meet the engineer behind it.</p>
+<p class="about-subtitle">Over 10 years of experience creating secure, resilient and seamless infrastructure – meet the engineer.</p>
 
 </div>
 
@@ -27,26 +27,26 @@ icon: material/account
 
     ---
 
-    Engineering platforms from East Africa, serving clients across the continent.
+    Engineering platforms in East Africa for a variety of continental clients.
 
-- :material-calendar-clock:{ .lg } **10+ Years in IT**
+- :material-calendar-clock:{ .lg } **10+ Years of IT Experience**
 
     ---
 
-    From enterprise support to leading Platform Engineering teams.
+    IT support to platform engineering management.
 
 - :material-briefcase:{ .lg } **Deputy IT Manager**
 
     ---
 
-    Eclectics International — infrastructure, DevSecOps, and operational excellence.
+    Eclectics International – Infrastructure, DevSecOps, and Operational Excellence.
 
 - :material-translate:{ .lg } **Languages**
 
     ---
 
-    English — Full Professional<br>
-    Swahili — Native or Bilingual
+    English – Fully Proficient<br>
+    Swahili – Native/Fluent
 
 </div>
 
@@ -72,8 +72,6 @@ icon: material/account
 
 ## My Story
 
-Hi, I'm a Platform Engineering Manager and Infrastructure Engineer based in Nairobi, Kenya, with more than 10 years of experience building secure, scalable, and highly available technology platforms.
-
 ### The Work
 
 <div class="about-panel" markdown>
@@ -86,13 +84,15 @@ My passion lies in Platform Engineering—creating internal platforms that make 
 
 </div>
 
-### Outside the Keyboard
+### Away from the Keyboard
 
 <div class="about-panel" markdown>
 
-Outside of my day-to-day responsibilities, I'm constantly exploring emerging technologies. My current interests include AI agents, retrieval-augmented generation (RAG), Model Context Protocol (MCP), AI-assisted operations (AIOps), and intelligent automation. I'm particularly interested in how artificial intelligence can improve platform reliability, observability, incident response, and developer experience.
+Apart from my day job, I am intrigued by cutting-edge technology and love researching ways in which such technologies could solve real-life issues. Some of the areas that interest me at the moment are AI agents, RAG, MCP, AIOps, and Intelligent Automation. I am especially interested in using artificial intelligence to improve the reliability, observability, incident management, and the developer experience.
 
-When I'm away from the keyboard, I enjoy spending time with friends and family, exploring nature, and occasionally disappearing down the rabbit hole of a fascinating technical paper or open-source project.
+Once in a while, you might find me buried in either a technical deep dive, a GitHub repository, or even an academic paper – for much longer than I had initially anticipated.
+
+Away from my keyboard, I love hanging out with my family and friends, going outside, and being amidst nature.
 
 </div>
 

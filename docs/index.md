@@ -25,25 +25,25 @@ icon: material/home
 
 ## About Me
 
-Hi, I'm a Platform Engineering Manager and Infrastructure Engineer based in Nairobi, Kenya — with 10+ years of experience turning complex infrastructure into simple, reliable systems.
+Hello, I am a Platform Engineering Manager & Infrastructure Engineer from Nairobi, Kenya with more than 10 years of experience in building complex infrastructure into easy-to-use systems.
 
-[Read More About Me](about.md){ .md-button .md-button--primary }
+[Learn More About Me](about.md){ .md-button .md-button--primary }
 
 ## Featured Project
 
-### Client Migration to AWS
+### Migration of Client Infra to AWS
 
 <p class="stack-line"><strong>Stack:</strong> <span class="stack-tag">AWS</span><span class="stack-tag">Security Groups</span><span class="stack-tag">VPN</span><span class="stack-tag">FortiGate</span><span class="stack-tag">DR</span></p>
 
-Led the migration of client infrastructure from on-premises to AWS, designing and implementing a scalable and secure cloud architecture — improving performance, reducing costs, and enhancing disaster recovery capabilities.
+Responsible for migrating client infra to AWS, including design and implementation of scalable &amp; secure cloud architecture.
 
-[See All Projects](projects.md){ .md-button .md-button--primary }
+[View all projects](projects.md){ .md-button .md-button--primary }
 
-## Let's Connect
+## Connect with me
 
-Always open to discussing platform engineering, cloud architecture, and DevOps opportunities.
+Available for discussions on Platform Engineering, Cloud Architecture &amp; DevOps roles.
 
-[Get In Touch](mailto:musangomathew@gmail.com){ .md-button }
-[Connect on LinkedIn](https://www.linkedin.com/in/mathew-musango/){ .md-button .md-button--primary target="_blank" rel="noopener" }
+[Contact Me](mailto:musangomathew@gmail.com){ .md-button }
+[Connect via LinkedIn](https://www.linkedin.com/in/mathew-musango/){ .md-button .md-button--primary target="_blank" rel="noopener" }
 
 ---
