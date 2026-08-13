@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-08-13
+
+### Added
+- **Full Spanish localization**: the entire site is available in Spanish with a header language switcher (globe icon), per-language navigation, and translated pages (Home, About, Experience, Skills, Projects, Certifications, Resume, Contact).
+- **Multilingual resume**: a Spanish resume PDF alongside the English one, with the resume viewer, download, and new-tab actions wired per language.
+
+### Changed
+- Content refresh across Home, About, Experience, Skills, Projects, Certifications, and Contact (updated taglines, narratives, and copy; "Eclectics International" naming; refreshed language levels).
+- Typography: Space Grotesk headings + Inter body.
+- Contact page redesigned with side-by-side cards.
+- Resume PDF restyled: neutral headings, standard blue hyperlinks.
+- Home hero shows an "Email" label instead of the raw address.
+
+### Fixed
+- Spanish asset paths (logos, resume PDF, credential badges) under `/es/`.
+- Resume PDF worker path on the Spanish page and the standalone viewer.
+- Language-switcher navigation (removed `navigation.instant` for correct per-page switching).
+
 ## [1.4.0] - 2026-08-13
 
 ### Added
