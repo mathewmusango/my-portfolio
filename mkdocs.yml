@@ -106,6 +106,17 @@ plugins:
             Certifications: Certificaciones
             Resume: Currículum
             Contact: Contacto
+        - locale: zh
+          name: 中文
+          nav_translations:
+            Home: 首页
+            About: 关于我
+            Professional Experience: 专业经验
+            Technical Expertise: 技术专长
+            Projects: 项目
+            Certifications: 认证
+            Resume: 简历
+            Contact: 联系我
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - git-revision-date-localized:
