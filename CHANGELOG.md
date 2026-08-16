@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-08-13
+
+### Added
+- **Chinese (简体中文) localization**: the full site is available in Chinese, with the header language switcher now offering English, Español, and 中文.
+- **Chinese resume PDF** (`resume-zh.pdf`), wired into the Chinese resume page (viewer, download, new-tab).
+
 ## [2.0.0] - 2026-08-13
 
 ### Added
