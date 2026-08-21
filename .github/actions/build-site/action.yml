@@ -43,6 +43,10 @@ runs:
       shell: bash
       run: python3 scripts/check_links.py site/
 
+    - name: Check translations
+      shell: bash
+      run: python3 scripts/check_translations.py
+
     - name: CSS sanity check
       shell: bash
       run: python3 -c "css=open('docs/stylesheets/extra.css').read(); assert css.count('{') == css.count('}')"
