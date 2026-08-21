@@ -69,19 +69,79 @@
   </p>
 </div>
 
-{# The 404 template is served for any missing path, so localize it from the URL prefix. #}
+{# The 404 template is served for any missing path, so localize it from the URL prefix.
+   Note: the i18n plugin renders this template once per language and the last build
+   (zh) wins, so the baked header is always zh — this script re-localizes everything
+   from the current URL, including the language switcher links (which must point at
+   the same missing path in each language so the localized 404 re-renders). #}
 <script>
   (function () {
     var path = window.location.pathname;
-    var lang = path.indexOf("/zh/") === 0 ? "zh" : path.indexOf("/es/") === 0 ? "es" : "en";
+
+    // Derive the site base (e.g. /my-portfolio) from the baked switcher links,
+    // which always carry the subpath: href="/my-portfolio/es/...". This is more
+    // reliable than parsing the path, because English 404 URLs have no language
+    // prefix to anchor on.
+    var esLink = document.querySelector('a.md-select__link[hreflang="es"]');
+    var base = "/";
+    if (esLink) {
+      var h = esLink.getAttribute("href") || "";
+      var i = h.indexOf("/es/");
+      if (i > 0) base = h.slice(0, i);
+    }
+
+    // Current path minus the base, then strip any language prefix.
+    var rest = path.slice(base.length);
+    var lang = "en";
+    var lm = rest.match(/^\/(es|zh)(\/|$)/);
+    if (lm) {
+      lang = lm[1];
+      rest = "/" + rest.slice(lm[0].length);
+    }
+    if (rest === "/") rest = "";
+
+    var target = {
+      en: base + rest,
+      es: base + "/es" + rest,
+      zh: base + "/zh" + rest
+    };
+    // Keep a trailing slash on the root links (clean URL style).
+    if (rest === "") {
+      target.en = base + "/";
+      target.es = base + "/es/";
+      target.zh = base + "/zh/";
+    }
+
     var t = {
+      en: {
+        title: "404 — Resource Not Found",
+        body: "The page you're looking for doesn't exist. Everything else is operating normally.",
+        home: "Home",
+        contact: "Contact Me",
+        labels: ["Platform Core", "Automation", "Security", "Observability"],
+        aria: "Platform with one disconnected resource",
+        header: "header",
+        nav: "navigation",
+        search: "search",
+        clear: "Clear current query",
+        toc: "table of contents",
+        lang: "Switch language",
+        placeholder: "Search"
+      },
       es: {
         title: "404 — Recurso No Encontrado",
         body: "La página que buscas no existe. Todo lo demás funciona con normalidad.",
         home: "Inicio",
         contact: "Contáctame",
         labels: ["Núcleo de Plataforma", "Automatización", "Seguridad", "Observabilidad"],
-        aria: "Plataforma con un recurso desconectado"
+        aria: "Plataforma con un recurso desconectado",
+        header: "Cabecera",
+        nav: "navegación",
+        search: "buscar",
+        clear: "Vaciar consulta actual",
+        toc: "tabla de contenidos",
+        lang: "Cambiar idioma",
+        placeholder: "Buscar"
       },
       zh: {
         title: "404 — 未找到资源",
@@ -89,10 +149,27 @@
         home: "首页",
         contact: "联系我",
         labels: ["平台核心", "自动化", "安全", "可观测性"],
-        aria: "平台有一个资源未连接"
+        aria: "平台有一个资源未连接",
+        header: "页眉",
+        nav: "导航栏",
+        search: "查找",
+        clear: "清空当前内容",
+        toc: "目录",
+        lang: "选择当前语言",
+        placeholder: "搜索"
       }
     }[lang];
     if (!t) return;
+
+    // Re-point the language switcher links at the same path in each language
+    // (so switching on a 404 re-renders the localized 404 for the same URL).
+    var links = document.querySelectorAll("a.md-select__link");
+    links.forEach(function (el) {
+      var href = el.getAttribute("hreflang");
+      if (href && target[href]) el.setAttribute("href", target[href]);
+    });
+
+    // Page content.
     document.querySelector("h1").textContent = t.title;
     document.querySelector(".error-404 > p").textContent = t.body;
     var btns = document.querySelectorAll(".error-404 .md-button");
@@ -105,6 +182,23 @@
     txts.forEach(function (el, i) {
       if (i < t.labels.length) el.textContent = t.labels[i];
     });
+
+    // Header chrome: the baked template is always zh (last i18n build wins), so
+    // re-localize the visible/aria strings from the URL prefix.
+    var hdr = document.querySelector(".md-header");
+    if (hdr) hdr.setAttribute("aria-label", t.header);
+    var langBtn = document.querySelector(".md-select .md-header__button");
+    if (langBtn) langBtn.setAttribute("aria-label", t.lang);
+    var searchInput = document.querySelector(".md-search__input");
+    if (searchInput) searchInput.setAttribute("placeholder", t.placeholder);
+    var navEls = document.querySelectorAll(".md-nav--primary");
+    navEls.forEach(function (el) { el.setAttribute("aria-label", t.nav); });
+    var searchOpts = document.querySelector(".md-search__options");
+    if (searchOpts) searchOpts.setAttribute("aria-label", t.search);
+    var clearBtn = document.querySelector(".md-search__reset");
+    if (clearBtn) clearBtn.setAttribute("aria-label", t.clear);
+    var toc = document.querySelector(".md-nav--secondary");
+    if (toc) toc.setAttribute("aria-label", t.toc);
   })();
 </script>
 {% endblock %}
