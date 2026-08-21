@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-08-21
+
+### Added
+- **i18n folder structure**: pages now live in `docs/en/`, `docs/es/`, `docs/zh/` (was flat `*.es.md`/`*.zh.md` suffix naming) — rendered URLs unchanged.
+- **Localized error pages**: `500` page translated per language (`/500/`, `/es/500/`, `/zh/500/`), and the `404` page is JS-localized from the URL prefix (`/es/`, `/zh/`) since it's a single static template.
+- **Real issuer logos** for the two Coursera certifications: official Google wordmark and the official CU Boulder interlocking mark (replacing placeholder icons).
+- **JS/CSS minification** (`mkdocs-minify-plugin`) alongside HTML — custom scripts listed in `js_files`/`css_files` (already-minified pdf.js excluded).
+- **Translation staleness check** in CI: an English page committed after its `es`/`zh` translation fails the build until the translation is updated (git commit timestamps).
+- **`site_url` canonical config**: sitemap, canonical links, and hreflang alternates now correct in every build (previously only prod CI injected it; local/test builds emitted a broken `None` sitemap).
+- **In-depth documentation**: `MKDOCS.md` (mkdocs.yml reference) and refreshed `README.md`; `DEVOPS.md` updated.
+
+### Changed
+- `check_translations.py` now enforces presence **and** staleness (heading drift remains a warning).
+- The shared build action only injects `site_url` when the config key is absent.
+
+### Fixed
+- `404` page broken rendering (a stray `</script>` corrupted the localization script — replaced the fragile regex with string matching).
+- `docs/assets/pdf-viewer.html` now references the minified viewer script.
+
 ## [2.1.0] - 2026-08-13
 
 ### Added
@@ -73,12 +92,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pinned all Python dependencies in `requirements.txt` for reproducible builds (`mkdocs-git-revision-date-localized-plugin==1.5.3`, `mkdocs-git-committers-plugin-2==2.5.0`).
 - Release workflow now generates release notes from the CHANGELOG section for the tagged version.
 
- - 2026-08-09
+## [1.0.0] - 2026-08-09
 
 ### Added
 - Initial site: personal cloud-resume for Mathew Musango Peter — MkDocs + Material, dark slate theme with teal accents.
 - Pages: Home, About, Professional Experience, Technical Expertise, Projects, Certifications, Resume, Contact.
 - Containerized workflow with podman (`compose.yaml`): live-reload dev server on port 8000 with a `/health` endpoint.
 - Certifications: provider accordions, badge cards, and an in-page credential popup (badge links to the credential).
-- Portfolio link in the resume PDF header (Email | LinkedIn | Portfolio | Nairobi, Kenya).
-- CI/CD: GitHub Actions CI + deploy workflow publishing the built site to GitHub Pages (`gh-pages` branch), and a release workflow creating a GitHub Release from `v*` tags.
+- Portfolio link (`mathewmusango.github.io/my-portfolio`) added to the resume PDF header (Email | LinkedIn | Portfolio | Nairobi, Kenya).
+- CI/CD: GitHub Actions CI (`ci.yml` — strict build validation) on this repo. The public
+  `mathewmusango/my-portfolio` repo (production) carries its own CI + deploy workflow, publishing
+  the built site to its `gh-pages` branch via GitHub Pages.
+- GitHub Actions release workflow (`release.yml`): pushing a `v*` tag builds the site and creates a
+  GitHub Release with the site archive attached.
