@@ -1,5 +1,8 @@
 site_name: Mathew Musango Peter
 site_description: Platform Engineering and Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
+# Canonical URL — used for sitemap, canonical links, and hreflang alternates.
+# Same for test and prod builds (both repos build the same site).
+site_url: https://mathewmusango.github.io/my-portfolio/
 copyright: Copyright &copy; 2026 Mathew Musango Peter
 
 # Git repository link (header GitHub button)
@@ -90,7 +93,7 @@ markdown_extensions:
 
 plugins:
   - i18n:
-      docs_structure: suffix
+      docs_structure: folder
       languages:
         - locale: en
           name: English
@@ -126,6 +129,16 @@ plugins:
       branch: main
   - minify:
       minify_html: true
+      minify_js: true
+      minify_css: true
+      # Files to minify (pdf.min.js is already minified upstream — skip it)
+      js_files:
+        - javascripts/resume-modal.js
+        - javascripts/cert-modal.js
+        - javascripts/hero-lightbox.js
+        - javascripts/pdf-viewer.js
+      css_files:
+        - stylesheets/extra.css
 
 
 extra_javascript:

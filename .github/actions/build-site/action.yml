@@ -13,7 +13,9 @@ runs:
     - name: Inject site_url
       if: inputs.site_url != ''
       shell: bash
-      run: 'printf ''site_url: %s\n'' "${{ inputs.site_url }}" >> mkdocs.yml'
+      run: |
+        # mkdocs.yml carries the canonical site_url now; only append if absent.
+        grep -q '^site_url:' mkdocs.yml || printf 'site_url: %s\n' "${{ inputs.site_url }}" >> mkdocs.yml
 
     - name: Cache pip
       uses: actions/cache@v6

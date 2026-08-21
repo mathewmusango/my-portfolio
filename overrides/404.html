@@ -68,4 +68,43 @@
     <a href="mailto:musangomathew@gmail.com" class="md-button">Contact Me</a>
   </p>
 </div>
+
+{# The 404 template is served for any missing path, so localize it from the URL prefix. #}
+<script>
+  (function () {
+    var path = window.location.pathname;
+    var lang = path.indexOf("/zh/") === 0 ? "zh" : path.indexOf("/es/") === 0 ? "es" : "en";
+    var t = {
+      es: {
+        title: "404 — Recurso No Encontrado",
+        body: "La página que buscas no existe. Todo lo demás funciona con normalidad.",
+        home: "Inicio",
+        contact: "Contáctame",
+        labels: ["Núcleo de Plataforma", "Automatización", "Seguridad", "Observabilidad"],
+        aria: "Plataforma con un recurso desconectado"
+      },
+      zh: {
+        title: "404 — 未找到资源",
+        body: "您要找的页面不存在。其他一切运行正常。",
+        home: "首页",
+        contact: "联系我",
+        labels: ["平台核心", "自动化", "安全", "可观测性"],
+        aria: "平台有一个资源未连接"
+      }
+    }[lang];
+    if (!t) return;
+    document.querySelector("h1").textContent = t.title;
+    document.querySelector(".error-404 > p").textContent = t.body;
+    var btns = document.querySelectorAll(".error-404 .md-button");
+    if (btns[0]) btns[0].textContent = t.home;
+    if (btns[1]) btns[1].textContent = t.contact;
+    document.title = t.title;
+    var svg = document.querySelector(".error-404__art");
+    if (svg) svg.setAttribute("aria-label", t.aria);
+    var txts = svg.querySelectorAll("text");
+    txts.forEach(function (el, i) {
+      if (i < t.labels.length) el.textContent = t.labels[i];
+    });
+  })();
+</script>
 {% endblock %}
