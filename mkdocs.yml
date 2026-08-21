@@ -139,6 +139,9 @@ plugins:
         - javascripts/pdf-viewer.js
       css_files:
         - stylesheets/extra.css
+  # Download external assets (Google Fonts) at build time and serve them locally,
+  # so visitors' browsers make no third-party requests.
+  - privacy
 
 
 extra_javascript:
