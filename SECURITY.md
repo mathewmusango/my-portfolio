@@ -6,7 +6,7 @@ This is a personal portfolio/resume site — static content with no authenticati
 user data. If you find a security issue in the site, its build pipeline, or its
 dependencies, please report it **privately** instead of opening a public issue:
 
-- **Email:** musangomathew@gmail.com
+- **Email:** [Email me](mailto:musangomathew@gmail.com)
 
 Include a description of the issue, steps to reproduce, and the affected component
 (site content, dependencies, CI/CD). Reports are acknowledged within 7 days.
