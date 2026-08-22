@@ -37,25 +37,31 @@ h1, h2, h3, h4 {
 
 .md-footer-connect {
   display: flex;
-  gap: 1.25rem;
-  font-size: 0.8rem;
+  align-items: center;
+  gap: 1.15rem;
+  font-size: 1.05rem;
 }
 
 .md-footer-connect svg {
   width: 1em;
   height: 1em;
   fill: currentColor;
-  vertical-align: -0.15em;
-  margin-right: 0.35em;
+  display: block;
 }
 
 .md-footer-connect a {
+  display: inline-flex;
+  align-items: center;
   color: var(--md-footer-fg-color--light);
+  padding: 0.15rem;
 }
 
 .md-footer-connect a:hover {
   color: var(--md-footer-fg-color);
-  text-decoration: underline;
+}
+
+.md-footer-connect a[title]:hover {
+  text-decoration: none;
 }
 
 .md-footer-copyright {
@@ -1790,4 +1796,191 @@ body.hero-lightbox-open {
   .contact-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ------------------------------------------------------------------ */
+/* Navigation tabs — bold, standout header bar                          */
+/* ------------------------------------------------------------------ */
+/* Material already paints .md-tabs with the teal primary and white
+   text (var(--md-primary-fg-color) bg / var(--md-primary-bg-color) fg)
+   in BOTH schemes — only override weight, size, and spacing so we don't
+   clobber the theme's bar colors. */
+
+.md-tabs__list {
+  gap: 0.25rem;
+}
+
+.md-tabs__item {
+  display: flex;
+  align-items: center;
+}
+
+.md-tabs__link {
+  /* Neutralize Material's margin-top (pushes text to the bar's bottom) and
+     center the label vertically instead. */
+  margin-top: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  padding: 0.5rem 0.9rem;
+  border-radius: 6px;
+  opacity: 0.85;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.md-tabs__link:hover,
+.md-tabs__link:focus {
+  opacity: 1;
+}
+
+.md-tabs__item--active .md-tabs__link {
+  /* Full-height pill that merges with the tab bar's bottom edge: round the
+     top corners only, no side/bottom curves on the active tab. */
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 6px 6px 0 0;
+  height: 2.4rem;
+  box-sizing: border-box;
+}
+
+/* Sidebar: bold the active link so "where you are" is unmistakable,
+   while inactive links stay regular (keeps the tab bar as the standout). */
+.md-nav__link--active,
+.md-nav__link--active .md-ellipsis {
+  font-weight: 700;
+}
+
+/* Header + tab bar: slightly narrower than the 61rem content grid, so the
+   top chrome reads as a compact band while the page content keeps its width. */
+.md-header .md-grid,
+.md-tabs .md-grid {
+  max-width: 52rem;
+}
+
+/* Custom breadcrumb (Option B): the current page renders as bold, non-link
+   text. The chevron separator before it comes from Material's
+   `.md-path__item:not(:first-child)::before`, which applies automatically. */
+.md-path__link--current {
+  color: var(--md-default-fg-color);
+  font-weight: 700;
+  cursor: default;
+}
+
+.md-path__link--current:hover,
+.md-path__link--current:focus {
+  color: var(--md-default-fg-color);
+}
+
+/* ------------------------------------------------------------------ */
+/* Site Metrics page — stat cards, bar chart, planned badges            */
+/* ------------------------------------------------------------------ */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin: 1.2rem 0 1rem;
+}
+
+.metrics-stat {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 12px;
+  padding: 0.9rem 1rem;
+}
+
+[data-md-color-scheme="slate"] .metrics-stat {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+[data-md-color-scheme="default"] .metrics-stat {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.metrics-stat h3 {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  color: var(--md-primary-fg-color);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.metrics-stat h3 svg {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+.metrics-stat p {
+  margin: 0.25rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--md-default-fg-color--light);
+}
+
+.metrics-stat strong {
+  display: block;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  color: var(--md-default-fg-color);
+}
+
+/* Horizontal bar chart */
+.metrics-chart {
+  display: grid;
+  gap: 0.95rem;
+  margin: 0.5rem 0 1rem;
+}
+
+.metrics-bar__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
+
+.metrics-bar__label {
+  font-weight: 700;
+}
+
+.metrics-bar__value {
+  color: var(--md-default-fg-color--light);
+}
+
+.metrics-bar__track {
+  height: 0.6rem;
+  border-radius: 999px;
+  background: var(--md-default-fg-color--lightest);
+  overflow: hidden;
+}
+
+.metrics-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .metrics-bar__fill {
+  background: #80cbc4;
+}
+
+/* "Planned" status badge */
+.metrics-badge {
+  display: inline-block;
+  margin-top: 0.55rem;
+  padding: 0.08rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-primary-fg-color);
+  border: 1px solid rgba(0, 137, 123, 0.4);
+  background: rgba(0, 137, 123, 0.07);
+}
+
+[data-md-color-scheme="slate"] .metrics-badge {
+  color: #80cbc4;
+  border-color: rgba(128, 203, 196, 0.4);
+  background: rgba(128, 203, 196, 0.08);
 }

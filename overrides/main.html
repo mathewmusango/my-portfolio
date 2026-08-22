@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 
+{% block extrahead %}
+  <!-- Open Graph / social share tags (static card, no social plugin) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="{{ config.site_name }}">
+  <meta property="og:title" content="{{ page.title | default(config.site_name) }}">
+  <meta property="og:description" content="{{ config.site_description }}">
+  <meta property="og:url" content="{{ page.canonical_url }}">
+  <meta property="og:image" content="{{ config.site_url }}assets/img/og-card.png">
+  <meta name="twitter:card" content="summary_large_image">
+{% endblock %}
+
 {% block footer %}
 <footer class="md-footer">
   {% if page.previous_page or page.next_page %}
@@ -36,9 +47,12 @@
     <div class="md-footer-meta__inner md-grid md-footer-bottom">
       <p class="md-footer-copyright">© 2026 Mathew Musango Peter</p>
       <div class="md-footer-connect">
-        <a href="mailto:musangomathew@gmail.com">{% include ".icons/fontawesome/solid/envelope.svg" %}Email</a>
-        <a href="https://www.linkedin.com/in/mathew-musango/" target="_blank" rel="noopener">{% include ".icons/fontawesome/brands/linkedin.svg" %}LinkedIn</a>
-        <a href="https://github.com/mathewmusango" target="_blank" rel="noopener">{% include ".icons/fontawesome/brands/github.svg" %}GitHub</a>
+        {% set page_lang = i18n_page_locale if i18n_page_locale is defined else 'en' %}
+        {% set history_label = 'Site History' if page_lang == 'en' else ('Historial del sitio' if page_lang == 'es' else '站点历史') %}
+        <a href="{{ base_url }}/history/" title="{{ history_label }}" aria-label="{{ history_label }}">{% include ".icons/material/history.svg" %}</a>
+        <a href="mailto:musangomathew@gmail.com" title="Email" aria-label="Email">{% include ".icons/fontawesome/solid/envelope.svg" %}</a>
+        <a href="https://www.linkedin.com/in/mathew-musango/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">{% include ".icons/fontawesome/brands/linkedin.svg" %}</a>
+        <a href="https://github.com/mathewmusango" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">{% include ".icons/fontawesome/brands/github.svg" %}</a>
       </div>
     </div>
   </div>

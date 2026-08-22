@@ -37,7 +37,7 @@ Hello, I am a Platform Engineering Manager & Infrastructure Engineer from Nairob
 
 Responsible for migrating client infra to AWS, including design and implementation of scalable &amp; secure cloud architecture.
 
-[View all projects](projects.md){ .md-button .md-button--primary }
+[View all projects](projects/){ .md-button .md-button--primary }
 
 ## Connect with me
 
