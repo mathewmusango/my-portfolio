@@ -37,7 +37,7 @@ Hola, soy un Gerente de Ingeniería de Plataformas e Ingeniero de Infraestructur
 
 Responsable de migrar la infraestructura de clientes a AWS, incluyendo el diseño e implementación de una arquitectura de nube escalable y segura.
 
-[Ver todos los proyectos](projects.md){ .md-button .md-button--primary }
+[Ver todos los proyectos](projects/){ .md-button .md-button--primary }
 
 ## Conecta conmigo
 

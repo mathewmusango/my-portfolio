@@ -37,7 +37,7 @@ icon: material/home
 
 负责将客户基础设施迁移至 AWS，包括可扩展且安全的云架构的设计与实施。
 
-[查看所有项目](projects.md){ .md-button .md-button--primary }
+[查看所有项目](projects/){ .md-button .md-button--primary }
 
 ## 与我联系
 

@@ -126,7 +126,8 @@
         clear: "Clear current query",
         toc: "table of contents",
         lang: "Switch language",
-        placeholder: "Search"
+        placeholder: "Search",
+        tabs: ["Home", "Blog", "Site Metrics"]
       },
       es: {
         title: "404 — Recurso No Encontrado",
@@ -141,7 +142,8 @@
         clear: "Vaciar consulta actual",
         toc: "tabla de contenidos",
         lang: "Cambiar idioma",
-        placeholder: "Buscar"
+        placeholder: "Buscar",
+        tabs: ["Inicio", "Blog", "Métricas del sitio"]
       },
       zh: {
         title: "404 — 未找到资源",
@@ -156,7 +158,8 @@
         clear: "清空当前内容",
         toc: "目录",
         lang: "选择当前语言",
-        placeholder: "搜索"
+        placeholder: "搜索",
+        tabs: ["首页", "博客", "站点指标"]
       }
     }[lang];
     if (!t) return;
@@ -199,6 +202,13 @@
     if (clearBtn) clearBtn.setAttribute("aria-label", t.clear);
     var toc = document.querySelector(".md-nav--secondary");
     if (toc) toc.setAttribute("aria-label", t.toc);
+
+    // Header tabs: the baked template is always zh (last i18n build wins), so
+    // re-point each tab label from the URL prefix.
+    var tabLinks = document.querySelectorAll(".md-tabs__link");
+    tabLinks.forEach(function (el, i) {
+      if (i < t.tabs.length) el.textContent = t.tabs[i];
+    });
   })();
 </script>
 {% endblock %}

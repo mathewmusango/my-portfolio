@@ -1,0 +1,51 @@
+{#-
+  Custom breadcrumb (Option B — full trail): homepage + ancestors + current
+  page. The current page renders as bold, non-link text so the trail reads
+  "Home › Projects › Observability & Monitoring" instead of Material's
+  ancestors-only path.
+
+  Ancestors whose leaf URL equals the homepage URL (the top-level "Home"
+  section, which drills down to index.md) are skipped so we never get the
+  duplicate "Home Home" crumb.
+-#}
+{% import "partials/path-item.html" as item with context %}
+
+{% macro leaf_url(nav_item) -%}
+  {%- if nav_item.children -%}
+    {%- set first = nav_item.children | first -%}
+    {%- if first.children -%}
+      {{- leaf_url(first) -}}
+    {%- else -%}
+      {{- first.url -}}
+    {%- endif -%}
+  {%- else -%}
+    {{- nav_item.url -}}
+  {%- endif -%}
+{%- endmacro %}
+
+{% if page.meta and page.meta.hide %}
+  {% set hidden = "hidden" if "path" in page.meta.hide %}
+{% endif %}
+{% set depth = page.ancestors | length %}
+{% if nav.homepage %}
+  {% set depth = depth + 1 %}
+{% endif %}
+{% if depth > 1 and page != nav.homepage %}
+  <nav class="md-path" aria-label="{{ lang.t('nav') }}" {{ hidden }}>
+    <ol class="md-path__list">
+      {% if nav.homepage %}
+        {{ item.render(nav.homepage) }}
+      {% endif %}
+      {% for nav_item in page.ancestors | reverse %}
+        {% if leaf_url(nav_item) != nav.homepage.url %}
+          {{ item.render(nav_item) }}
+        {% endif %}
+      {% endfor %}
+      <li class="md-path__item" aria-current="page">
+        <span class="md-path__link md-path__link--current">
+          <span class="md-ellipsis">{{ page.title }}</span>
+        </span>
+      </li>
+    </ol>
+  </nav>
+{% endif %}

@@ -10,14 +10,22 @@ repo_url: https://github.com/mathewmusango/my-portfolio
 repo_name: mathewmusango/my-portfolio
 
 nav:
-  - Home: index.md
-  - About: about.md
-  - Professional Experience: experience.md
-  - Technical Expertise: skills.md
-  - Projects: projects.md
-  - Certifications: certifications.md
-  - Resume: resume.md
-  - Contact: contact.md
+  - Home:
+      - Home: index.md
+      - About: about.md
+      - Professional Experience: experience.md
+      - Technical Expertise: skills.md
+      - Projects:
+          - Projects: projects/index.md
+          - Cloud & Migrations: projects/cloud-migrations.md
+          - Observability & Monitoring: projects/observability.md
+          - Security & Resilience: projects/security-resilience.md
+          - Platform Engineering: projects/platform-engineering.md
+          - Knowledge & Collaboration: projects/knowledge-collaboration.md
+      - Certifications: certifications.md
+      - Resume: resume.md
+      - Contact: contact.md
+  - Site Metrics: metrics/index.md
 
 theme:
   name: material
@@ -35,8 +43,13 @@ theme:
     - content.code.copy
     - content.tooltips
     - navigation.footer
-    - navigation.sections
+    - navigation.indexes
+    - navigation.path
+    - navigation.prune
     - navigation.top
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.tracking
     - search.highlight
     - search.suggest
     - toc.follow
@@ -109,6 +122,12 @@ plugins:
             Certifications: Certificaciones
             Resume: Currículum
             Contact: Contacto
+            Site Metrics: Métricas del sitio
+            Cloud & Migrations: Nube y Migraciones
+            Observability & Monitoring: Observabilidad y Monitoreo
+            Security & Resilience: Seguridad y Resiliencia
+            Platform Engineering: Ingeniería de Plataformas
+            Knowledge & Collaboration: Conocimiento y Colaboración
         - locale: zh
           name: 中文
           nav_translations:
@@ -120,6 +139,12 @@ plugins:
             Certifications: 认证
             Resume: 简历
             Contact: 联系我
+            Site Metrics: 站点指标
+            Cloud & Migrations: 云与迁移
+            Observability & Monitoring: 可观测性与监控
+            Security & Resilience: 安全与弹性
+            Platform Engineering: 平台工程
+            Knowledge & Collaboration: 知识与协作
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
   - git-revision-date-localized:
@@ -152,6 +177,8 @@ extra_javascript:
   - javascripts/pdf-viewer.js
 
 extra:
+  # Hide the "Made with Material for MkDocs" footer badge.
+  generator: false
   social:
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/mathew-musango/
