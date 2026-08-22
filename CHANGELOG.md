@@ -11,6 +11,21 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [2.3.0] - 2026-08-22
+
+### Added
+- **Site Metrics dashboard** (trilingual): instrument-panel page with real site facts — stat cards (pages, languages, last updated, automated delivery + SBOM), a page-group bar chart, and "Planned" status cards for visitor analytics, uptime, and performance. Privacy-first: no tracking scripts shipped.
+- **Custom breadcrumb**: `Home › … › current page` trail (bold current), localized per language, hidden on the homepage.
+- **Site History page** (trilingual) with footer icon links (Site History · Email · LinkedIn · GitHub) and a static og:image share card.
+- **`navigation.tracking`**: scroll-spy sidebar with URL hash per section (deep-linkable headings).
+- **`navigation.prune`**: pages missing from `nav:` are hidden from the sidebar/tabs but remain reachable by URL.
+
+### Changed
+- **Navigation tabs**: now `Home · Site Metrics` with icons; the active tab highlight merges with the tab bar's bottom edge; header band narrowed.
+- **Projects**: overview + five category pages, collapsible submenu with the first item open by default, labels localized per language.
+- **Footer**: prev/next fix (Skills → Projects, was "Overview"); icons-only links; Material generator badge hidden (`generator: false`).
+- es/zh homepage: stale `projects.md` link fixed → `projects/`.
+
 ## [2.2.0] - 2026-08-21
 
 ### Added
