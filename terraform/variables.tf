@@ -41,15 +41,15 @@ variable "enable_cloudfront" {
 }
 
 variable "enable_vpc" {
-  description = "Run the Lambdas inside a private VPC (real AWS) — no internet path, only VPC endpoints for DynamoDB + CloudWatch Logs. Disable for Ministack (no real VPC)."
+  description = "Run the Lambdas inside a private VPC (real AWS) — no internet path, only VPC endpoints for DynamoDB + CloudWatch Logs. OFF by default: the VPC's CloudWatch Logs interface endpoint (~$7/mo) is outside the Free Tier; the Lambda origin gate + least-privilege IAM still apply. Opt in for the hardened variant (also disable for Ministack, which has no real VPC)."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_waf" {
-  description = "Attach a WAF ACL to the CloudFront distribution (real AWS only): allow only the site's Origin/Referer + rate-limit rule. Disable for Ministack."
+  description = "Attach a WAF ACL to the CloudFront distribution (real AWS only): allow only the site's Origin/Referer + rate-limit rule. OFF by default: WAF (~$7/mo) is outside the Free Tier; the Lambda origin gate (403 for non-site origins) is the free equivalent. Opt in for the hardened variant (also disable for Ministack)."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "waf_allowed_host" {

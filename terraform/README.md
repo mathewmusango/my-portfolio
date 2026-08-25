@@ -42,8 +42,8 @@ flowchart LR
 | `aws_apigatewayv2_route` ×4 | `POST /event` → writer · `GET /summary` · `GET /views` · `GET /health` → reader |
 | `aws_cloudfront_distribution.metrics` | Edge + geo headers, CachingDisabled, HTTPS only |
 | `aws_cloudfront_origin_request_policy.geo` | Whitelists geo + CORS + Content-Type headers |
-| `aws_wafv2_web_acl.metrics` (real AWS) | Default-block; allows only the site Origin/Referer + IP rate limit |
-| VPC (real AWS) | 2 private subnets, lambda SG (logs prefix-list egress), DynamoDB Gateway + Logs Interface endpoints |
+| `aws_wafv2_web_acl.metrics` (real AWS, opt-in) | Default-block; allows only the site Origin/Referer + IP rate limit — **off by default (Free Tier)**; the Lambda origin gate is the free equivalent |
+| VPC (real AWS, opt-in) | 2 private subnets, lambda SG (logs prefix-list egress), DynamoDB Gateway + Logs Interface endpoints — **off by default (Free Tier)**; the Logs interface endpoint is ~$7/mo |
 | IAM | **Least privilege**: writer role = `AWSLambdaBasicExecutionRole` + `dynamodb:PutItem` on the table only; reader role = `AWSLambdaBasicExecutionRole` + `dynamodb:Scan` on the table only; each function is invoked only by its own API route; + `AWSLambdaVPCAccessExecutionRole` when `enable_vpc` |
 
 ## Event schema (what's stored)
@@ -187,40 +187,46 @@ The backend is wired to the site:
 Uptime = external probes hitting `/health`; Performance = future
 `type: "webvitals"` events.
 
-## Security (hardened, private-by-default)
+## Security (Free-Tier default, opt-in hardening)
 
-**Only the site may reach the API** — enforced in two layers:
+**Only the site may reach the API** — enforced at the application layer, free:
 
 1. **Lambda origin gate** (all environments, incl. local): the writer and reader
    reject any request whose `Origin`/`Referer` host doesn't equal
    `allowed_origin` — including requests with **no** header at all (403).
    `/health` is exempt (uptime probes carry no Origin/Referer and return no data).
-2. **WAF on the CloudFront edge** (real AWS, `enable_waf`): default *block*;
-   only requests whose `Origin`/`Referer` contains `waf_allowed_host` are
-   allowed, plus an IP rate-limit rule (300 req / 5 min).
+2. **Least-privilege IAM**: writer = `dynamodb:PutItem` on the table only;
+   reader = `dynamodb:Scan` only; each function is invoked only by its own
+   API route.
 
-**The Lambdas live in a private VPC** (real AWS, `enable_vpc`) with **no
-internet path**: egress only to the DynamoDB **Gateway** endpoint and the
-CloudWatch Logs **Interface** endpoint (via the `logs` prefix list). No NAT, no
-public IPs. Cold starts gain ~0.5–1 s from the ENI attach.
+**Opt-in hardening (outside the Free Tier — ~$14/mo total):**
 
-**Cost note (real AWS):** the Logs interface endpoint ≈ $7/month; the DynamoDB
-Gateway endpoint and the VPC itself are free. Still pennies overall.
+- **WAF on the CloudFront edge** (`enable_waf`): default *block*; only requests
+  whose `Origin`/`Referer` contains `waf_allowed_host` are allowed, plus an IP
+  rate-limit rule (300 req / 5 min). ~$7/mo.
+- **Private VPC** (`enable_vpc`): lambdas with **no internet path** — egress only
+  to the DynamoDB **Gateway** (free) and CloudWatch Logs **Interface** endpoints.
+  The Logs endpoint is ~$7/mo; cold starts gain ~0.5–1 s from the ENI attach.
+
+**Cost note (real AWS):** the Free-Tier default (both off) costs ~$0 fixed —
+CloudFront, API Gateway, Lambda, and DynamoDB (always-free tier) cover the
+usage. WAF + the Logs endpoint are the only always-billable items.
 
 **Local (Ministack):** `local.tfvars` sets `enable_vpc = false` and
-`enable_waf = false` (no real VPC/WAF there) — the lambda origin gate still
-applies.
+`enable_waf = false` — matching the Free-Tier default; the lambda origin gate
+still applies.
 
 ## Operations
 
 - **CORS**: configured on the HTTP API for `allowed_origin` (default the live
   site). API responses carry `Access-Control-Allow-*` regardless.
 - **No auth on the API** — it's a public beacon by design; payloads are validated
-  and size-capped, and the origin gate + WAF restrict who can call it.
+  and size-capped, and the origin gate (plus WAF when enabled) restrict who can call it.
 - **No secrets** in this directory; AWS access comes from the machine's credential
   chain.
 - **Test vs prod**: this is the live-site stack (prod metrics). Local dev applies
   with `environment = "test"` (see `local.tfvars`) — resource names and the
-  table are prefixed, so both can coexist. **Terraform is never run by GitHub
-  workflows** — no CI/Deploy/Release job and no `promote.sh` sync touches
-  `terraform/` (`DEVOPS.md` §10.4); prod apply happens manually from the CLI.
+  table are prefixed, so both can coexist. **Terraform runs via GitHub
+  Actions** — `.github/workflows/terraform.yml` (identical in both repos) plans
+  on any change to `terraform/**` and applies only on manual `workflow_dispatch`
+  (OIDC, `AWS_ROLE_ARN` + `AWS_REGION` repo vars); prod is the operational repo.
