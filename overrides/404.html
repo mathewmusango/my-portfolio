@@ -64,8 +64,8 @@
   <h1>404 — Resource Not Found</h1>
   <p>The page you're looking for doesn't exist. Everything else is operating normally.</p>
   <p>
-    <a href="{{ base_url }}" class="md-button md-button--primary">Home</a>
-    <a href="mailto:musangomathew@gmail.com" class="md-button">Contact Me</a>
+    <a href="{{ base_url }}" class="md-button md-button--primary"><span>Home</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:1.1em;height:1.1em;vertical-align:-0.2em" aria-hidden="true"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></a>
+    <a href="mailto:musangomathew@gmail.com" class="md-button md-button--primary"><span>Contact Me</span> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" style="width:1.1em;height:1.1em;vertical-align:-0.2em" aria-hidden="true"><path d="M2 21 23 12 2 3v7l15 2-15 2z"/></svg></a>
   </p>
 </div>
 
@@ -176,8 +176,14 @@
     document.querySelector("h1").textContent = t.title;
     document.querySelector(".error-404 > p").textContent = t.body;
     var btns = document.querySelectorAll(".error-404 .md-button");
-    if (btns[0]) btns[0].textContent = t.home;
-    if (btns[1]) btns[1].textContent = t.contact;
+    if (btns[0]) {
+      var label = btns[0].querySelector("span");
+      if (label) label.textContent = t.home;
+    }
+    if (btns[1]) {
+      var label2 = btns[1].querySelector("span");
+      if (label2) label2.textContent = t.contact;
+    }
     document.title = t.title;
     var svg = document.querySelector(".error-404__art");
     if (svg) svg.setAttribute("aria-label", t.aria);

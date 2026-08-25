@@ -11,10 +11,10 @@ Selected projects across cloud, observability, security, and platform engineerin
 
 <div class="proj-index" markdown>
 
-- [Cloud & Migrations](cloud-migrations.md) — enterprise migration to AWS with a real DR story
-- [Observability & Monitoring](observability.md) — unified metrics, logs, and traces across 200+ servers
-- [Security & Resilience](security-resilience.md) — PCI-DSS compliance, hardening, and tested disaster recovery
-- [Platform Engineering](platform-engineering.md) — production Kubernetes platform and a DevSecOps delivery pipeline
-- [Knowledge & Collaboration](knowledge-collaboration.md) — an enterprise collaboration platform people actually adopt
+- [Cloud & Migrations](cloud-migrations.md) — enterprise migration to AWS with a real DR story.
+- [Observability & Monitoring](observability.md) — unified metrics, logs, and traces across 200+ servers.
+- [Security & Resilience](security-resilience.md) — PCI-DSS compliance, hardening, and tested disaster recovery.
+- [Platform Engineering](platform-engineering.md) — production Kubernetes platform and a DevSecOps delivery pipeline.
+- [Knowledge & Collaboration](knowledge-collaboration.md) — an enterprise collaboration platform people actually adopt.
 
 </div>

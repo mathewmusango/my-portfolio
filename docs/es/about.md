@@ -39,7 +39,7 @@ icon: material/account
     ---
 
     Inglés – Dominio completo<br>
-    Suajili – Nativo/Fluido
+    Suajili – Nativo/Fluido.
 
 </div>
 

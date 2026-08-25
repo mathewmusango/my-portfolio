@@ -27,7 +27,7 @@ icon: material/home
 
 Hola, soy un Gerente de Ingeniería de Plataformas e Ingeniero de Infraestructura de Nairobi, Kenia, con más de 10 años de experiencia transformando infraestructura compleja en sistemas fáciles de usar.
 
-[Conoce más sobre mí](about.md){ .md-button .md-button--primary }
+[Conoce más sobre mí :material-account:](about.md){ .md-button .md-button--primary }
 
 ## Proyecto Destacado
 
@@ -37,13 +37,12 @@ Hola, soy un Gerente de Ingeniería de Plataformas e Ingeniero de Infraestructur
 
 Responsable de migrar la infraestructura de clientes a AWS, incluyendo el diseño e implementación de una arquitectura de nube escalable y segura.
 
-[Ver todos los proyectos](projects/){ .md-button .md-button--primary }
+[Ver todos los proyectos :material-rocket-launch:](projects/){ .md-button .md-button--primary }
 
 ## Conecta conmigo
 
 Disponible para conversar sobre Ingeniería de Plataformas, Arquitectura de Nube y roles de DevOps.
 
-[Contáctame](mailto:musangomathew@gmail.com){ .md-button }
-[Conecta por LinkedIn](https://www.linkedin.com/in/mathew-musango/){ .md-button .md-button--primary target="_blank" rel="noopener" }
+[Contáctame :material-send:](contact.md){ .md-button .md-button--primary }
 
 ---

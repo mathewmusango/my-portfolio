@@ -118,6 +118,7 @@ markdown_extensions:
   - abbr
   - admonition
   - attr_list
+  - def_list
   - footnotes
   - md_in_html
   - pymdownx.details
@@ -135,6 +136,8 @@ markdown_extensions:
           format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.snippets:
       base_path: docs
+      auto_append:
+        - includes/abbreviations.md
   - pymdownx.tabbed
   - toc:
       permalink: true
@@ -198,6 +201,10 @@ plugins:
   - tags
   - git-revision-date-localized:
       enable_creation_date: true
+      # Snippet fragments (inlined via pymdownx.snippets) are not pages and
+      # have no meaningful revision date — exclude to keep the strict build quiet.
+      exclude:
+        - includes/*
   - git-committers:
       repository: mathewmusango/my-portfolio
       branch: main
@@ -224,6 +231,9 @@ extra_javascript:
   - javascripts/hero-lightbox.js
   - assets/js/pdf.min.js
   - javascripts/pdf-viewer.js
+  - assets/js/tablesort.min.js
+  - assets/js/tablesort.dotsep.min.js
+  - javascripts/tablesort.js
   - assets/javascripts/mermaid.min.js
   - javascripts/diagram-zoom.js
 

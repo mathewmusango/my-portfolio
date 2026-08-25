@@ -46,7 +46,7 @@ icon: material/account
     ---
 
     English – Fully Proficient<br>
-    Swahili – Native/Fluent
+    Swahili – Native/Fluent.
 
 </div>
 

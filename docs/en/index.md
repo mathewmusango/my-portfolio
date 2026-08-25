@@ -27,7 +27,7 @@ icon: material/home
 
 Hello, I am a Platform Engineering Manager & Infrastructure Engineer from Nairobi, Kenya with more than 10 years of experience in building complex infrastructure into easy-to-use systems.
 
-[Learn More About Me](about.md){ .md-button .md-button--primary }
+[Learn More About Me :material-account:](about.md){ .md-button .md-button--primary }
 
 ## Featured Project
 
@@ -37,13 +37,12 @@ Hello, I am a Platform Engineering Manager & Infrastructure Engineer from Nairob
 
 Responsible for migrating client infra to AWS, including design and implementation of scalable &amp; secure cloud architecture.
 
-[View all projects](projects/){ .md-button .md-button--primary }
+[View all projects :material-rocket-launch:](projects/){ .md-button .md-button--primary }
 
 ## Connect with me
 
 Available for discussions on Platform Engineering, Cloud Architecture &amp; DevOps roles.
 
-[Contact Me](mailto:musangomathew@gmail.com){ .md-button }
-[Connect via LinkedIn](https://www.linkedin.com/in/mathew-musango/){ .md-button .md-button--primary target="_blank" rel="noopener" }
+[Contact Me :material-send:](contact.md){ .md-button .md-button--primary }
 
 ---

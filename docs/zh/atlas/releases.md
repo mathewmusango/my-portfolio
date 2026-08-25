@@ -4,9 +4,12 @@ icon: material/timeline-clock
 
 # 版本时间线 {#release-timeline}
 
+[查看所有发布 :material-rocket-launch:](https://github.com/mathewmusango/my-portfolio/releases){ .md-button .md-button--primary }
+
 | 版本 | 日期 | 亮点 | 链接 |
 |---|---|---|---|
-| [2.3.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.3.0) | 2026-08-22 | 导航标签页、自定义面包屑、站点指标仪表板、追踪 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.3.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.3.0/sbom.cdx.json) |
+| [2.5.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.5.0) | 2026-08-25 | 词汇表悬停提示、可排序版本时间线、首页 CTA 按钮、错误页面按钮 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.5.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.5.0/sbom.cdx.json) |
+| [2.4.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.4.0) | 2026-08-25 | 站点结构页面（mermaid 站点图）、站点图谱子菜单、面包屑、字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.4.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.4.0/sbom.cdx.json) |
 | [2.2.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.2.0) | 2026-08-21 | i18n 文件夹结构、本地化错误页面、真实证书徽标、JS/CSS 压缩、自托管字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.2.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.2.0/sbom.cdx.json) |
 | [2.1.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.1.0) | 2026-08-13 | 中文（简体）本地化、中文简历 PDF | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.1.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.1.0/sbom.cdx.json) |
 | [2.0.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.0.0) | 2026-08-13 | 完整西班牙语本地化、多语言简历、内容更新、新字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.0.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.0.0/sbom.cdx.json) |

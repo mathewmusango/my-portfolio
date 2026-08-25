@@ -11,6 +11,19 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [2.5.0] - 2026-08-25
+
+### Added
+- **Glossary tooltips**: technical acronyms (AWS, PCI-DSS, CI/CD, LCP, INP, CLS, SBOM, …) now show a hover tooltip with their meaning — site-wide, in all three languages.
+
+### Changed
+- **Release Timeline**: now sortable by version (dot-aware ordering) via a self-hosted tablesort, plus a primary "View all releases" button.
+- **Home CTAs**: "Contact Me" is a primary button linking to the Contact page, the home buttons gained icons, and the redundant "Connect via LinkedIn" button was removed.
+- **Error pages**: the 404 and 500 "Home" / "Contact Me" buttons are now primary with white icons, matching the home page.
+
+### Fixed
+- Punctuation: the About languages line and the Projects index descriptions now end with a period in all three languages.
+
 ## [2.4.0] - 2026-08-25
 
 ### Added

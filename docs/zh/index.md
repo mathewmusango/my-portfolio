@@ -27,7 +27,7 @@ icon: material/home
 
 你好，我是一名平台工程经理兼基础设施工程师，来自肯尼亚内罗毕，拥有超过10年将复杂基础设施转化为易用系统的经验。
 
-[了解更多关于我](about.md){ .md-button .md-button--primary }
+[了解更多关于我 :material-account:](about.md){ .md-button .md-button--primary }
 
 ## 重点项目
 
@@ -37,13 +37,12 @@ icon: material/home
 
 负责将客户基础设施迁移至 AWS，包括可扩展且安全的云架构的设计与实施。
 
-[查看所有项目](projects/){ .md-button .md-button--primary }
+[查看所有项目 :material-rocket-launch:](projects/){ .md-button .md-button--primary }
 
 ## 与我联系
 
 欢迎讨论平台工程、云架构与 DevOps 相关职位。
 
-[联系我](mailto:musangomathew@gmail.com){ .md-button }
-[通过 LinkedIn 联系](https://www.linkedin.com/in/mathew-musango/){ .md-button .md-button--primary target="_blank" rel="noopener" }
+[联系我 :material-send:](contact.md){ .md-button .md-button--primary }
 
 ---
