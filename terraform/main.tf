@@ -73,14 +73,14 @@ resource "aws_vpc_endpoint" "metrics_dynamodb" {
 }
 
 resource "aws_vpc_endpoint" "metrics_logs" {
-  count                = var.enable_vpc ? 1 : 0
-  vpc_id               = aws_vpc.metrics[0].id
-  service_name         = "com.amazonaws.${var.aws_region}.logs"
-  vpc_endpoint_type    = "Interface"
-  subnet_ids           = aws_subnet.metrics[*].id
-  security_group_ids   = [aws_security_group.metrics_lambda[0].id]
-  private_dns_enabled  = true
-  tags                 = var.tags
+  count               = var.enable_vpc ? 1 : 0
+  vpc_id              = aws_vpc.metrics[0].id
+  service_name        = "com.amazonaws.${var.aws_region}.logs"
+  vpc_endpoint_type   = "Interface"
+  subnet_ids          = aws_subnet.metrics[*].id
+  security_group_ids  = [aws_security_group.metrics_lambda[0].id]
+  private_dns_enabled = true
+  tags                = var.tags
 }
 
 # ---------------------------------------------------------------------------
@@ -228,8 +228,8 @@ resource "aws_iam_role_policy" "lambda_reader_dynamodb" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["dynamodb:Scan", "dynamodb:Query"]
+      Effect = "Allow"
+      Action = ["dynamodb:Scan", "dynamodb:Query"]
       Resource = [
         aws_dynamodb_table.metrics.arn,
         "${aws_dynamodb_table.metrics.arn}/index/*",
