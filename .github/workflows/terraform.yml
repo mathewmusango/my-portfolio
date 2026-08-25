@@ -40,8 +40,11 @@ jobs:
           REGION: ${{ secrets.AWS_REGION }}
         run: |
           TOKEN="$(curl -s -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | python3 -c 'import sys,json; print(json.load(sys.stdin)["value"])')"
-          printf '%s' "${TOKEN}" | cut -d. -f2 | python3 -c 'import sys,base64,json; p=sys.stdin.read().strip(); p+="="*(-len(p)%4); print("CLAIMS:", json.dumps(json.loads(base64.b64decode(p)), indent=2))'
-          python3 -c "import os; r=os.environ['ROLE_ARN']; print('ROLE_ARN len:', len(r)); print('ROLE_ARN tail:', repr(r[-25:])); print('REGION:', repr(os.environ['REGION']))"
+          CLAIMS="$(printf '%s' "${TOKEN}" | cut -d. -f2 | python3 -c 'import sys,base64,json; p=sys.stdin.read().strip(); p+="="*(-len(p)%4); print(json.dumps(json.loads(base64.b64decode(p))))')"
+          echo "::error::OIDC_CLAIMS=${CLAIMS}"
+          echo "::error::ROLE_ARN_LEN=$(python3 -c "import os; print(len(os.environ['ROLE_ARN']))")"
+          echo "::error::ROLE_ARN_TAIL=$(python3 -c "import os; print(repr(os.environ['ROLE_ARN'][-25:]))")"
+          echo "::error::REGION=$(python3 -c "import os; print(repr(os.environ['REGION']))")"
 
       - uses: hashicorp/setup-terraform@v4
         with:
