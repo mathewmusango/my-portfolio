@@ -1,5 +1,9 @@
 ---
 icon: material/account-group
+tags:
+  - Collaboration
+  - Knowledge
+  - Adoption
 ---
 
 # 知识与协作

@@ -26,6 +26,11 @@ nav:
       - Resume: resume.md
       - Contact: contact.md
   - Site Metrics: metrics/index.md
+  - Site Atlas:
+      - Site Atlas: atlas/index.md
+      - Release Timeline: atlas/releases.md
+      - Tags: atlas/tags.md
+      - Site Structure: atlas/structure.md
 
 theme:
   name: material
@@ -36,6 +41,33 @@ theme:
   icon:
     repo: fontawesome/brands/git-alt
     alternate: material/earth
+    tag:
+      aws: fontawesome/brands/aws
+      migration: material/cloud-arrow-up
+      cloud: material/cloud
+      security: material/shield-lock
+      vpn: material/network
+      dr: material/backup-restore
+      observability: material/chart-line
+      monitoring: material/monitor
+      metrics: material/counter
+      logging: material/console-line
+      tracing: material/vector-line
+      devsecops: material/security
+      pci-dss: material/credit-card-lock
+      hardening: material/shield-lock-outline
+      compliance: material/clipboard-check
+      platform-engineering: material/view-dashboard
+      kubernetes: material/kubernetes
+      ci-cd: material/source-pull
+      gitops: material/git
+      collaboration: material/account-group
+      knowledge: material/book-open-page-variant
+      adoption: material/account-heart
+      certifications: material/certificate-outline
+      linux: fontawesome/brands/linux
+      google: fontawesome/brands/google
+      automation: material/lightning-bolt
   font:
     text: Inter
     code: Roboto Mono
@@ -45,12 +77,12 @@ theme:
     - navigation.footer
     - navigation.indexes
     - navigation.path
-    - navigation.prune
     - navigation.top
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.tracking
     - search.highlight
+    - search.share
     - search.suggest
     - toc.follow
 
@@ -96,7 +128,11 @@ markdown_extensions:
       repo_url_shorthand: true
       user: mathewmusango
       repo: my-portfolio
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.snippets:
       base_path: docs
   - pymdownx.tabbed
@@ -123,6 +159,10 @@ plugins:
             Resume: Currículum
             Contact: Contacto
             Site Metrics: Métricas del sitio
+            Site Atlas: Atlas del sitio
+            Site Structure: Estructura del Sitio
+            Release Timeline: Cronología de Versiones
+            Tags: Etiquetas
             Cloud & Migrations: Nube y Migraciones
             Observability & Monitoring: Observabilidad y Monitoreo
             Security & Resilience: Seguridad y Resiliencia
@@ -140,6 +180,10 @@ plugins:
             Resume: 简历
             Contact: 联系我
             Site Metrics: 站点指标
+            Site Atlas: 站点图谱
+            Site Structure: 站点结构
+            Release Timeline: 版本时间线
+            Tags: 标签
             Cloud & Migrations: 云与迁移
             Observability & Monitoring: 可观测性与监控
             Security & Resilience: 安全与弹性
@@ -147,6 +191,11 @@ plugins:
             Knowledge & Collaboration: 知识与协作
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      lang:
+        - en
+        - es
+        - zh
+  - tags
   - git-revision-date-localized:
       enable_creation_date: true
   - git-committers:
@@ -175,10 +224,40 @@ extra_javascript:
   - javascripts/hero-lightbox.js
   - assets/js/pdf.min.js
   - javascripts/pdf-viewer.js
+  - assets/javascripts/mermaid.min.js
+  - javascripts/diagram-zoom.js
 
 extra:
   # Hide the "Made with Material for MkDocs" footer badge.
   generator: false
+  # Tag identifiers → icons (see theme.icon.tag).
+  tags:
+    AWS: aws
+    Migration: migration
+    Cloud: cloud
+    Security: security
+    VPN: vpn
+    DR: dr
+    Observability: observability
+    Monitoring: monitoring
+    Metrics: metrics
+    Logging: logging
+    Tracing: tracing
+    DevSecOps: devsecops
+    PCI-DSS: pci-dss
+    Hardening: hardening
+    Compliance: compliance
+    Platform Engineering: platform-engineering
+    Kubernetes: kubernetes
+    CI/CD: ci-cd
+    GitOps: gitops
+    Collaboration: collaboration
+    Knowledge: knowledge
+    Adoption: adoption
+    Certifications: certifications
+    Linux: linux
+    Google: google
+    Automation: automation
   social:
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/mathew-musango/

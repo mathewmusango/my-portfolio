@@ -1,5 +1,11 @@
 ---
 icon: material/chart-line
+tags:
+  - Observability
+  - Monitoring
+  - Metrics
+  - Logging
+  - Tracing
 ---
 
 # Observabilidad y Monitoreo

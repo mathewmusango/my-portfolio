@@ -5,8 +5,11 @@
   ancestors-only path.
 
   Ancestors whose leaf URL equals the homepage URL (the top-level "Home"
-  section, which drills down to index.md) are skipped so we never get the
-  duplicate "Home Home" crumb.
+  section, which drills down to index.md) or the current page's URL (the
+  section root, e.g. the Site Atlas landing) are skipped. The "Home" crumb
+  renders only for pages under the Home section — Site Atlas / Site Metrics
+  start at their own tab. Tab roots (Home, Site Metrics, Site Atlas) render a
+  single self-named crumb.
 -#}
 {% import "partials/path-item.html" as item with context %}
 
@@ -30,14 +33,20 @@
 {% if nav.homepage %}
   {% set depth = depth + 1 %}
 {% endif %}
-{% if depth > 1 and page != nav.homepage %}
+{% if depth > 0 %}
+  {% set ns = namespace(under_home = false) %}
+  {% for nav_item in page.ancestors %}
+    {% if leaf_url(nav_item) == nav.homepage.url %}
+      {% set ns.under_home = true %}
+    {% endif %}
+  {% endfor %}
   <nav class="md-path" aria-label="{{ lang.t('nav') }}" {{ hidden }}>
     <ol class="md-path__list">
-      {% if nav.homepage %}
+      {% if nav.homepage and ns.under_home and page != nav.homepage %}
         {{ item.render(nav.homepage) }}
       {% endif %}
       {% for nav_item in page.ancestors | reverse %}
-        {% if leaf_url(nav_item) != nav.homepage.url %}
+        {% if leaf_url(nav_item) != nav.homepage.url and leaf_url(nav_item) != page.url %}
           {{ item.render(nav_item) }}
         {% endif %}
       {% endfor %}

@@ -14,6 +14,24 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.05rem;
 }
 
+/* Beautiful line breaks — site-wide reading typography.
+   Headings: balance wraps into even lines (no lonely 1-2 word last line).
+   Body text: pretty wrapping removes orphaned single words on the last line. */
+.md-typeset h1,
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  text-wrap: balance;
+}
+
+.md-typeset p,
+.md-typeset li,
+.md-typeset dd {
+  text-wrap: pretty;
+}
+
 /* Light-gray page background, like the reference template */
 [data-md-color-scheme="default"] {
   --md-default-bg-color: #f8f9fa;
@@ -508,6 +526,80 @@ details.cert-acc .cert-grid {
 .cert-modal {
   width: min(92vw, 580px);
   height: min(80vh, 660px);
+}
+
+/* Site Structure page — inline diagram with zoom */
+.diagram-zoom__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.diagram-zoom__toolbar button {
+  min-width: 2rem;
+  padding: 0.2rem 0.55rem;
+  border: none;
+  border-radius: 6px;
+  background: var(--md-primary-fg-color);
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.diagram-zoom__toolbar button:hover {
+  background: var(--md-primary-fg-color--dark);
+}
+
+.diagram-zoom__level {
+  min-width: 3.2rem;
+  text-align: center;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-default-fg-color--light);
+}
+
+.diagram-zoom__viewport {
+  overflow: auto;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+  background: var(--md-default-bg-color);
+}
+
+.diagram-zoom__viewport .mermaid {
+  transform-origin: top left;
+}
+
+/* Hover preview card for linked diagram nodes */
+.diagram-zoom__preview {
+  position: fixed;
+  z-index: 60;
+  max-width: 260px;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 6px;
+  background: var(--md-default-bg-color);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  pointer-events: none;
+}
+
+.diagram-zoom__preview strong {
+  display: block;
+  color: var(--md-default-fg-color);
+}
+
+.diagram-zoom__preview span {
+  display: block;
+  color: var(--md-default-fg-color--light);
+  word-break: break-all;
+}
+
+.diagram-zoom__error {
+  color: var(--md-default-fg-color--light);
+  font-size: 0.9rem;
 }
 
 /* Home page hero — no background panel */

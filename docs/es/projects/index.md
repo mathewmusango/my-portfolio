@@ -6,6 +6,9 @@ icon: material/rocket-launch
 
 Proyectos seleccionados en nube, observabilidad, seguridad e ingeniería de plataformas.
 
+!!! note
+    Cada proyecto enlaza a una página dedicada que cubre el desafío, la arquitectura y las lecciones aprendidas — con historias reales de producción.
+
 <div class="proj-index" markdown>
 
 - [Nube y Migraciones](cloud-migrations.md) — migración empresarial a AWS con una historia real de DR

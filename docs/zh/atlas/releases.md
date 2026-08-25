@@ -1,11 +1,12 @@
-# 站点历史
+---
+icon: material/timeline-clock
+---
 
-本网站以小型、版本驱动的方式迭代。每个版本都会被标记并发布，附带其源代码归档和软件物料清单（SBOM），完整的按版本说明见[更新日志](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md)。
-
-## 版本时间线
+# 版本时间线 {#release-timeline}
 
 | 版本 | 日期 | 亮点 | 链接 |
 |---|---|---|---|
+| [2.3.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.3.0) | 2026-08-22 | 导航标签页、自定义面包屑、站点指标仪表板、追踪 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.3.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.3.0/sbom.cdx.json) |
 | [2.2.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.2.0) | 2026-08-21 | i18n 文件夹结构、本地化错误页面、真实证书徽标、JS/CSS 压缩、自托管字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.2.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.2.0/sbom.cdx.json) |
 | [2.1.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.1.0) | 2026-08-13 | 中文（简体）本地化、中文简历 PDF | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.1.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.1.0/sbom.cdx.json) |
 | [2.0.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.0.0) | 2026-08-13 | 完整西班牙语本地化、多语言简历、内容更新、新字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.0.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.0.0/sbom.cdx.json) |

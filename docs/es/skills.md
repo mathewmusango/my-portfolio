@@ -1,5 +1,13 @@
 ---
 icon: material/tools
+tags:
+  - Platform Engineering
+  - Cloud
+  - Kubernetes
+  - DevSecOps
+  - Observability
+  - Automation
+  - Security
 ---
 
 # Competencias Técnicas

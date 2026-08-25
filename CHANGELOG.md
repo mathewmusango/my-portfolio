@@ -11,6 +11,18 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [2.4.0] - 2026-08-25
+
+### Added
+- **Site Structure page** (Site Atlas menu, trilingual): interactive mermaid site-map — self-rendered with the site theme (light/dark aware), node labels localized per language, hover preview cards, clickable nodes that open pages in a new tab, and inline zoom controls.
+- **Site Atlas submenu**: the single page split into a landing (intro + The Repository), Release Timeline, and Tags index — a collapsible menu like Home.
+- **Mermaid self-hosted** (mermaid@11.17.1) — diagrams render without runtime CDN requests.
+
+### Changed
+- **Breadcrumbs**: each tab root shows its own name; the Home crumb appears only for Home-section pages; tab-root duplicates removed (no more "Site Atlas › Site Atlas").
+- **Typography**: balanced heading line breaks and no orphaned body words site-wide.
+- Site Structure URL moved under `/atlas/structure/` (folder-style, like Tags).
+
 ## [2.3.0] - 2026-08-22
 
 ### Added

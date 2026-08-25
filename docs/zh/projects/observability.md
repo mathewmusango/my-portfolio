@@ -1,5 +1,11 @@
 ---
 icon: material/chart-line
+tags:
+  - Observability
+  - Monitoring
+  - Metrics
+  - Logging
+  - Tracing
 ---
 
 # 可观测性与监控

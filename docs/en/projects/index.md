@@ -6,6 +6,9 @@ icon: material/rocket-launch
 
 Selected projects across cloud, observability, security, and platform engineering.
 
+!!! note
+    Each project links to a dedicated page covering the challenge, the architecture, and the lessons learned — with real stories from production.
+
 <div class="proj-index" markdown>
 
 - [Cloud & Migrations](cloud-migrations.md) — enterprise migration to AWS with a real DR story
