@@ -14,8 +14,16 @@ locals {
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
-  # GitHub's OIDC signing key thumbprint (published; the console auto-fetches it).
-  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+  # GitHub's OIDC signing certificate thumbprints (SHA-1 of the DER certs from
+  # https://token.actions.githubusercontent.com/.well-known/jwks). GitHub rotates
+  # these keys — keep the original AND the current ones; a stale list makes STS
+  # deny the assume with "Not authorized to perform sts:AssumeRoleWithWebIdentity".
+  thumbprint_list = [
+    "6938fd4d98bab03faadb97b34396831e3780aea1",  # original GitHub OIDC key
+    "ca435a638a8cfed6b89364e064e08460b91c6250",  # current GitHub OIDC key
+    "38e9b30b3a023a1b72309921a69a42fcc496c42c",  # current GitHub OIDC key
+    "4f3e9ad8c9a6f5eb3173006f4fa630e28f43dce9",  # current GitHub OIDC key
+  ]
 }
 
 # ---------------------------------------------------------------------------
