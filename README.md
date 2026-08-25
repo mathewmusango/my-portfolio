@@ -1,6 +1,8 @@
 # Mathew Musango Peter
 
-Personal cloud-resume site for **Mathew Musango Peter** — Platform Engineering & Infrastructure Leader.
+[![Mathew Musango Peter - Portfolio](https://img.shields.io/badge/Mathew_Musango_Peter_--_Portfolio-00897b?style=for-the-badge)](https://mathewmusango.github.io/my-portfolio/)
+
+Personal portfolio site for **Mathew Musango Peter** — Platform Engineering & Infrastructure Leader.
 Built with **MkDocs + Material for MkDocs**, dark-teal theme.
 
 Live: <https://mathewmusango.github.io/my-portfolio/>
