@@ -43,9 +43,10 @@ No stored secrets are required — workflows use the auto-scoped `GITHUB_TOKEN`.
 
 The site's visitor-analytics backend is real AWS infrastructure, defined with **Terraform**:
 
-- **CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB**, with a private VPC
-  for the functions (no internet path — only VPC endpoints), a WAF that allows
-  only the site's origin, and least-privilege IAM (separate writer/reader roles).
+- **CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB** — **Free-Tier by
+  default**: least-privilege IAM (separate writer/reader roles) and a Lambda
+  origin gate (403 for non-site requests). WAF + a private VPC are opt-in
+  (~$14/mo combined) behind `enable_waf`/`enable_vpc`.
 - The Terraform definitions live in this repository (`terraform/`), applied via
   GitHub Actions using OIDC — planned on every change, applied on manual
   dispatch only. No state or secrets are ever committed; state lives in a
