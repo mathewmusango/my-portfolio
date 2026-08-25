@@ -1,0 +1,60 @@
+name: Terraform
+
+# Plans automatically whenever terraform/ changes (push to main); applies only
+# on manual workflow_dispatch with action=apply — a blind auto-apply is how
+# stacks get destroyed. Uses OIDC (no secrets): the repo needs the variables
+# AWS_ROLE_ARN + AWS_REGION (see DEVOPS §7.1 / terraform/ci).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Plan or apply (apply is destructive — review the plan first)"
+        required: true
+        default: "plan"
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.15.9"
+
+      - name: Assume AWS role (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Init (S3 backend — shared state with local dev)
+        run: terraform init -input=false
+
+      - name: Validate
+        run: terraform validate
+
+      - name: Plan (prod)
+        run: |
+          terraform plan -input=false -no-color -out=tf.plan \
+            -var environment=prod \
+            -var allowed_origin=https://mathewmusango.github.io
+
+      - name: Apply (manual dispatch only)
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+        run: terraform apply -input=false -no-color tf.plan

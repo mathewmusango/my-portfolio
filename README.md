@@ -39,6 +39,18 @@ DevOps/SRE documentation (`DEVOPS.md`).
 
 No stored secrets are required — workflows use the auto-scoped `GITHUB_TOKEN`.
 
+## Infrastructure as Code (Terraform)
+
+The site's visitor-analytics backend is real AWS infrastructure, defined with **Terraform**:
+
+- **CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB**, with a private VPC
+  for the functions (no internet path — only VPC endpoints), a WAF that allows
+  only the site's origin, and least-privilege IAM (separate writer/reader roles).
+- The Terraform definitions live in this repository (`terraform/`), applied via
+  GitHub Actions using OIDC — planned on every change, applied on manual
+  dispatch only. No state or secrets are ever committed; state lives in a
+  private S3 backend with DynamoDB locking.
+
 ## Security
 
 - See [SECURITY.md](SECURITY.md) for the vulnerability reporting policy.
