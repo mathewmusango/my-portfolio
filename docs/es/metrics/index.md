@@ -1,10 +1,12 @@
 ---
 icon: material/chart-line
+hide:
+  - toc
 ---
 
 # Métricas del sitio
 
-Este sitio se construye y opera como las plataformas que diseño: contenido con control de versiones, compilaciones automatizadas y verificaciones estrictas antes de publicar nada. Esta página es su panel de instrumentos: qué contiene, cómo se entrega y qué se mide. Hoy no se incluyen scripts de seguimiento, así que cada cifra aquí es un hecho, no una suposición.
+Este sitio se construye y opera como una plataforma de producción — contenido con control de versiones, compilaciones automatizadas y verificaciones estrictas antes de publicar nada. Esta página es su panel de instrumentos: qué contiene, cómo se entrega y qué se mide. La única instrumentación en tiempo de ejecución es un beacon de primera parte y centrado en la privacidad que envía solo la ruta de la página y el idioma — cada cifra aquí es un hecho, no una suposición.
 
 <div class="metrics-grid" markdown>
 
@@ -12,7 +14,7 @@ Este sitio se construye y opera como las plataformas que diseño: contenido con 
 
 ### :material-file-document: Páginas
 
-**16**
+**{{pages_total}}**
 
 por idioma, totalmente trilingüe
 
@@ -32,7 +34,7 @@ Inglés · Español · 中文
 
 ### :material-update: Última actualización
 
-**Ago 2026**
+**{{last_updated}}**
 
 el contenido se publica con cada release
 
@@ -44,80 +46,14 @@ el contenido se publica con cada release
 
 **Automatizada**
 
-GitHub Actions · build estricto · SBOM
+GitHub Actions · build estricto · SBOM · Terraform IaC
 
 </div>
 
 </div>
 
-## Dónde vive el contenido
+## Datos en vivo
 
-Dieciséis páginas por idioma, agrupadas por propósito.
+La analítica de visitas — vistas de página, idiomas y páginas principales, recopilada con privacidad — vive en su propia página.
 
-<div class="metrics-chart">
-
-<div class="metrics-bar">
-  <div class="metrics-bar__row">
-    <span class="metrics-bar__label">Perfil principal</span>
-    <span class="metrics-bar__value">6 páginas</span>
-  </div>
-  <div class="metrics-bar__track"><div class="metrics-bar__fill" style="width: 37.5%"></div></div>
-</div>
-
-<div class="metrics-bar">
-  <div class="metrics-bar__row">
-    <span class="metrics-bar__label">Proyectos</span>
-    <span class="metrics-bar__value">6 páginas</span>
-  </div>
-  <div class="metrics-bar__track"><div class="metrics-bar__fill" style="width: 37.5%"></div></div>
-</div>
-
-<div class="metrics-bar">
-  <div class="metrics-bar__row">
-    <span class="metrics-bar__label">Sitio y herramientas</span>
-    <span class="metrics-bar__value">4 páginas</span>
-  </div>
-  <div class="metrics-bar__track"><div class="metrics-bar__fill" style="width: 25%"></div></div>
-</div>
-
-</div>
-
-Perfil principal: sobre mí, experiencia, habilidades, certificaciones, currículum y contacto. Proyectos: el resumen y las cinco categorías en profundidad. Sitio y herramientas: inicio, historial, esta página y las páginas de error.
-
-## Qué se medirá a continuación
-
-El sitio se distribuye con privacidad por diseño: sin scripts de analítica ni rastreadores de terceros. Cuando la instrumentación entre en funcionamiento, los datos se publicarán aquí, agregados y sin datos personales.
-
-<div class="metrics-grid" markdown>
-
-<div class="metrics-stat" markdown>
-
-### :material-account-eye: Analítica de visitas
-
-Vistas de página, páginas principales y referentes, agregados y respetuosos con la privacidad.
-
-<span class="metrics-badge">Planificado</span>
-
-</div>
-
-<div class="metrics-stat" markdown>
-
-### :material-heart-pulse: Disponibilidad
-
-Comprobaciones de disponibilidad del sitio en vivo, reportadas como promedio móvil de 30 días.
-
-<span class="metrics-badge">Planificado</span>
-
-</div>
-
-<div class="metrics-stat" markdown>
-
-### :material-gauge: Rendimiento
-
-Core Web Vitals — LCP, INP, CLS — medidos en cada release.
-
-<span class="metrics-badge">Planificado</span>
-
-</div>
-
-</div>
+[Ver análisis de visitas :material-account-eye:](analytics/){ .md-button .md-button--primary }

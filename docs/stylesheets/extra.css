@@ -53,6 +53,23 @@ h1, h2, h3, h4 {
   padding: 0.5rem 0;
 }
 
+.md-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* Footer page-visits counter (footer-visits.js) */
+.page-visits {
+  font-size: 0.8rem;
+  color: var(--md-footer-fg-color--light);
+  white-space: nowrap;
+}
+
+.page-visits[hidden] {
+  display: none;
+}
+
 .md-footer-connect {
   display: flex;
   align-items: center;
@@ -1968,9 +1985,15 @@ body.hero-lightbox-open {
 /* ------------------------------------------------------------------ */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
   margin: 1.2rem 0 1rem;
+}
+
+@media (max-width: 640px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .metrics-stat {
@@ -2075,4 +2098,265 @@ body.hero-lightbox-open {
   color: #80cbc4;
   border-color: rgba(128, 203, 196, 0.4);
   background: rgba(128, 203, 196, 0.08);
+}
+
+/* "Live" status badge — filled teal pill */
+.metrics-badge--live {
+  color: #fff;
+  background: var(--md-primary-fg-color);
+  border-color: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .metrics-badge--live {
+  color: #00332d;
+  background: #80cbc4;
+  border-color: #80cbc4;
+}
+
+/* Live totals block (filled by metrics-live.js from GET /summary) */
+.metrics-live {
+  margin-top: 0.7rem;
+  padding-top: 0.55rem;
+  border-top: 1px dashed var(--md-default-fg-color--lightest);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  color: var(--md-default-fg-color--light);
+}
+
+.metrics-live[hidden] {
+  display: none;
+}
+
+.metrics-live b {
+  color: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .metrics-live b {
+  color: #80cbc4;
+}
+
+.metrics-live ul {
+  margin: 0.2rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.metrics-live li {
+  font-size: 0.75rem;
+}
+
+/* Live dashboard — stat chips + top-pages bars */
+.metrics-live__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
+  gap: 0.5rem;
+  margin: 0.6rem 0 0.8rem;
+}
+
+.metrics-live__stat {
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem 0.45rem;
+  text-align: center;
+}
+
+.metrics-live__stat b {
+  display: block;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .metrics-live__stat b {
+  color: #80cbc4;
+}
+
+.metrics-live__stat span {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--md-default-fg-color--light);
+}
+
+.metrics-live__label {
+  margin: 0.2rem 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--md-default-fg-color--light);
+}
+
+.metrics-live__bar {
+  margin-bottom: 0.6rem;
+}
+
+/* Analytics page — full-width metric rows (page views / geo / uptime / performance) */
+.metrics-stack .metrics-stat {
+  margin-bottom: 1rem;
+}
+
+.metrics-live__cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
+  margin-top: 0.4rem;
+}
+
+@media (max-width: 720px) {
+  .metrics-live__cols {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Pie charts (conic-gradient) + legend */
+.metrics-pie-wrap {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+}
+
+.metrics-pie {
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  box-shadow: inset 0 0 0 0.35rem var(--md-default-bg-color);
+}
+
+.metrics-pie-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.metrics-pie-legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.metrics-pie-legend__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.metrics-live__note {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  font-style: italic;
+  color: var(--md-default-fg-color--light);
+}
+
+/* Tags index — three-column layout (material/tags output inside .tags-grid) */
+.tags-grid {
+  column-count: 3;
+  column-gap: 2rem;
+}
+
+.tags-item {
+  break-inside: avoid;
+}
+
+.tags-item ul {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 960px) {
+  .tags-grid {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 720px) {
+  .tags-grid {
+    column-count: 1;
+  }
+}
+
+/* Geo access-point map (geo-map.js) */
+.metrics-geo-map {
+  margin-top: 0.5rem;
+}
+
+.metrics-geo-map__svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 10px;
+  background: rgba(0, 137, 123, 0.03);
+}
+
+.metrics-geo-map__dot--bg {
+  fill: var(--md-default-fg-color--lighter);
+  opacity: 0.45;
+}
+
+.metrics-geo-map__dot {
+  fill: var(--md-primary-fg-color);
+  stroke: var(--md-default-bg-color);
+  stroke-width: 1.2;
+}
+
+[data-md-color-scheme="slate"] .metrics-geo-map__dot {
+  fill: #80cbc4;
+}
+
+/* Visitors / vitals helpers (analytics page) */
+.pv-ratio {
+  display: flex;
+  height: 0.6rem;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.2rem;
+  background: var(--md-default-fg-color--lightest);
+}
+
+.pv-ratio__ret {
+  background: var(--md-primary-fg-color);
+  opacity: 0.45;
+}
+
+[data-md-color-scheme="slate"] .pv-ratio__ret {
+  background: #80cbc4;
+}
+
+.pv-vitals-head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-bottom: 0.15rem;
+}
+
+.pv-vitals-name {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--md-default-fg-color--light);
+}
+
+.pv-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.pv-dot--good {
+  background: #2e7d32;
+}
+
+.pv-dot--warn {
+  background: #f9a825;
 }

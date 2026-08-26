@@ -1,5 +1,7 @@
 ---
 icon: material/book-open-page-variant
+hide:
+  - toc
 ---
 
 # Site Atlas
