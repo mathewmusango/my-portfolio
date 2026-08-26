@@ -19,10 +19,10 @@ resource "aws_iam_openid_connect_provider" "github" {
   # these keys — keep the original AND the current ones; a stale list makes STS
   # deny the assume with "Not authorized to perform sts:AssumeRoleWithWebIdentity".
   thumbprint_list = [
-    "6938fd4d98bab03faadb97b34396831e3780aea1",  # original GitHub OIDC key
-    "ca435a638a8cfed6b89364e064e08460b91c6250",  # current GitHub OIDC key
-    "38e9b30b3a023a1b72309921a69a42fcc496c42c",  # current GitHub OIDC key
-    "4f3e9ad8c9a6f5eb3173006f4fa630e28f43dce9",  # current GitHub OIDC key
+    "6938fd4d98bab03faadb97b34396831e3780aea1", # original GitHub OIDC key
+    "ca435a638a8cfed6b89364e064e08460b91c6250", # current GitHub OIDC key
+    "38e9b30b3a023a1b72309921a69a42fcc496c42c", # current GitHub OIDC key
+    "4f3e9ad8c9a6f5eb3173006f4fa630e28f43dce9", # current GitHub OIDC key
   ]
 }
 
@@ -44,7 +44,10 @@ resource "aws_iam_role" "github_actions" {
         }
         StringLike = {
           "token.actions.githubusercontent.com:sub" : [
-            for repo in var.repos : "repo:${repo}:*"
+            # GitHub's sub claim includes node IDs since 2025:
+            #   repo:OWNER@<owner-id>/REPO@<repo-id>:ref:refs/heads/<branch>
+            # so each repo pattern wildcards both IDs with @*.
+            for repo in var.repos : "repo:${replace(repo, "/", "@*/")}@*:*"
           ]
         }
       }
