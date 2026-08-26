@@ -25,7 +25,9 @@ nav:
       - Certifications: certifications.md
       - Resume: resume.md
       - Contact: contact.md
-  - Site Metrics: metrics/index.md
+  - Site Metrics:
+      - Site Metrics: metrics/index.md
+      - Visitor Analytics: metrics/analytics.md
   - Site Atlas:
       - Site Atlas: atlas/index.md
       - Release Timeline: atlas/releases.md
@@ -110,6 +112,11 @@ extra_css:
 exclude_docs: |
   includes/*
 
+# Build hook — keeps the Site Metrics page counts computed at build time
+# (scripts/site_metrics_hook.py replaces {{pages_*}}/{{pct_*}} tokens).
+hooks:
+  - scripts/site_metrics_hook.py
+
 # Custom error pages are built but intentionally not in the nav
 not_in_nav: |
   500.md
@@ -162,6 +169,7 @@ plugins:
             Resume: Currículum
             Contact: Contacto
             Site Metrics: Métricas del sitio
+            Visitor Analytics: Análisis de visitas
             Site Atlas: Atlas del sitio
             Site Structure: Estructura del Sitio
             Release Timeline: Cronología de Versiones
@@ -183,6 +191,7 @@ plugins:
             Resume: 简历
             Contact: 联系我
             Site Metrics: 站点指标
+            Visitor Analytics: 访客分析
             Site Atlas: 站点图谱
             Site Structure: 站点结构
             Release Timeline: 版本时间线
@@ -218,6 +227,9 @@ plugins:
         - javascripts/cert-modal.js
         - javascripts/hero-lightbox.js
         - javascripts/pdf-viewer.js
+        - javascripts/geo-map.js
+        - javascripts/tags-grid.js
+        - javascripts/footer-visits.js
       css_files:
         - stylesheets/extra.css
   # Download external assets (Google Fonts) at build time and serve them locally,
@@ -236,8 +248,16 @@ extra_javascript:
   - javascripts/tablesort.js
   - assets/javascripts/mermaid.min.js
   - javascripts/diagram-zoom.js
+  - javascripts/metrics-beacon.js
+  - javascripts/geo-map.js
+  - javascripts/tags-grid.js
+  - javascripts/footer-visits.js
+  - javascripts/metrics-live.js
 
 extra:
+  # Site Metrics beacon endpoint — set via METRICS_ENDPOINT at build/serve time.
+  # Empty = beacon disabled (prod until the real stack deploys).
+  metrics_endpoint: !ENV [METRICS_ENDPOINT, ""]
   # Hide the "Made with Material for MkDocs" footer badge.
   generator: false
   # Tag identifiers → icons (see theme.icon.tag).

@@ -9,6 +9,11 @@
   <meta property="og:url" content="{{ page.canonical_url }}">
   <meta property="og:image" content="{{ config.site_url }}assets/img/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
+  <!-- Site Metrics beacon endpoint — set via METRICS_ENDPOINT at build time;
+       absent when unset, and the beacon then no-ops. -->
+  {% if config.extra.metrics_endpoint %}
+  <meta name="metrics-endpoint" content="{{ config.extra.metrics_endpoint }}">
+  {% endif %}
 {% endblock %}
 
 {% block footer %}
@@ -46,7 +51,10 @@
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid md-footer-bottom">
       <p class="md-footer-copyright">© 2026 Mathew Musango Peter</p>
-      <div class="md-footer-connect">
+      <div class="md-footer-right">
+        <span class="page-visits" id="page-visits" hidden></span>
+        <span class="md-footer-sep">|</span>
+        <div class="md-footer-connect">
         <a href="mailto:musangomathew@gmail.com" title="Email" aria-label="Email">{% include ".icons/fontawesome/solid/envelope.svg" %}</a>
         <a href="https://www.linkedin.com/in/mathew-musango/" target="_blank" rel="noopener" title="LinkedIn" aria-label="LinkedIn">{% include ".icons/fontawesome/brands/linkedin.svg" %}</a>
         <a href="https://github.com/mathewmusango" target="_blank" rel="noopener" title="GitHub" aria-label="GitHub">{% include ".icons/fontawesome/brands/github.svg" %}</a>
