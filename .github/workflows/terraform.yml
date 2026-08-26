@@ -33,9 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # TEMP debug — prints OIDC token claims + secret sanity; remove after diagnosis
-      - name: Debug OIDC (temp)
-        env:
           ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
           REGION: ${{ secrets.AWS_REGION }}
         run: |
