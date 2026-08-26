@@ -94,14 +94,16 @@ resource "aws_iam_policy" "metrics_terraform" {
         Action = [
           "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:DescribeTable",
           "dynamodb:UpdateTable", "dynamodb:ListTables", "dynamodb:TagResource",
-          "dynamodb:UntagResource",
+          "dynamodb:UntagResource", "dynamodb:ListTagsOfResource",
           "lambda:CreateFunction", "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
           "lambda:DeleteFunction", "lambda:GetFunction", "lambda:ListFunctions",
-          "lambda:AddPermission", "lambda:RemovePermission", "lambda:TagResource", "lambda:UntagResource",
+          "lambda:AddPermission", "lambda:RemovePermission", "lambda:TagResource", "lambda:UntagResource", "lambda:ListTags",
           "apigateway:POST", "apigateway:GET", "apigateway:PATCH", "apigateway:DELETE",
           "apigateway:PUT", "apigateway:CreateApiKey", "apigateway:TagResource", "apigateway:UntagResource",
+          "apigateway:GetTags",
           "cloudfront:CreateDistribution", "cloudfront:UpdateDistribution", "cloudfront:DeleteDistribution",
-          "cloudfront:GetDistribution", "cloudfront:ListDistributions",
+          "cloudfront:GetDistribution", "cloudfront:ListDistributions", "cloudfront:ListTagsForResource",
+          "cloudfront:TagResource", "cloudfront:UntagResource",
           "cloudfront:CreateOriginRequestPolicy", "cloudfront:UpdateOriginRequestPolicy",
           "cloudfront:DeleteOriginRequestPolicy", "cloudfront:GetOriginRequestPolicy",
           "wafv2:CreateWebACL", "wafv2:UpdateWebACL", "wafv2:DeleteWebACL", "wafv2:GetWebACL",
@@ -127,6 +129,7 @@ resource "aws_iam_policy" "metrics_terraform" {
         Action = [
           "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:ListRoles",
           "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
+          "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:UpdateAssumeRolePolicy",
           "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:TagRole", "iam:UntagRole",
           "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy", "iam:ListPolicies",
           "iam:PassRole"
