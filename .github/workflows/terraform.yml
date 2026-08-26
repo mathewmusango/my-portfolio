@@ -33,16 +33,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-          ROLE_ARN: ${{ secrets.AWS_ROLE_ARN }}
-          REGION: ${{ secrets.AWS_REGION }}
-        run: |
-          TOKEN="$(curl -s -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com" | python3 -c 'import sys,json; print(json.load(sys.stdin)["value"])')"
-          CLAIMS="$(printf '%s' "${TOKEN}" | cut -d. -f2 | python3 -c 'import sys,base64,json; p=sys.stdin.read().strip(); p+="="*(-len(p)%4); print(json.dumps(json.loads(base64.b64decode(p))))')"
-          echo "::error::OIDC_CLAIMS=${CLAIMS}"
-          echo "::error::ROLE_ARN_LEN=$(python3 -c "import os; print(len(os.environ['ROLE_ARN']))")"
-          echo "::error::ROLE_ARN_TAIL=$(python3 -c "import os; print(repr(os.environ['ROLE_ARN'][-25:]))")"
-          echo "::error::REGION=$(python3 -c "import os; print(repr(os.environ['REGION']))")"
-
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: "1.15.9"
