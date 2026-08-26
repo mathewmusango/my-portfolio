@@ -64,6 +64,6 @@ variable "tags" {
   default = {
     project    = "my-portfolio"
     managed_by = "terraform"
-    repo       = "kizingainc/my-portfolio"
+    repo       = "mathewmusango/my-portfolio"
   }
 }

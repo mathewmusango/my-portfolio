@@ -402,7 +402,7 @@ resource "aws_cloudfront_distribution" "metrics" {
     target_origin_id       = "metrics-api"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
-    allowed_methods        = ["GET", "HEAD", "OPTIONS", "POST"]
+    allowed_methods        = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
     cached_methods         = ["GET", "HEAD"]
     # Managed policy: CachingDisabled (dynamic API — never cache)
     cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
