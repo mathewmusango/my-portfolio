@@ -10,6 +10,31 @@ locals {
     ? aws_iam_openid_connect_provider.github[0].arn
     : data.aws_iam_openid_connect_provider.github[0].arn
   )
+
+  # Shared trust policy for BOTH roles (ref-scoped per environment).
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = local.provider_arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+        }
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" : [
+            # GitHub's sub claim includes node IDs since 2025:
+            #   repo:OWNER@<owner-id>/REPO@<repo-id>:ref:refs/<ref>
+            # so each repo pattern wildcards both IDs with @*; ref_patterns
+            # then scopes the ref (e.g. main only for staging, v* tags for prod).
+            for pair in setproduct(var.repos, var.ref_patterns) :
+            "repo:${replace(pair[0], "/", "@*/")}@*:${pair[1]}"
+          ]
+        }
+      }
+    }]
+  })
 }
 
 # ---------------------------------------------------------------------------
@@ -41,34 +66,20 @@ data "aws_iam_openid_connect_provider" "github" {
 # ---------------------------------------------------------------------------
 # Role — assumed by GitHub Actions (OIDC), scoped per repo
 # ---------------------------------------------------------------------------
-resource "aws_iam_role" "github_actions" {
+resource "aws_iam_role" "terraform" {
   name = var.role_name
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Federated = local.provider_arn }
-      Action    = "sts:AssumeRoleWithWebIdentity"
-      Condition = {
-        StringEquals = {
-          "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
-        }
-        StringLike = {
-          "token.actions.githubusercontent.com:sub" : [
-            # GitHub's sub claim includes node IDs since 2025:
-            #   repo:OWNER@<owner-id>/REPO@<repo-id>:ref:refs/<ref>
-            # so each repo pattern wildcards both IDs with @*; ref_patterns
-            # then scopes the ref (e.g. main only for staging, v* tags for prod).
-            for pair in setproduct(var.repos, var.ref_patterns) :
-            "repo:${replace(pair[0], "/", "@*/")}@*:${pair[1]}"
-          ]
-        }
-      }
-    }]
-  })
+  assume_role_policy = local.assume_role_policy
+  tags               = var.tags
+}
 
-  tags = var.tags
+# Deploy role — content sync (S3) + invalidation ONLY. Least privilege: this
+# role runs on every deploy; the wide terraform role never sees content writes.
+resource "aws_iam_role" "deploy" {
+  name = var.deploy_role_name
+
+  assume_role_policy = local.assume_role_policy
+  tags               = var.tags
 }
 
 # --- Policy: terraform plan/apply on the metrics stack ---------------------
@@ -121,6 +132,10 @@ resource "aws_iam_policy" "metrics_terraform" {
           "cloudfront:CreateDistribution", "cloudfront:UpdateDistribution", "cloudfront:DeleteDistribution",
           "cloudfront:GetDistribution", "cloudfront:ListDistributions", "cloudfront:ListTagsForResource",
           "cloudfront:TagResource", "cloudfront:UntagResource",
+          "cloudfront:CreateOriginAccessControl", "cloudfront:UpdateOriginAccessControl",
+          "cloudfront:DeleteOriginAccessControl", "cloudfront:GetOriginAccessControl",
+          "cloudfront:ListOriginAccessControls",
+          "cloudfront:GetDistributionConfig",
           "cloudfront:CreateFunction", "cloudfront:UpdateFunction", "cloudfront:DeleteFunction",
           "cloudfront:GetFunction", "cloudfront:DescribeFunction", "cloudfront:ListFunctions",
           "cloudfront:PublishFunction",
@@ -139,6 +154,9 @@ resource "aws_iam_policy" "metrics_terraform" {
           "logs:ListTagsLogGroup", "logs:TagResource", "logs:UntagResource",
           "s3:CreateBucket", "s3:DeleteBucket", "s3:GetBucketLocation", "s3:ListBucket",
           "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutBucketVersioning",
+          "s3:GetBucketTagging", "s3:PutBucketTagging",
+          "s3:GetBucketPublicAccessBlock", "s3:PutBucketPublicAccessBlock",
+          "s3:GetBucketPolicy", "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
           "sts:GetCallerIdentity"
         ]
         Resource = "*"
@@ -194,12 +212,12 @@ resource "aws_iam_policy" "site_deploy" {
 }
 
 resource "aws_iam_role_policy_attachment" "metrics_terraform" {
-  role       = aws_iam_role.github_actions.name
+  role       = aws_iam_role.terraform.name
   policy_arn = aws_iam_policy.metrics_terraform.arn
 }
 
 resource "aws_iam_role_policy_attachment" "site_deploy" {
-  role       = aws_iam_role.github_actions.name
+  role       = aws_iam_role.deploy.name
   policy_arn = aws_iam_policy.site_deploy.arn
 }
 

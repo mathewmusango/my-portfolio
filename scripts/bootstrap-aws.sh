@@ -62,14 +62,14 @@ case "$ENV" in
     ;;
 esac
 
-# Detect the account-level GitHub OIDC provider — whoever runs first creates it
-# (manage_provider=true); later runs reuse it via the ci module's data lookup.
-if ! PROVIDER_LIST="$(aws iam list-open-id-connect-providers --output text --query 'OpenIDConnectProviderList[].Arn' 2>&1)"; then
-  echo "error: cannot list OIDC providers (check AWS_PROFILE / credentials)" >&2
-  echo "$PROVIDER_LIST" >&2
-  exit 1
-fi
-if echo "$PROVIDER_LIST" | grep -q "token.actions.githubusercontent.com"; then
+# Provider ownership is decided by THIS env's state, not by the live provider:
+# - if this env's state owns the resource -> keep managing it (never destroy it)
+# - else reuse the account-level provider (created by whichever env owns it)
+# - no state yet (first run) -> create it if no provider exists anywhere.
+if terraform state list -state="terraform.$ENV.tfstate" 2>/dev/null | grep -qE '^aws_iam_openid_connect_provider\.github'; then
+  MANAGE_PROVIDER=true
+  PROVIDER_NOTE="managing (owned by this env's state)"
+elif aws iam list-open-id-connect-providers --output text --query 'OpenIDConnectProviderList[].Arn' 2>/dev/null | grep -q "token.actions.githubusercontent.com"; then
   MANAGE_PROVIDER=false
   PROVIDER_NOTE="reusing (provider exists)"
 else
@@ -77,12 +77,13 @@ else
   PROVIDER_NOTE="creating (provider not found)"
 fi
 
-AWS_PROFILE="$AWS_PROFILE" terraform apply -auto-approve -no-color -input=false \
+AWS_PROFILE=prod terraform apply -auto-approve -no-color -input=false \
   -state="terraform.$ENV.tfstate" \
   -var "environment=$ENV" \
   -var "aws_region=$AWS_REGION" \
   -var "name_prefix=$PROJECT" \
-  -var "role_name=github-actions-$PROJECT-$ENV" \
+  -var "role_name=github-actions-$PROJECT-$ENV-terraform" \
+  -var "deploy_role_name=github-actions-$PROJECT-$ENV-deploy" \
   -var "repos=$REPO_JSON" \
   -var "state_bucket=$PROJECT-$ENV-tfstate" \
   -var "state_lock_table=$PROJECT-$ENV-tfstate-lock" \
@@ -92,7 +93,8 @@ AWS_PROFILE="$AWS_PROFILE" terraform apply -auto-approve -no-color -input=false 
   -var "tags={\"project\":\"$PROJECT\",\"managed_by\":\"terraform\",\"environment\":\"$ENV\"}"
 
 echo "Bootstrap complete for $PROJECT/$ENV ($AWS_REGION):"
-echo "  role:           github-actions-$PROJECT-$ENV"
+echo "  terraform role: github-actions-$PROJECT-$ENV-terraform"
+echo "  deploy role:    github-actions-$PROJECT-$ENV-deploy"
 echo "  state bucket:   $PROJECT-$ENV-tfstate"
 echo "  lock table:     $PROJECT-$ENV-tfstate-lock"
 echo "  site buckets:   $PROJECT-$ENV-site*"

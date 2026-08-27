@@ -14,7 +14,12 @@ variable "name_prefix" {
 }
 
 variable "role_name" {
-  description = "Name of the GitHub Actions assume-role."
+  description = "Name of the GitHub Actions TERRAFORM assume-role (stack plan/apply)."
+  type        = string
+}
+
+variable "deploy_role_name" {
+  description = "Name of the GitHub Actions DEPLOY assume-role (S3 content sync + invalidation only)."
   type        = string
 }
 

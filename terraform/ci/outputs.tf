@@ -1,6 +1,11 @@
 output "role_arn" {
-  description = "The GitHub Actions role — put this in the repo's AWS_ROLE_ARN variable."
-  value       = aws_iam_role.github_actions.arn
+  description = "The GitHub Actions TERRAFORM role — put this in the repo's <ENV>_TERRAFORM_ROLE_ARN secret."
+  value       = aws_iam_role.terraform.arn
+}
+
+output "deploy_role_arn" {
+  description = "The GitHub Actions DEPLOY role — put this in the repo's <ENV>_DEPLOY_ROLE_ARN secret."
+  value       = aws_iam_role.deploy.arn
 }
 
 output "oidc_provider_arn" {

@@ -5,7 +5,7 @@ name: Terraform
 #   push v* tag               -> prod   — plan only (apply stays manual)
 #   workflow_dispatch         -> choose environment + action
 # Prod is NEVER auto-applied — a blind auto-apply is how stacks get destroyed.
-# Uses OIDC. Secrets: STAGING/PROD_AWS_ROLE_ARN, PROJECT, AWS_REGION,
+# Uses OIDC. Secrets: STAGING/PROD_TERRAFORM_ROLE_ARN, PROJECT, AWS_REGION,
 # STAGING/PROD_ALLOWED_ORIGIN (see terraform/ci + scripts/bootstrap-aws.sh).
 on:
   push:
@@ -60,7 +60,7 @@ jobs:
       - name: Assume AWS role (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ steps.env.outputs.environment == 'prod' && secrets.PROD_AWS_ROLE_ARN || secrets.STAGING_AWS_ROLE_ARN }}
+          role-to-assume: ${{ steps.env.outputs.environment == 'prod' && secrets.PROD_TERRAFORM_ROLE_ARN || secrets.STAGING_TERRAFORM_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Init (S3 backend — bucket/lock derived from the resolved environment)
