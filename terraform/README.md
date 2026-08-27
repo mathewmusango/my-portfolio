@@ -167,10 +167,10 @@ terraform init \
   -backend-config="encrypt=true"
 ```
 
-CI does the same automatically from the repo variables `TF_STATE_BUCKET` /
-`TF_STATE_LOCK_TABLE` (with `my-portfolio-prod-*` fallbacks) and the
-`AWS_REGION` secret. Local dev points at the bucket via `AWS_ENDPOINT_URL`
-(Ministack) or real S3.
+CI does the same automatically: bucket and lock names are derived from the
+`PROJECT` + `TF_ENVIRONMENT` secrets (`<project>-<env>-tfstate`), region from the
+`AWS_REGION` secret — all secrets, nothing in the repo. Local dev points at the
+bucket via `AWS_ENDPOINT_URL` (Ministack) or real S3.
 
 ## Site integration (done on this branch)
 

@@ -2,8 +2,9 @@ name: Terraform
 
 # Plans automatically whenever terraform/ changes (push to main); applies only
 # on manual workflow_dispatch with action=apply — a blind auto-apply is how
-# stacks get destroyed. Uses OIDC (no secrets): the repo needs the secrets
-# AWS_ROLE_ARN + AWS_REGION (see DEVOPS §7.1 / terraform/ci).
+# stacks get destroyed. Uses OIDC: the repo needs the secrets
+# PROD_AWS_ROLE_ARN + AWS_REGION + PROJECT + TF_ENVIRONMENT + ALLOWED_ORIGIN
+# (see terraform/ci + scripts/bootstrap-aws.sh).
 on:
   push:
     branches: [main]
@@ -40,16 +41,16 @@ jobs:
       - name: Assume AWS role (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          role-to-assume: ${{ secrets.PROD_AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Init (S3 backend — portable; values from repo vars/secrets)
+      - name: Init (S3 backend — bucket/lock derived from PROJECT + TF_ENVIRONMENT secrets)
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ vars.TF_STATE_BUCKET || 'my-portfolio-prod-tfstate' }}" \
+            -backend-config="bucket=${{ secrets.PROJECT }}-${{ secrets.TF_ENVIRONMENT }}-tfstate" \
             -backend-config="key=metrics/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ vars.TF_STATE_LOCK_TABLE || 'my-portfolio-prod-tfstate-lock' }}" \
+            -backend-config="dynamodb_table=${{ secrets.PROJECT }}-${{ secrets.TF_ENVIRONMENT }}-tfstate-lock" \
             -backend-config="encrypt=true"
 
       - name: Validate
@@ -63,9 +64,9 @@ jobs:
           # controls. CloudFront is ON (geo headers + HTTPS edge). Flip
           # enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
-            -var "environment=${{ vars.TF_ENVIRONMENT || 'prod' }}" \
+            -var "environment=${{ secrets.TF_ENVIRONMENT }}" \
             -var "aws_region=${{ secrets.AWS_REGION }}" \
-            -var "allowed_origin=${{ vars.ALLOWED_ORIGIN }}" \
+            -var "allowed_origin=${{ secrets.ALLOWED_ORIGIN }}" \
             -var enable_vpc=false \
             -var enable_waf=false \
             -var enable_cloudfront=true
