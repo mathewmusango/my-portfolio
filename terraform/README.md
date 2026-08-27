@@ -98,9 +98,10 @@ is needed. The provider is stock and reads the standard AWS chain:
 - **Real AWS** — your normal chain (`~/.aws/credentials` / SSO / CI secrets);
   no endpoint set. The same code targets real AWS unchanged.
 
-The only per-environment things the AWS config can't carry are the two
-Terraform-specific variables in `local.tfvars` (`environment`, `allowed_origin`)
-— passed explicitly with `-var-file`, never auto-loaded.
+The per-environment values the AWS config can't carry live in `local.tfvars`
+(`environment`, `allowed_origin`, plus the required `project` / `aws_region` /
+`tags`) — passed explicitly with `-var-file`, never auto-loaded. Real AWS gets
+the same values from CI secrets at plan time; nothing is hardcoded in `*.tf`.
 
 **Credentials never live in the repo.** And **the site itself needs no
 credentials at all** — CloudFront is a public HTTPS edge; the browser beacon
@@ -219,8 +220,9 @@ Uptime = external probes hitting `/health`; Performance = future
 **Opt-in hardening (outside the Free Tier — ~$14/mo total):**
 
 - **WAF on the CloudFront edge** (`enable_waf`): default *block*; only requests
-  whose `Origin`/`Referer` contains `waf_allowed_host` are allowed, plus an IP
-  rate-limit rule (300 req / 5 min). ~$7/mo.
+  whose `Origin`/`Referer` contains the site's host (derived from
+  `allowed_origin` — the WAF search string is the module's first allowed host)
+  are allowed, plus an IP rate-limit rule (300 req / 5 min). ~$7/mo.
 - **Private VPC** (`enable_vpc`): lambdas with **no internet path** — egress only
   to the DynamoDB **Gateway** (free) and CloudWatch Logs **Interface** endpoints.
   The Logs endpoint is ~$7/mo; cold starts gain ~0.5–1 s from the ENI attach.

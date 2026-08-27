@@ -1,5 +1,5 @@
 locals {
-  name_prefix  = "${var.project}-${var.environment}"
+  name_prefix = "${var.project}-${var.environment}"
   # Primary origin may be empty (staging: the site's own distro is auto-added via
   # extra_allowed_origins) — filter it out so CORS/origin-gate stay clean.
   primary_origins = var.allowed_origin == "" ? [] : [var.allowed_origin]
@@ -503,7 +503,7 @@ resource "aws_wafv2_web_acl" "metrics" {
               single_header { name = "origin" }
             }
             positional_constraint = "CONTAINS"
-            search_string         = var.waf_allowed_host
+            search_string         = try(local.allowed_hosts[0], "")
             text_transformation {
               priority = 0
               type     = "LOWERCASE"
@@ -516,7 +516,7 @@ resource "aws_wafv2_web_acl" "metrics" {
               single_header { name = "referer" }
             }
             positional_constraint = "CONTAINS"
-            search_string         = var.waf_allowed_host
+            search_string         = try(local.allowed_hosts[0], "")
             text_transformation {
               priority = 0
               type     = "LOWERCASE"

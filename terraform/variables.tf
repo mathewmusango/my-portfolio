@@ -4,15 +4,13 @@ variable "aws_region" {
 }
 
 variable "project" {
-  description = "Project name — prefixes all resource names."
+  description = "Project name — prefixes all resource names. Supplied via -var (PROJECT secret), never hardcoded."
   type        = string
-  default     = "my-portfolio"
 }
 
 variable "environment" {
-  description = "Environment tag/suffix (prod/test). The live site metrics stack is 'prod'."
+  description = "Environment label (staging|prod) — suffix for all resource names. Supplied via -var (trigger-resolved), never hardcoded."
   type        = string
-  default     = "prod"
 }
 
 variable "allowed_origin" {
@@ -62,18 +60,7 @@ variable "enable_waf" {
   default     = false
 }
 
-variable "waf_allowed_host" {
-  description = "Host that WAF allows through (Origin/Referer) — must match the site origin."
-  type        = string
-  default     = "mathewmusango.github.io"
-}
-
 variable "tags" {
-  description = "Tags applied to all resources."
+  description = "Tags applied to all resources. Supplied via -var (workflow builds it from secrets + github.repository), never hardcoded."
   type        = map(string)
-  default = {
-    project    = "my-portfolio"
-    managed_by = "terraform"
-    repo       = "mathewmusango/my-portfolio"
-  }
 }

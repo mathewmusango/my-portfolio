@@ -54,12 +54,6 @@ variable "enable_waf" {
   default     = false
 }
 
-variable "waf_allowed_host" {
-  description = "Host that WAF allows through (Origin/Referer)."
-  type        = string
-  default     = ""
-}
-
 variable "tags" {
   type = map(string)
 }

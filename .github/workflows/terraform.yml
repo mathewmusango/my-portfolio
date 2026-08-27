@@ -87,6 +87,7 @@ jobs:
             -var "project=${{ secrets.PROJECT }}" \
             -var "aws_region=${{ secrets.AWS_REGION }}" \
             -var "allowed_origin=${{ steps.env.outputs.environment == 'prod' && secrets.PROD_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}" \
+            -var 'tags={"project":"${{ secrets.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}' \
             -var enable_vpc=false \
             -var enable_waf=false \
             -var enable_cloudfront=true \

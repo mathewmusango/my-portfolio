@@ -202,6 +202,5 @@ module "metrics" {
   enable_cloudfront     = var.enable_cloudfront
   enable_vpc            = var.enable_vpc
   enable_waf            = var.enable_waf
-  waf_allowed_host      = var.waf_allowed_host
   tags                  = local.tags
 }
