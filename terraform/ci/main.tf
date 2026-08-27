@@ -212,7 +212,7 @@ resource "aws_iam_policy" "site_deploy" {
         Effect = "Allow"
         Action = [
           "cloudfront:CreateInvalidation", "cloudfront:GetDistribution",
-          "cloudfront:GetInvalidation"
+          "cloudfront:GetInvalidation", "cloudfront:ListDistributions",
         ]
         Resource = "*"
       },
