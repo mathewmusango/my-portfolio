@@ -2,6 +2,7 @@ name: Deploy prod
 
 # Tag-only (v*): publishes the site to gh-pages (prod public) AND the prod S3
 # bucket + CloudFront. Never runs on main — staging deploys via deploy-staging.yml.
+# Both jobs skip when the tagged commit didn't change docs/.
 on:
   workflow_run:
     workflows: ["CI"]
@@ -17,6 +18,20 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+
+      - name: Check docs changes (deploy only when docs/ changed)
+        id: docs
+        run: |
+          if git rev-parse -q --verify HEAD~1 >/dev/null 2>&1 && ! git diff --name-only HEAD~1 HEAD -- docs/ | grep -q .; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download site artifact
         uses: actions/download-artifact@v8
         with:
@@ -26,6 +41,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: Deploy to gh-pages
+        if: steps.docs.outputs.changed == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -41,6 +57,20 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 2
+
+      - name: Check docs changes (deploy only when docs/ changed)
+        id: docs
+        run: |
+          if git rev-parse -q --verify HEAD~1 >/dev/null 2>&1 && ! git diff --name-only HEAD~1 HEAD -- docs/ | grep -q .; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download site artifact
         uses: actions/download-artifact@v8
         with:
@@ -55,9 +85,11 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Sync site to prod S3 (bucket root — site serves at /)
+        if: steps.docs.outputs.changed == 'true'
         run: aws s3 sync site/ "s3://${{ secrets.PROJECT }}-prod-site/" --delete --no-progress
 
       - name: Invalidate prod CloudFront (lookup by comment convention)
+        if: steps.docs.outputs.changed == 'true'
         run: |
           ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ secrets.PROJECT }}-prod-site'].Id" --output text)"
           if [ -n "$ID" ]; then
