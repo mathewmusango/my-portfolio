@@ -6,6 +6,10 @@ inputs:
     description: Production site URL to inject before building (optional).
     required: false
     default: ""
+  metrics_endpoint:
+    description: METRICS_ENDPOINT for the beacon (CloudFront/API URL). Empty = beacon disabled.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -33,6 +37,7 @@ runs:
       shell: bash
       env:
         MKDOCS_GIT_COMMITTERS_APIKEY: "${{ github.token }}"
+        METRICS_ENDPOINT: "${{ inputs.metrics_endpoint }}"
       run: mkdocs build --strict
 
     - name: Audit dependencies (pip-audit)
