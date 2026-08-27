@@ -1,13 +1,16 @@
 name: Terraform
 
-# Plans automatically whenever terraform/ changes (push to main); applies only
-# on manual workflow_dispatch with action=apply — a blind auto-apply is how
-# stacks get destroyed. Uses OIDC: the repo needs the secrets
-# PROD_AWS_ROLE_ARN + AWS_REGION + PROJECT + TF_ENVIRONMENT + ALLOWED_ORIGIN
-# (see terraform/ci + scripts/bootstrap-aws.sh).
+# Environment is controlled from GitHub by the trigger:
+#   push main (terraform/**)  -> staging (plan)
+#   push v* tag               -> prod   (plan)
+#   workflow_dispatch         -> choose environment + action
+# Apply is NEVER automatic — a blind auto-apply is how stacks get destroyed.
+# Uses OIDC. Secrets: STAGING/PROD_AWS_ROLE_ARN, PROJECT, AWS_REGION,
+# STAGING/PROD_ALLOWED_ORIGIN (see terraform/ci + scripts/bootstrap-aws.sh).
 on:
   push:
     branches: [main]
+    tags: ["v*"]
     paths:
       - "terraform/**"
   workflow_dispatch:
@@ -20,6 +23,15 @@ on:
         options:
           - plan
           - apply
+      environment:
+        description: "Target (default: v* tag -> prod, main -> staging)"
+        required: false
+        default: ""
+        type: choice
+        options:
+          - ""
+          - staging
+          - prod
 
 permissions:
   id-token: write
@@ -38,25 +50,32 @@ jobs:
         with:
           terraform_version: "1.15.9"
 
+      - name: Resolve environment (dispatch override > v* tag > main)
+        id: env
+        run: |
+          ENV="${{ github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}"
+          echo "environment=$ENV" >> "$GITHUB_OUTPUT"
+          echo "Resolved environment: $ENV"
+
       - name: Assume AWS role (OIDC)
         uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ secrets.PROD_AWS_ROLE_ARN }}
+          role-to-assume: ${{ steps.env.outputs.environment == 'prod' && secrets.PROD_AWS_ROLE_ARN || secrets.STAGING_AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Init (S3 backend — bucket/lock derived from PROJECT + TF_ENVIRONMENT secrets)
+      - name: Init (S3 backend — bucket/lock derived from the resolved environment)
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ secrets.PROJECT }}-${{ secrets.TF_ENVIRONMENT }}-tfstate" \
+            -backend-config="bucket=${{ secrets.PROJECT }}-${{ steps.env.outputs.environment }}-tfstate" \
             -backend-config="key=metrics/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ secrets.PROJECT }}-${{ secrets.TF_ENVIRONMENT }}-tfstate-lock" \
+            -backend-config="dynamodb_table=${{ secrets.PROJECT }}-${{ steps.env.outputs.environment }}-tfstate-lock" \
             -backend-config="encrypt=true"
 
       - name: Validate
         run: terraform validate
 
-      - name: Plan (prod)
+      - name: Plan (${{ steps.env.outputs.environment }})
         run: |
           # Free-Tier default: WAF + private VPC are OFF (the Logs VPC endpoint
           # and WAF are outside the Free Tier). The Lambda origin gate (403 for
@@ -64,9 +83,9 @@ jobs:
           # controls. CloudFront is ON (geo headers + HTTPS edge). Flip
           # enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
-            -var "environment=${{ secrets.TF_ENVIRONMENT }}" \
+            -var "environment=${{ steps.env.outputs.environment }}" \
             -var "aws_region=${{ secrets.AWS_REGION }}" \
-            -var "allowed_origin=${{ secrets.ALLOWED_ORIGIN }}" \
+            -var "allowed_origin=${{ steps.env.outputs.environment == 'prod' && secrets.PROD_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}" \
             -var enable_vpc=false \
             -var enable_waf=false \
             -var enable_cloudfront=true

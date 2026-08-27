@@ -168,9 +168,9 @@ terraform init \
 ```
 
 CI does the same automatically: bucket and lock names are derived from the
-`PROJECT` + `TF_ENVIRONMENT` secrets (`<project>-<env>-tfstate`), region from the
-`AWS_REGION` secret — all secrets, nothing in the repo. Local dev points at the
-bucket via `AWS_ENDPOINT_URL` (Ministack) or real S3.
+`PROJECT` secret + the trigger-resolved environment (main → staging, `v*` tags →
+prod), region from the `AWS_REGION` secret — all secrets, nothing in the repo.
+Local dev points at the bucket via `AWS_ENDPOINT_URL` (Ministack) or real S3.
 
 ## Site integration (done on this branch)
 
