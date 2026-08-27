@@ -1,6 +1,9 @@
 locals {
   name_prefix  = "${var.project}-${var.environment}"
   allowed_host = replace(replace(var.allowed_origin, "https://", ""), "http://", "")
+  # All origins this environment may send from (primary + extra, HTTPS only).
+  metrics_origins = distinct(concat([var.allowed_origin], var.extra_allowed_origins))
+  allowed_hosts   = distinct(concat([local.allowed_host], [for o in var.extra_allowed_origins : replace(replace(o, "https://", ""), "http://", "")]))
 }
 
 data "aws_availability_zones" "available" {
@@ -172,7 +175,7 @@ resource "aws_lambda_function" "metrics_writer" {
     variables = {
       TABLE_NAME      = aws_dynamodb_table.metrics.name
       EVENT_RETENTION = var.event_retention_days
-      ALLOWED_ORIGIN  = var.allowed_origin
+      ALLOWED_ORIGIN  = join(",", local.metrics_origins)
     }
   }
 
@@ -243,7 +246,7 @@ resource "aws_lambda_function" "metrics_reader" {
   environment {
     variables = {
       TABLE_NAME     = aws_dynamodb_table.metrics.name
-      ALLOWED_ORIGIN = var.allowed_origin
+      ALLOWED_ORIGIN = join(",", local.metrics_origins)
     }
   }
 
@@ -272,7 +275,7 @@ resource "aws_apigatewayv2_api" "metrics" {
   protocol_type = "HTTP"
 
   cors_configuration {
-    allow_origins = [var.allowed_origin]
+    allow_origins = local.metrics_origins
     allow_methods = ["GET", "POST", "OPTIONS"]
     allow_headers = ["Content-Type", "X-Metrics-Type"]
     max_age       = 3600
@@ -425,7 +428,7 @@ resource "aws_cloudfront_function" "origin_gate" {
   count   = var.enable_cloudfront ? 1 : 0
   name    = "${local.name_prefix}-origin-gate"
   runtime = "cloudfront-js-2.0"
-  comment = "Allow only the site's Origin/Referer; /health exempt (free WAF-equivalent)"
+  comment = "Allow only the site origins (HTTPS); /health exempt (free WAF-equivalent)"
   publish = true
   code    = <<-EOT
 function handler(event) {
@@ -436,13 +439,19 @@ function handler(event) {
     return request;
   }
 
-  var allowed = '${local.allowed_host}';
-  var origin = '';
-  var referer = '';
-  if (request.headers['origin']) origin = request.headers['origin'].value;
-  if (request.headers['referer']) referer = request.headers['referer'].value;
+  var allowed = ['${join("', '", local.allowed_hosts)}'];
 
-  if (hostname(origin) === allowed || hostname(referer) === allowed) {
+  function hdr(name) {
+    var h = request.headers[name];
+    return h ? h.value : '';
+  }
+  function ok(value) {
+    if (!value) return false;
+    if (value.indexOf('https://') !== 0) return false; // HTTPS only
+    return allowed.indexOf(hostname(value)) !== -1;
+  }
+
+  if (ok(hdr('origin')) || ok(hdr('referer'))) {
     return request;
   }
 

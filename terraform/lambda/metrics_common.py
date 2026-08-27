@@ -15,7 +15,9 @@ import base64
 import json
 import os
 
-ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")
+ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get("ALLOWED_ORIGIN", "*").split(",") if o.strip()
+]
 
 MAX_BODY_BYTES = 2048
 
@@ -37,40 +39,53 @@ def _hostname(url):
         return ""
 
 
+def request_origin(event):
+    """The Origin header of the request, if any (case-insensitive)."""
+    for k, v in (event.get("headers") or {}).items():
+        if k.lower() == "origin":
+            return v
+    return ""
+
+
 def origin_allowed(event):
-    """The request must come from the allowed site origin.
+    """The request must come from an allowed site origin (HTTPS only).
 
-    Only the site (whose Origin/Referer matches ALLOWED_ORIGIN) may call the
-    API; requests with no Origin/Referer are rejected — this is a public beacon
-    by design, but nothing other than the site should reach it. CloudFront/WAF
-    enforces the same rule at the edge in production (defense in depth).
+    Only sites whose Origin/Referer matches one of the ALLOWED_ORIGINS list may
+    call the API; requests with no Origin/Referer are rejected — this is a
+    public beacon by design, but nothing other than the sites should reach it.
+    Cleartext (http://) origins are always rejected. CloudFront/WAF enforces the
+    same rule at the edge in production (defense in depth).
     """
-    if ALLOWED_ORIGIN == "*":
+    if "*" in ALLOWED_ORIGINS:
         return True
+    origin = request_origin(event).strip()
     headers = {k.lower(): v for k, v in (event.get("headers") or {}).items()}
-    allowed_host = _hostname(ALLOWED_ORIGIN)
-    return (
-        _hostname(headers.get("origin", "")) == allowed_host
-        or _hostname(headers.get("referer", "")) == allowed_host
-    )
+    referer = (headers.get("referer") or "").strip()
+    if origin and not origin.lower().startswith("https://"):
+        return False  # HTTPS only
+    allowed_hosts = {_hostname(o) for o in ALLOWED_ORIGINS}
+    return _hostname(origin) in allowed_hosts or _hostname(referer) in allowed_hosts
 
 
-def headers(extra=None):
+def headers(extra=None, request_origin=None):
     h = {
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
         "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type,X-Metrics-Type",
     }
+    # Multi-origin CORS: echo the request origin only when it is allowed.
+    if request_origin and origin_allowed({"headers": {"origin": request_origin}}):
+        h["Access-Control-Allow-Origin"] = request_origin
+        h["Vary"] = "Origin"
     if extra:
         h.update(extra)
     return h
 
 
-def response(status, body=None, extra=None):
+def response(status, body=None, extra=None, request_origin=None):
     return {
         "statusCode": status,
-        "headers": headers(extra),
+        "headers": headers(extra, request_origin),
         "body": json.dumps(body) if body is not None else "",
         "isBase64Encoded": False,
     }

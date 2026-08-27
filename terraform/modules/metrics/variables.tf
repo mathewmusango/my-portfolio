@@ -14,8 +14,14 @@ variable "environment" {
 }
 
 variable "allowed_origin" {
-  description = "CORS origin for the metrics API — the site that sends events."
+  description = "Primary CORS origin for the metrics API — the site that sends events."
   type        = string
+}
+
+variable "extra_allowed_origins" {
+  description = "Additional allowed origins (e.g. the site's own CloudFront domain). HTTPS only, added alongside allowed_origin."
+  type        = list(string)
+  default     = []
 }
 
 variable "event_retention_days" {

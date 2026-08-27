@@ -12,7 +12,7 @@ import uuid
 import boto3
 from decimal import Decimal
 
-from metrics_common import decode_body, geo, headers, origin_allowed, response
+from metrics_common import decode_body, geo, headers, origin_allowed, request_origin, response
 
 TABLE_NAME = os.environ["TABLE_NAME"]
 RETENTION_DAYS = int(os.environ.get("EVENT_RETENTION", "90"))
@@ -70,7 +70,7 @@ def handler(event, context):
     # 204: the beacon never needs a body back
     return {
         "statusCode": 204,
-        "headers": headers(),
+        "headers": headers(request_origin=request_origin(event)),
         "body": "",
         "isBase64Encoded": False,
     }

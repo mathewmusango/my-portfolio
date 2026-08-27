@@ -125,17 +125,19 @@ resource "aws_cloudfront_distribution" "site" {
 # gated OFF until the metrics phase (enable_metrics). Lives in ./modules/metrics.
 # ---------------------------------------------------------------------------
 module "metrics" {
-  source               = "./modules/metrics"
-  count                = var.enable_metrics ? 1 : 0
-  aws_region           = var.aws_region
-  project              = var.project
-  environment          = var.environment
-  allowed_origin       = var.allowed_origin
-  event_retention_days = var.event_retention_days
-  price_class          = var.price_class
-  enable_cloudfront    = var.enable_cloudfront
-  enable_vpc           = var.enable_vpc
-  enable_waf           = var.enable_waf
-  waf_allowed_host     = var.waf_allowed_host
-  tags                 = local.tags
+  source         = "./modules/metrics"
+  count          = var.enable_metrics ? 1 : 0
+  aws_region     = var.aws_region
+  project        = var.project
+  environment    = var.environment
+  allowed_origin = var.allowed_origin
+  # The site's own CloudFront domain is always allowed (auto-derived, HTTPS).
+  extra_allowed_origins = var.enable_site ? ["https://${aws_cloudfront_distribution.site[0].domain_name}"] : []
+  event_retention_days  = var.event_retention_days
+  price_class           = var.price_class
+  enable_cloudfront     = var.enable_cloudfront
+  enable_vpc            = var.enable_vpc
+  enable_waf            = var.enable_waf
+  waf_allowed_host      = var.waf_allowed_host
+  tags                  = local.tags
 }

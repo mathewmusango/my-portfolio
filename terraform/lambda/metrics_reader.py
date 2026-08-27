@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import boto3
 
-from metrics_common import origin_allowed, response
+from metrics_common import origin_allowed, request_origin, response
 
 TABLE_NAME = os.environ["TABLE_NAME"]
 
@@ -203,7 +203,7 @@ def handler(event, context):
             "status": "ok",
             "service": "my-portfolio-metrics",
             "table": TABLE_NAME,
-        })
+        }, request_origin=request_origin(event))
 
     if path == "/views" and method == "GET":
         params = event.get("queryStringParameters") or {}
@@ -213,9 +213,9 @@ def handler(event, context):
         return response(200, {
             "page": page,
             "views": _views(page),
-        }, extra={"Cache-Control": "max-age=300"})
+        }, extra={"Cache-Control": "max-age=300"}, request_origin=request_origin(event))
 
     if path == "/summary" and method == "GET":
-        return response(200, _summary(), extra={"Cache-Control": "max-age=300"})
+        return response(200, _summary(), extra={"Cache-Control": "max-age=300"}, request_origin=request_origin(event))
 
     return response(404, {"error": "not found"})
