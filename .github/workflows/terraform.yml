@@ -89,6 +89,7 @@ jobs:
             -var "allowed_origin=${{ steps.env.outputs.environment == 'prod' && secrets.PROD_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}" \
             -var enable_vpc=false \
             -var enable_waf=false \
+            # Geo headers come from CloudFront — BOTH envs get the metrics edge.
             -var enable_cloudfront=true
 
       - name: Apply (staging auto on main; prod only via manual dispatch)

@@ -10,6 +10,9 @@ provider "aws" {
 
 locals {
   name_prefix = "${var.project}-${var.environment}"
+  # Every taggable resource carries the environment (staging/prod) — merged
+  # from the base tags so nothing needs to be passed per-env.
+  tags = merge(var.tags, { environment = var.environment })
 }
 
 # ---------------------------------------------------------------------------
@@ -19,7 +22,7 @@ locals {
 resource "aws_s3_bucket" "site" {
   count  = var.enable_site ? 1 : 0
   bucket = "${local.name_prefix}-site"
-  tags   = var.tags
+  tags   = local.tags
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
@@ -69,26 +72,41 @@ resource "aws_s3_bucket_policy" "site" {
 resource "aws_cloudfront_distribution" "site" {
   count               = var.enable_site ? 1 : 0
   enabled             = true
-  comment             = "${local.name_prefix} static site (S3 origin, OAC)"
+  comment             = "${local.name_prefix}-site"
   default_root_object = "index.html"
+  http_version        = "http2and3"
   price_class         = var.price_class
-  tags                = var.tags
+  tags                = local.tags
   is_ipv6_enabled     = true
 
   origin {
     domain_name              = aws_s3_bucket.site[0].bucket_regional_domain_name
-    origin_id                = "site"
+    origin_id                = "${local.name_prefix}-site"
     origin_access_control_id = aws_cloudfront_origin_access_control.site[0].id
   }
 
   default_cache_behavior {
-    target_origin_id       = "site"
+    target_origin_id       = "${local.name_prefix}-site"
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     # Managed policy: CachingOptimized
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+  }
+
+  # Error pages — 403/404 to the site's 404 page (graceful fallback if a
+  # locale-specific 404.html is absent; CloudFront shows its default page then).
+  custom_error_response {
+    error_code         = 404
+    response_code      = 404
+    response_page_path = "/404.html"
+  }
+
+  custom_error_response {
+    error_code         = 403
+    response_code      = 404
+    response_page_path = "/404.html"
   }
 
   restrictions {
@@ -119,5 +137,5 @@ module "metrics" {
   enable_vpc           = var.enable_vpc
   enable_waf           = var.enable_waf
   waf_allowed_host     = var.waf_allowed_host
-  tags                 = var.tags
+  tags                 = local.tags
 }

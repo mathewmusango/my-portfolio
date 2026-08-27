@@ -374,7 +374,7 @@ resource "aws_cloudfront_origin_request_policy" "geo" {
 resource "aws_cloudfront_distribution" "metrics" {
   count           = var.enable_cloudfront ? 1 : 0
   enabled         = true
-  comment         = "${local.name_prefix} metrics API (geo-enabled)"
+  comment         = "${local.name_prefix}-metrics"
   price_class     = var.price_class
   tags            = var.tags
   is_ipv6_enabled = true
