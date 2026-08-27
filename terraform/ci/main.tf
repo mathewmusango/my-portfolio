@@ -171,6 +171,18 @@ resource "aws_iam_policy" "metrics_terraform" {
         ]
       },
       {
+        Sid    = "ProjectDynamoDB"
+        Effect = "Allow"
+        # All DynamoDB on the PROJECT tables only (metrics + any future).
+        # dynamodb:* avoids the provider's growing read set (TTL, contributor
+        # insights, replica autoscaling, streams ...) while staying scoped.
+        Action = ["dynamodb:*"]
+        Resource = [
+          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.name_prefix}-*",
+          "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/${var.name_prefix}-*/index/*",
+        ]
+      },
+      {
         Sid    = "IAMManage"
         Effect = "Allow"
         Action = [
