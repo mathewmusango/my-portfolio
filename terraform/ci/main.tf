@@ -77,7 +77,7 @@ resource "aws_iam_role" "github_actions" {
 # resource ARNs if this ever leaves a personal portfolio.
 resource "aws_iam_policy" "metrics_terraform" {
   name        = "${var.name_prefix}-${var.environment}-metrics-terraform"
-  description = "Allow GitHub Actions to plan/apply the my-portfolio metrics terraform stack."
+  description = "Allow GitHub Actions to plan/apply the ${var.name_prefix} metrics terraform stack."
 
   policy = jsonencode({
     Version = "2012-10-17"
