@@ -11,6 +11,10 @@
   var endpoint = (meta.getAttribute("content") || "").trim().replace(/\/+$/, "");
   if (!endpoint) return;
 
+  // The metrics dashboard doesn't track itself — no footer page counter on
+  // /metrics/ or /metrics/analytics/ (any locale).
+  if (/\/(?:es\/|zh\/)?metrics(?:\/analytics)?\/?$/.test(location.pathname)) return;
+
   var host = document.getElementById("page-visits");
   if (!host) return;
 
