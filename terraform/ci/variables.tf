@@ -14,7 +14,7 @@ variable "repos" {
   description = "GitHub repos allowed to assume the role ('owner/repo'). Only mathewmusango/my-portfolio (the operational repo) — the test repo is a mirror and does not run terraform against real AWS."
   type        = list(string)
   default = [
-    "mathewmusango/my-portfolio",  # prod repo — runs terraform.yml
+    "mathewmusango/my-portfolio", # prod repo — runs terraform.yml
   ]
 }
 

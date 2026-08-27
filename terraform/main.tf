@@ -9,7 +9,8 @@ provider "aws" {
 }
 
 locals {
-  name_prefix = "${var.project}-${var.environment}"
+  name_prefix  = "${var.project}-${var.environment}"
+  allowed_host = replace(replace(var.allowed_origin, "https://", ""), "http://", "")
 }
 
 data "aws_availability_zones" "available" {
@@ -407,6 +408,10 @@ resource "aws_cloudfront_distribution" "metrics" {
     # Managed policy: CachingDisabled (dynamic API — never cache)
     cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     origin_request_policy_id = aws_cloudfront_origin_request_policy.geo[0].id
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.origin_gate[0].arn
+    }
   }
 
   restrictions {
@@ -418,6 +423,54 @@ resource "aws_cloudfront_distribution" "metrics" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+}
+
+# ---------------------------------------------------------------------------
+# Edge origin gate — FREE WAF-equivalent (CloudFront Function, $0): only
+# requests whose Origin/Referer host matches the site pass; /health is exempt
+# for uptime probes. Replaces the paid WAF ACL's main rule at the edge.
+# ---------------------------------------------------------------------------
+resource "aws_cloudfront_function" "origin_gate" {
+  count   = var.enable_cloudfront ? 1 : 0
+  name    = "${local.name_prefix}-origin-gate"
+  runtime = "cloudfront-js-2.0"
+  comment = "Allow only the site's Origin/Referer; /health exempt (free WAF-equivalent)"
+  publish = true
+  code    = <<-EOT
+function handler(event) {
+  var request = event.request;
+
+  // Uptime probes hit /health without Origin/Referer — always allow.
+  if (request.uri === '/health') {
+    return request;
+  }
+
+  var allowed = '${local.allowed_host}';
+  var origin = '';
+  var referer = '';
+  if (request.headers['origin']) origin = request.headers['origin'].value;
+  if (request.headers['referer']) referer = request.headers['referer'].value;
+
+  if (hostname(origin) === allowed || hostname(referer) === allowed) {
+    return request;
+  }
+
+  return {
+    statusCode: 403,
+    statusDescription: 'Forbidden',
+    headers: { 'content-type': { value: 'text/plain' } },
+    body: 'Forbidden',
+  };
+}
+
+function hostname(value) {
+  if (!value) return '';
+  value = value.replace(/^[a-z]+:\/\//i, '');
+  value = value.split('/')[0];
+  value = value.split(':')[0];
+  return value.toLowerCase();
+}
+EOT
 }
 
 # ---------------------------------------------------------------------------
