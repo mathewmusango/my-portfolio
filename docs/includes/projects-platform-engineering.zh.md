@@ -4,6 +4,13 @@
 
     设计并运营了面向现代云原生工作负载的生产级 Kubernetes 平台——Cilium 网络（配合 Calico 和 MetalLB）、DirectPV/MinIO/NFS 存储和安全内建——并使用 GitLab CI/CD、Argo CD、Jenkins 和 SonarQube 创建了端到端的 DevSecOps 交付流水线，在每个阶段嵌入安全和 PCI-DSS 合规。
 
+    !!! note "我的角色"
+
+        **角色：** 平台工程负责人 — Kubernetes 与 DevSecOps
+        **范围：** 生产级 Kubernetes 平台（网络 · 存储 · 安全）；端到端 CI/CD 流水线；PCI-DSS 控制
+        **职责：** 架构 → 构建 → 运维
+        **领导力：** 为应用团队交付平台与交付能力 — 基础设施、CI/CD 和安全即服务
+
     !!! note "主要贡献"
 
         - 在 **Cilium** 上架构平台——配合 **Calico** 和 **MetalLB** 实现网络策略和负载均衡——以及 Gateway API、入口和 WireGuard 加密

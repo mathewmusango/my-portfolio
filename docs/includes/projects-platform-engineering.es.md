@@ -4,6 +4,13 @@
 
     Diseñé y operé una plataforma Kubernetes de grado de producción para cargas de trabajo cloud-native modernas — red Cilium (con Calico y MetalLB en su lugar), almacenamiento DirectPV/MinIO/NFS y seguridad integrada — y creé un pipeline de entrega DevSecOps de extremo a extremo con GitLab CI/CD, Argo CD, Jenkins y SonarQube, integrando seguridad y cumplimiento PCI-DSS en cada etapa.
 
+    !!! note "Mi Rol"
+
+        **Rol:** Líder de Plataforma — Kubernetes y DevSecOps
+        **Alcance:** plataforma Kubernetes de producción (redes · almacenamiento · seguridad); pipeline CI/CD de extremo a extremo; controles PCI-DSS
+        **Propiedad:** arquitectura → construcción → operaciones
+        **Liderazgo:** entregué las capacidades de plataforma y entrega para los equipos de aplicación — infraestructura, CI/CD y seguridad como servicio
+
     !!! note "Contribuciones Clave"
 
         - Arquitecté la plataforma sobre **Cilium** — con **Calico** y **MetalLB** para políticas de red y balanceo de carga — además de Gateway API, ingress y cifrado WireGuard

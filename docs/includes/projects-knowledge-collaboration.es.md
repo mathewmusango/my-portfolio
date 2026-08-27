@@ -4,6 +4,12 @@
 
     Desplegué una instancia de Wikimedia para centralizar el intercambio de conocimiento y la colaboración en toda la organización, con seguridad personalizada y ajuste de rendimiento.
 
+    !!! note "Mi Rol"
+
+        **Rol:** Ingeniero de Plataforma — Infraestructura de Colaboración
+        **Alcance:** plataforma de colaboración autoalojada; ajuste de seguridad y rendimiento
+        **Propiedad:** despliegue → adopción
+
     !!! note "Contribuciones Clave"
 
         - Desplegué y configuré **Wikimedia** para la organización

@@ -4,6 +4,12 @@
 
     Built centralized observability across 200+ servers — unifying metrics, logs, and traces into a single operational view with actionable alerting and dashboards.
 
+    !!! note "My Role"
+
+        **Role:** Platform Engineering Lead — Observability
+        **Scope:** platform architecture across 200+ servers; stack selection (Prometheus · Grafana · Mimir · Loki · Tempo · OpenTelemetry); alerting & SLOs
+        **Ownership:** architecture → deployment → operational adoption
+
     !!! note "Key Contributions"
 
         - Deployed **Prometheus + Grafana + Mimir** for metrics, **Loki** for logs, **Tempo** for tracing

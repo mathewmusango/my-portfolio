@@ -4,6 +4,12 @@
 
     Led the migration of client infrastructure from on-premises to AWS — a scalable, secure cloud architecture with a real disaster recovery story.
 
+    !!! note "My Role"
+
+        **Role:** Technical Lead — Cloud Migration
+        **Scope:** AWS architecture (VPC · Security Groups · Site-to-Site VPN), perimeter hardening, disaster recovery design
+        **Ownership:** architecture → implementation → DR readiness
+
     !!! note "Key Contributions"
 
         - Designed the AWS architecture — VPC, **Security Groups**, and a **Site-to-Site VPN**

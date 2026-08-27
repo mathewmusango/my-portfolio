@@ -4,6 +4,13 @@
 
     Designed and operated a production-grade Kubernetes platform for modern cloud-native workloads — Cilium networking (with Calico and MetalLB in place), DirectPV/MinIO/NFS storage, and security built in — and created an end-to-end DevSecOps delivery pipeline with GitLab CI/CD, Argo CD, Jenkins, and SonarQube, embedding security and PCI-DSS compliance at every stage.
 
+    !!! note "My Role"
+
+        **Role:** Platform Engineering Lead — Kubernetes & DevSecOps
+        **Scope:** production Kubernetes platform (networking · storage · security); end-to-end CI/CD pipeline; PCI-DSS controls
+        **Ownership:** architecture → build → operations
+        **Leadership:** delivered platform and delivery capabilities for application teams — infrastructure, CI/CD, and security as a service
+
     !!! note "Key Contributions"
 
         - Architected the platform on **Cilium** — with **Calico** and **MetalLB** in place for network policies and load balancing — plus Gateway API, ingress, and WireGuard encryption

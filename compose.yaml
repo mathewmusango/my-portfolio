@@ -12,6 +12,9 @@ services:
       - ./overrides:/app/overrides
       - ./scripts:/app/scripts
       - ./.git:/app/.git:ro
+    # Metrics beacon endpoint (host env → container; empty = beacon disabled)
+    environment:
+      - METRICS_ENDPOINT
     command: ["python", "/app/scripts/serve.py", "--dev-addr", "0.0.0.0:8000"]
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8000/health', timeout=3); sys.exit(0 if r.status==200 else 1)"]

@@ -4,6 +4,12 @@
 
     Implemented CIS hardening standards and internal security policies to meet PCI-DSS requirements across enterprise environments.
 
+    !!! note "My Role"
+
+        **Role:** Security & Compliance Lead
+        **Scope:** CIS hardening, vulnerability management, and governance across enterprise environments
+        **Ownership:** standards → enforcement → continuous compliance
+
     !!! note "Key Contributions"
 
         - Applied **CIS benchmarks** and infrastructure hardening across servers
@@ -19,6 +25,12 @@
 ??? note "Building Business Continuity & Disaster Recovery"
 
     Implemented a backup and DR strategy with Veeam — replicating virtual machines to a DR site plus on-site backups, with recovery that is actually tested.
+
+    !!! note "My Role"
+
+        **Role:** Business Continuity Lead
+        **Scope:** backup architecture (Veeam), DR-site replication, recovery testing
+        **Ownership:** design → deployment → tested recovery
 
     !!! note "Key Contributions"
 

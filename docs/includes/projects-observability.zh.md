@@ -4,6 +4,12 @@
 
     构建了覆盖200多台服务器的集中式可观测性——将指标、日志和追踪统一到一个运营视图，并配备可操作的告警和仪表板。
 
+    !!! note "我的角色"
+
+        **角色：** 平台工程负责人 — 可观测性
+        **范围：** 覆盖 200+ 台服务器的平台架构；技术栈选型（Prometheus · Grafana · Mimir · Loki · Tempo · OpenTelemetry）；告警与 SLO
+        **职责：** 架构 → 部署 → 运维落地
+
     !!! note "主要贡献"
 
         - 部署 **Prometheus + Grafana + Mimir** 用于指标，**Loki** 用于日志，**Tempo** 用于追踪

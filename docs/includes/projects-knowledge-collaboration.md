@@ -4,6 +4,12 @@
 
     Deployed a Wikimedia instance to centralize knowledge sharing and collaboration across the organization, with custom security and performance tuning.
 
+    !!! note "My Role"
+
+        **Role:** Platform Engineer — Collaboration Infrastructure
+        **Scope:** self-hosted collaboration platform; security & performance tuning
+        **Ownership:** deployment → adoption
+
     !!! note "Key Contributions"
 
         - Deployed and configured **Wikimedia** for the organization

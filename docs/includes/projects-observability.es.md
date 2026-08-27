@@ -4,6 +4,12 @@
 
     Construí observabilidad centralizada en más de 200 servidores — unificando métricas, logs y trazas en una única vista operativa con alertas accionables y paneles.
 
+    !!! note "Mi Rol"
+
+        **Rol:** Líder de Plataforma — Observabilidad
+        **Alcance:** arquitectura de plataforma en más de 200 servidores; selección de stack (Prometheus · Grafana · Mimir · Loki · Tempo · OpenTelemetry); alertas y SLOs
+        **Propiedad:** arquitectura → despliegue → adopción operativa
+
     !!! note "Contribuciones Clave"
 
         - Desplegué **Prometheus + Grafana + Mimir** para métricas, **Loki** para logs, **Tempo** para trazabilidad

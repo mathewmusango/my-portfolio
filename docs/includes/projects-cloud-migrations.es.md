@@ -4,6 +4,12 @@
 
     Lideré la migración de la infraestructura de clientes de on-premises a AWS — una arquitectura de nube escalable y segura con una historia real de recuperación ante desastres.
 
+    !!! note "Mi Rol"
+
+        **Rol:** Líder Técnico — Migración a la Nube
+        **Alcance:** arquitectura AWS (VPC · Security Groups · Site-to-Site VPN), endurecimiento del perímetro, diseño de recuperación ante desastres
+        **Propiedad:** arquitectura → implementación → preparación para DR
+
     !!! note "Contribuciones Clave"
 
         - Diseñé la arquitectura AWS — VPC, **Security Groups** y una **VPN Site-to-Site**

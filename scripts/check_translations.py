@@ -2,9 +2,10 @@
 """Confirm language translations exist for the site's default-language pages.
 
 docs_structure is "folder": each language has its own directory (docs/en/,
-docs/es/, docs/zh/). For every English page in docs/en/ (excluding the
-includes/ snippet directory), the Spanish (docs/es/) and Chinese (docs/zh/)
-counterparts must exist — including error pages (500.md).
+docs/es/, docs/zh/). For every English page under docs/en/ (recursively,
+excluding the includes/ snippet directory), the Spanish (docs/es/) and
+Chinese (docs/zh/) counterparts must exist — including error pages (500.md)
+and nested pages (metrics/, atlas/, projects/).
 
 Checks performed:
   - Presence:      missing es/zh page                        -> ERROR
@@ -24,7 +25,6 @@ from pathlib import Path
 LANGS = ("es", "zh")
 
 HEADING = re.compile(r"^(#{1,6})\s+.+$")
-
 
 def heading_levels(path: Path) -> list:
     """Sequence of heading levels (1-6) — a structural fingerprint that is
@@ -65,10 +65,13 @@ def main() -> int:
         print(f"ERROR docs/en/ not found (is docs_structure: folder?)")
         return 1
 
-    for en in sorted(en_dir.glob("*.md")):
-        name = en.name
+    for en in sorted(en_dir.rglob("*.md")):
+        if "includes" in en.parts:
+            continue
+        rel = en.relative_to(en_dir)
+        name = str(rel)
         for lang in LANGS:
-            t = en_dir.parent / lang / name
+            t = en_dir.parent / lang / rel
             if not t.exists():
                 errors.append(f"{name}: missing translation {t}")
                 continue
