@@ -152,14 +152,23 @@ resource "aws_iam_policy" "metrics_terraform" {
           "ec2:CreateTags", "ec2:DeleteTags",
           "logs:CreateLogGroup", "logs:DeleteLogGroup", "logs:DescribeLogGroups",
           "logs:ListTagsLogGroup", "logs:TagResource", "logs:UntagResource",
-          "s3:CreateBucket", "s3:DeleteBucket", "s3:GetBucketLocation", "s3:ListBucket",
-          "s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:PutBucketVersioning",
-          "s3:GetBucketTagging", "s3:PutBucketTagging",
-          "s3:GetBucketPublicAccessBlock", "s3:PutBucketPublicAccessBlock",
-          "s3:GetBucketPolicy", "s3:PutBucketPolicy", "s3:DeleteBucketPolicy",
           "sts:GetCallerIdentity"
         ]
         Resource = "*"
+      },
+      {
+        Sid    = "ProjectS3"
+        Effect = "Allow"
+        # All S3 on the PROJECT buckets only (state + site). s3:* avoids the
+        # provider's ever-growing read set (ACL/tagging/versioning/policy ...)
+        # while staying scoped to this project's buckets.
+        Action = ["s3:*"]
+        Resource = [
+          "arn:aws:s3:::${var.state_bucket}",
+          "arn:aws:s3:::${var.state_bucket}/*",
+          "arn:aws:s3:::${var.site_bucket_prefix}*",
+          "arn:aws:s3:::${var.site_bucket_prefix}*/*",
+        ]
       },
       {
         Sid    = "IAMManage"
