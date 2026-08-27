@@ -93,27 +93,6 @@ resource "aws_cloudfront_distribution" "site" {
     cached_methods         = ["GET", "HEAD"]
     # Managed policy: CachingOptimized
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-
-    # Localized 500 error pages (en/es/zh) — redirect based on the request locale.
-    function_association {
-      event_type   = "viewer-response"
-      function_arn = aws_cloudfront_function.site_error_pages[0].arn
-    }
-  }
-
-  # Error pages — 403/404 to the root 404.html (the only locale-agnostic one);
-  # 500s are LOCALIZED (500/, es/500/, zh/500/) -> handled by the
-  # site_error_pages viewer-response function below.
-  custom_error_response {
-    error_code         = 404
-    response_code      = 404
-    response_page_path = "/404.html"
-  }
-
-  custom_error_response {
-    error_code         = 403
-    response_code      = 404
-    response_page_path = "/404.html"
   }
 
   restrictions {
@@ -125,36 +104,6 @@ resource "aws_cloudfront_distribution" "site" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-}
-
-# Localized 500 error pages — the 500 pages are per-locale (500/, es/500/,
-# zh/500/), so on a 500 response we redirect to the request's locale page.
-resource "aws_cloudfront_function" "site_error_pages" {
-  count   = var.enable_site ? 1 : 0
-  name    = "${local.name_prefix}-site-error-pages"
-  runtime = "cloudfront-js-2.0"
-  comment = "Redirect 500 responses to the localized 500 page (en/es/zh)"
-  publish = true
-  code    = <<-EOT
-function handler(event) {
-  var response = event.response;
-  if (response.statusCode !== '500') {
-    return response;
-  }
-  var uri = event.request.uri || '/';
-  var locale = '';
-  var m = uri.match(/^\/(es|zh)(\/|$)/);
-  if (m) { locale = m[1] + '/'; }
-  return {
-    statusCode: 302,
-    statusDescription: 'Found',
-    headers: {
-      location: { value: '/' + locale + '500/' },
-      'content-type': { value: 'text/html; charset=utf-8' },
-    },
-  };
-}
-EOT
 }
 
 # ---------------------------------------------------------------------------

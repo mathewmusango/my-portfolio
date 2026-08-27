@@ -1,9 +1,12 @@
 locals {
   name_prefix  = "${var.project}-${var.environment}"
-  allowed_host = replace(replace(var.allowed_origin, "https://", ""), "http://", "")
+  # Primary origin may be empty (staging: the site's own distro is auto-added via
+  # extra_allowed_origins) — filter it out so CORS/origin-gate stay clean.
+  primary_origins = var.allowed_origin == "" ? [] : [var.allowed_origin]
+  primary_hosts   = var.allowed_origin == "" ? [] : [replace(replace(var.allowed_origin, "https://", ""), "http://", "")]
   # All origins this environment may send from (primary + extra, HTTPS only).
-  metrics_origins = distinct(concat([var.allowed_origin], var.extra_allowed_origins))
-  allowed_hosts   = distinct(concat([local.allowed_host], [for o in var.extra_allowed_origins : replace(replace(o, "https://", ""), "http://", "")]))
+  metrics_origins = distinct(concat(local.primary_origins, var.extra_allowed_origins))
+  allowed_hosts   = distinct(concat(local.primary_hosts, [for o in var.extra_allowed_origins : replace(replace(o, "https://", ""), "http://", "")]))
 }
 
 data "aws_availability_zones" "available" {

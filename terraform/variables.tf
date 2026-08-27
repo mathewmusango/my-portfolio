@@ -39,9 +39,9 @@ variable "enable_cloudfront" {
 }
 
 variable "enable_metrics" {
-  description = "Deploy the metrics stack (API Gateway → Lambda → DynamoDB + its CloudFront edge). OFF until the metrics phase — the site-only stack runs without it."
+  description = "Deploy the metrics stack (API Gateway → Lambda → DynamoDB + its geo CloudFront edge). ON by default since the metrics phase (2026-08-27); set false for a site-only stack."
   type        = bool
-  default     = false
+  default     = true
 }
 
 variable "enable_site" {
