@@ -11,9 +11,13 @@
   var endpoint = (meta.getAttribute("content") || "").trim().replace(/\/+$/, "");
   if (!endpoint) return;
 
+  // Site-relative path — strips the GitHub Pages repo prefix (/my-portfolio)
+  // so the footer counter matches the normalized page keys in the store.
+  var sitePath = location.pathname.replace(/^\/my-portfolio(?=\/|$)/, "") || "/";
+
   // The metrics dashboard doesn't track itself — no footer page counter on
   // /metrics/ or /metrics/analytics/ (any locale).
-  if (/\/(?:es\/|zh\/)?metrics(?:\/analytics)?\/?$/.test(location.pathname)) return;
+  if (/\/(?:es\/|zh\/)?metrics(?:\/analytics)?\/?$/.test(sitePath)) return;
 
   var host = document.getElementById("page-visits");
   if (!host) return;
@@ -21,7 +25,7 @@
   var labels = { en: "Page Visits:", es: "Visitas de página:", zh: "页面访问量：" };
   var label = labels[document.documentElement.lang] || "Page Visits:";
 
-  fetch(endpoint + "/views?page=" + encodeURIComponent(location.pathname), {
+  fetch(endpoint + "/views?page=" + encodeURIComponent(sitePath), {
     headers: { Accept: "application/json" },
     cache: "no-store",
   })

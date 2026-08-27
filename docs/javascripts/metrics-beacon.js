@@ -21,10 +21,15 @@
   if (!endpoint) return;
   if (navigator.doNotTrack === "1") return;
 
+  // Site-relative path — strips the GitHub Pages repo prefix (/my-portfolio)
+  // so metrics stay host-agnostic (gh-pages staging, test/prod CloudFront,
+  // a future custom domain all store the same keys).
+  var sitePath = location.pathname.replace(/^\/my-portfolio(?=\/|$)/, "") || "/";
+
   // The metrics dashboard doesn't track itself — the landing page and the
   // analytics page would otherwise self-inflate their own pageview/vitals
   // counts. Matches /metrics/ and /metrics/analytics/ in any locale.
-  if (/\/(?:es\/|zh\/)?metrics(?:\/analytics)?\/?$/.test(location.pathname)) return;
+  if (/\/(?:es\/|zh\/)?metrics(?:\/analytics)?\/?$/.test(sitePath)) return;
 
   // Anonymous visitor id — localStorage only, no cookies, no identity.
   var VKEY = "__mp_visitor";
@@ -51,7 +56,7 @@
   } catch (e) { /* keep desktop */ }
 
   function send(payload) {
-    payload.page = location.pathname;
+    payload.page = sitePath;
     payload.lang = document.documentElement.lang || "en";
     if (visitor) payload.visitor = visitor;
     if (device) payload.device = device;
