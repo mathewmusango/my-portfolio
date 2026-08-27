@@ -18,10 +18,10 @@ Live: <https://mathewmusango.github.io/my-portfolio/>
 
 ## Development
 
-This repo is the **production mirror** — it exists so GitHub Actions can build and deploy the
-site. Local development (live-reload dev server with podman, `compose.yaml`) happens in the
-private source repo, which also holds the promotion tooling (`promote.sh`) and the full
-DevOps/SRE documentation (`DEVOPS.md`).
+This is the **single source of truth** — local development and deployment both run from here.
+Local development uses the live-reload dev server (`compose.yaml` → podman, backed by
+`scripts/serve.py`, which also exposes a `/health` endpoint). Commits to `main` are built,
+checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD
 
@@ -37,7 +37,9 @@ DevOps/SRE documentation (`DEVOPS.md`).
   packages `site.zip`, generates a CycloneDX SBOM (`sbom.cdx.json`) from `requirements.txt`,
   and creates/refreshes a GitHub Release with notes from `CHANGELOG.md`.
 
-No stored secrets are required — workflows use the auto-scoped `GITHUB_TOKEN`.
+Build, deploy, and release workflows use only the auto-scoped `GITHUB_TOKEN`. The Terraform
+workflow additionally assumes an AWS role via **OIDC** (no long-lived keys) using repo secrets
+(`AWS_ROLE_ARN`, `AWS_REGION`, `METRICS_ENDPOINT`).
 
 ## Infrastructure as Code (Terraform)
 
