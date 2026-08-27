@@ -21,6 +21,11 @@
   if (!endpoint) return;
   if (navigator.doNotTrack === "1") return;
 
+  // The metrics dashboard doesn't track itself — the landing page and the
+  // analytics page would otherwise self-inflate their own pageview/vitals
+  // counts. Matches /metrics/ and /metrics/analytics/ in any locale.
+  if (/\/(?:es\/|zh\/)?metrics(?:\/analytics)?\/?$/.test(location.pathname)) return;
+
   // Anonymous visitor id — localStorage only, no cookies, no identity.
   var VKEY = "__mp_visitor";
   var visitor = "";
