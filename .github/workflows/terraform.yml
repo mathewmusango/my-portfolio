@@ -54,12 +54,14 @@ jobs:
           # Free-Tier default: WAF + private VPC are OFF (the Logs VPC endpoint
           # and WAF are outside the Free Tier). The Lambda origin gate (403 for
           # non-site origins) + least-privilege IAM are the free security
-          # controls. Flip enable_vpc/enable_waf for the hardened variant.
+          # controls. CloudFront is ON (geo headers + HTTPS edge). Flip
+          # enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
             -var environment=prod \
             -var allowed_origin=https://mathewmusango.github.io \
             -var enable_vpc=false \
-            -var enable_waf=false
+            -var enable_waf=false \
+            -var enable_cloudfront=true
 
       - name: Apply (manual dispatch only)
         if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
