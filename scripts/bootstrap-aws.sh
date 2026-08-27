@@ -34,7 +34,18 @@ fi
 # Deployment values — required from .env, never hardcoded here.
 PROJECT="${PROJECT:?set PROJECT in .env (see .env.sample)}"
 AWS_REGION="${AWS_REGION:?set AWS_REGION in .env (see .env.sample)}"
-REPOS="${REPOS:?set REPOS in .env (e.g. [\"owner/repo\"])}"
+REPOS="${REPOS:?set REPOS in .env (e.g. mathewmusango/my-portfolio)}"
+
+# Space-separated repo list -> JSON array for -var repos (sh would strip inner
+# quotes from a JSON literal stored in .env, so the script builds the array).
+REPO_JSON=""
+for _repo in $REPOS; do
+  if [ -n "$REPO_JSON" ]; then
+    REPO_JSON="$REPO_JSON, "
+  fi
+  REPO_JSON="$REPO_JSON\"$_repo\""
+done
+REPO_JSON="[$REPO_JSON]"
 
 # Credentials — 'prod' profile by default, overridable via env/.env.
 AWS_PROFILE="${AWS_PROFILE:-prod}"
@@ -72,7 +83,7 @@ AWS_PROFILE="$AWS_PROFILE" terraform apply -auto-approve -no-color -input=false 
   -var "aws_region=$AWS_REGION" \
   -var "name_prefix=$PROJECT" \
   -var "role_name=github-actions-$PROJECT-$ENV" \
-  -var "repos=$REPOS" \
+  -var "repos=$REPO_JSON" \
   -var "state_bucket=$PROJECT-$ENV-tfstate" \
   -var "state_lock_table=$PROJECT-$ENV-tfstate-lock" \
   -var "site_bucket_prefix=$PROJECT-$ENV-site" \
