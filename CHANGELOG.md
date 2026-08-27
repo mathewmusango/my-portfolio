@@ -11,6 +11,25 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [3.0.0] - 2026-08-28
+
+### Added
+- **AWS platform (staging + prod)** — the site now runs on real infrastructure: a private S3 bucket behind CloudFront (OAC) serving at `/`, with staging (main pushes) and prod (`v*` tags) environments.
+- **Three deploy targets**: staging S3 on `main`, prod S3 + GitHub Pages on `v*` tags — deploys gate on `docs/` / `overrides/` / `mkdocs.yml` changes.
+- **Live visitor analytics (both environments)**: CloudFront (geo headers) → API Gateway → Lambda (reader/writer, least-privilege IAM) → DynamoDB (90-day TTL) — the Site Metrics dashboard now shows real data.
+- **Free edge origin-gate** (CloudFront Function): only the site may call the metrics API — WAF-equivalent at $0.
+- **Localized error pages** (403/404 → `/404.html`, 500 → language-matched page) and **directory-URL resolution** (`/path/` → `/path/index.html`) on CloudFront.
+
+### Changed
+- **Terraform value hygiene** — zero static values in code: `project`, `environment`, `aws_region`, `allowed_origin`, and `tags` are injected at runtime (CI secrets / local tfvars); the WAF host is derived from `allowed_origin`.
+- **Per-environment least-privilege roles** (terraform vs deploy) and state-based OIDC provider ownership.
+- **Language switcher** fixed on all hosts (relative links — dev server, S3, CloudFront).
+- **Metrics endpoint per target** — staging and prod each bake their own beacon endpoint at build time.
+
+### Fixed
+- 404s on CloudFront + S3 from directory URLs and non-root path layouts.
+- Metrics beacon fetch failing with schemeless endpoints — endpoints are now configured with the full `https://` URL.
+
 ## [2.5.0] - 2026-08-25
 
 ### Added
