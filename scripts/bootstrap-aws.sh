@@ -12,8 +12,9 @@
 # in code. AWS credentials come from the 'prod' profile (or AWS_ACCESS_KEY_ID /
 # AWS_SECRET_ACCESS_KEY env vars).
 #
-# Run STAGING first — it creates the account-level GitHub OIDC provider; PROD
-# reuses it (manage_provider=false).
+# Order-free: the script checks whether the account-level GitHub OIDC provider
+# already exists and sets manage_provider accordingly — the first run creates
+# it, later runs reuse it.
 
 set -eu
 
@@ -35,20 +36,37 @@ PROJECT="${PROJECT:?set PROJECT in .env (see .env.sample)}"
 AWS_REGION="${AWS_REGION:?set AWS_REGION in .env (see .env.sample)}"
 REPOS="${REPOS:?set REPOS in .env (e.g. [\"owner/repo\"])}"
 
+# Credentials — 'prod' profile by default, overridable via env/.env.
+AWS_PROFILE="${AWS_PROFILE:-prod}"
+export AWS_PROFILE
+
 cd "$ROOT/terraform/ci"
 
 case "$ENV" in
   staging)
     REF_PATTERNS='["ref:refs/heads/main"]'
-    MANAGE_PROVIDER=true
     ;;
   prod)
     REF_PATTERNS='["ref:refs/tags/v*"]'
-    MANAGE_PROVIDER=false
     ;;
 esac
 
-AWS_PROFILE=prod terraform apply -auto-approve -no-color -input=false \
+# Detect the account-level GitHub OIDC provider — whoever runs first creates it
+# (manage_provider=true); later runs reuse it via the ci module's data lookup.
+if ! PROVIDER_LIST="$(aws iam list-open-id-connect-providers --output text --query 'OpenIDConnectProviderList[].Arn' 2>&1)"; then
+  echo "error: cannot list OIDC providers (check AWS_PROFILE / credentials)" >&2
+  echo "$PROVIDER_LIST" >&2
+  exit 1
+fi
+if echo "$PROVIDER_LIST" | grep -q "token.actions.githubusercontent.com"; then
+  MANAGE_PROVIDER=false
+  PROVIDER_NOTE="reusing (provider exists)"
+else
+  MANAGE_PROVIDER=true
+  PROVIDER_NOTE="creating (provider not found)"
+fi
+
+AWS_PROFILE="$AWS_PROFILE" terraform apply -auto-approve -no-color -input=false \
   -state="terraform.$ENV.tfstate" \
   -var "environment=$ENV" \
   -var "aws_region=$AWS_REGION" \
@@ -63,8 +81,9 @@ AWS_PROFILE=prod terraform apply -auto-approve -no-color -input=false \
   -var "tags={\"project\":\"$PROJECT\",\"managed_by\":\"terraform\",\"environment\":\"$ENV\"}"
 
 echo "Bootstrap complete for $PROJECT/$ENV ($AWS_REGION):"
-echo "  role:          github-actions-$PROJECT-$ENV"
-echo "  state bucket:  $PROJECT-$ENV-tfstate"
-echo "  lock table:    $PROJECT-$ENV-tfstate-lock"
-echo "  site buckets:  $PROJECT-$ENV-site*"
-echo "  trust refs:    $REF_PATTERNS"
+echo "  role:           github-actions-$PROJECT-$ENV"
+echo "  state bucket:   $PROJECT-$ENV-tfstate"
+echo "  lock table:     $PROJECT-$ENV-tfstate-lock"
+echo "  site buckets:   $PROJECT-$ENV-site*"
+echo "  oidc provider:  $PROVIDER_NOTE"
+echo "  trust refs:     $REF_PATTERNS"
