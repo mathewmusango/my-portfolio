@@ -29,6 +29,11 @@
     RESUME: { en: "Resume", es: "Currículum", zh: "简历" },
     CONTACT: { en: "Contact", es: "Contacto", zh: "联系我" },
     METRICS: { en: "Site Metrics", es: "Métricas del sitio", zh: "站点指标" },
+    CF: { en: "Amazon CloudFront", es: "Amazon CloudFront", zh: "Amazon CloudFront" },
+    API: { en: "API Gateway", es: "API Gateway", zh: "API 网关" },
+    W: { en: "Lambda · writer", es: "Lambda · escritor", zh: "Lambda · 写入" },
+    R: { en: "Lambda · reader", es: "Lambda · lector", zh: "Lambda · 读取" },
+    DDB: { en: "Amazon DynamoDB", es: "Amazon DynamoDB", zh: "Amazon DynamoDB" },
     ATLAS: { en: "Site Atlas", es: "Atlas del sitio", zh: "站点图谱" },
     A2: { en: "Release Timeline", es: "Cronología de Versiones", zh: "版本时间线" },
     A3: { en: "Tags", es: "Etiquetas", zh: "标签" },
@@ -54,6 +59,13 @@
     ["ATLAS", "A2"],
     ["ATLAS", "A3"],
     ["ATLAS", "A4"],
+    // The analytics stack behind Site Metrics — connected into the same diagram.
+    ["METRICS", "CF"],
+    ["CF", "API"],
+    ["API", "W"],
+    ["API", "R"],
+    ["W", "DDB"],
+    ["R", "DDB"],
   ];
 
   var URLS = {
@@ -72,6 +84,11 @@
     RESUME: "/my-portfolio/resume/",
     CONTACT: "/my-portfolio/contact/",
     METRICS: "/my-portfolio/metrics/",
+    CF: "/my-portfolio/metrics/analytics/",
+    API: "/my-portfolio/metrics/",
+    W: "/my-portfolio/metrics/",
+    R: "/my-portfolio/metrics/",
+    DDB: "/my-portfolio/metrics/",
     ATLAS: "/my-portfolio/atlas/",
     A2: "/my-portfolio/atlas/releases/",
     A3: "/my-portfolio/atlas/tags/",
