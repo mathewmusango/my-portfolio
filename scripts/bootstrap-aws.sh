@@ -7,12 +7,13 @@
 #   - lock table        <project>-<env>-tfstate-lock
 #   - deploy policies   scoped to <project>-<env>-site buckets
 #
-# Uses the local AWS 'prod' profile (root credentials — the one-time seed;
-# everything after this runs via GitHub Actions OIDC).
+# Deployment values (PROJECT / AWS_REGION / REPOS) are picked from .env at the
+# repo root (gitignored — see .env.sample); nothing deployment-specific lives
+# in code. AWS credentials come from the 'prod' profile (or AWS_ACCESS_KEY_ID /
+# AWS_SECRET_ACCESS_KEY env vars).
 #
-# Portable: override PROJECT and AWS_REGION for a different project/region
-# (defaults: my-portfolio / us-east-1). Run STAGING first — it creates the
-# account-level GitHub OIDC provider; PROD reuses it (manage_provider=false).
+# Run STAGING first — it creates the account-level GitHub OIDC provider; PROD
+# reuses it (manage_provider=false).
 
 set -eu
 
@@ -22,11 +23,19 @@ case "$ENV" in
   *) echo "usage: scripts/bootstrap-aws.sh <staging|prod>"; exit 1 ;;
 esac
 
-PROJECT="${PROJECT:-my-portfolio}"
-# Deployment value — must come from the caller's env (never hardcoded here).
-AWS_REGION="${AWS_REGION:?set AWS_REGION (e.g. AWS_REGION=us-east-1) — not stored in the repo}"
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+if [ -f "$ROOT/.env" ]; then
+  set -a
+  . "$ROOT/.env"
+  set +a
+fi
 
-cd terraform/ci
+# Deployment values — required from .env, never hardcoded here.
+PROJECT="${PROJECT:?set PROJECT in .env (see .env.sample)}"
+AWS_REGION="${AWS_REGION:?set AWS_REGION in .env (see .env.sample)}"
+REPOS="${REPOS:?set REPOS in .env (e.g. [\"owner/repo\"])}"
+
+cd "$ROOT/terraform/ci"
 
 case "$ENV" in
   staging)
@@ -42,9 +51,10 @@ esac
 AWS_PROFILE=prod terraform apply -auto-approve -no-color -input=false \
   -state="terraform.$ENV.tfstate" \
   -var "environment=$ENV" \
-  -var "name_prefix=$PROJECT" \
   -var "aws_region=$AWS_REGION" \
+  -var "name_prefix=$PROJECT" \
   -var "role_name=github-actions-$PROJECT-$ENV" \
+  -var "repos=$REPOS" \
   -var "state_bucket=$PROJECT-$ENV-tfstate" \
   -var "state_lock_table=$PROJECT-$ENV-tfstate-lock" \
   -var "site_bucket_prefix=$PROJECT-$ENV-site" \
