@@ -80,8 +80,8 @@ jobs:
           # Free-Tier default: WAF + private VPC are OFF (the Logs VPC endpoint
           # and WAF are outside the Free Tier). The Lambda origin gate (403 for
           # non-site origins) + least-privilege IAM are the free security
-          # controls. CloudFront is ON (geo headers + HTTPS edge). Flip
-          # enable_vpc/enable_waf for the hardened variant.
+          # controls. Geo headers come from CloudFront — BOTH envs get the edge.
+          # Flip enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
             -var "environment=${{ steps.env.outputs.environment }}" \
             -var "project=${{ secrets.PROJECT }}" \
@@ -89,7 +89,6 @@ jobs:
             -var "allowed_origin=${{ steps.env.outputs.environment == 'prod' && secrets.PROD_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}" \
             -var enable_vpc=false \
             -var enable_waf=false \
-            # Geo headers come from CloudFront — BOTH envs get the metrics edge.
             -var enable_cloudfront=true
 
       - name: Apply (staging auto on main; prod only via manual dispatch)
