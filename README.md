@@ -25,35 +25,43 @@ checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD
 
-- **CI** (`.github/workflows/ci.yml`) — on every push/PR to `main`: shared build action
-  (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link check, CSS
-  sanity check) with the production `site_url`; uploads the built `site/` as an artifact
-  (7-day retention).
-- **Deploy** (`.github/workflows/deploy.yml`) — separate stage triggered when CI **completes
-  successfully** on `main` (`workflow_run`): downloads the CI artifact and force-pushes the
-  static output to the `gh-pages` branch, which GitHub Pages serves at
-  <https://mathewmusango.github.io/my-portfolio/>. Deploy commits are authored as `mathewmusango`.
+- **CI** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
+  build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
+  check, CSS sanity check) with the production `site_url`; uploads the built `site/` as an
+  artifact (7-day retention).
+- **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
+  syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) + CloudFront
+  invalidation (OIDC `STAGING_DEPLOY_ROLE_ARN`).
+- **Deploy prod** (`.github/workflows/deploy.yml`) — on CI success for **`v*` tags only**: the
+  `deploy-pages` job force-pushes the artifact to `gh-pages` (GitHub Pages — the public site at
+  <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
+  `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
+  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN`).
 - **Release** (`.github/workflows/release.yml`) — on `v*` tags (or manual dispatch): builds,
   packages `site.zip`, generates a CycloneDX SBOM (`sbom.cdx.json`) from `requirements.txt`,
   and creates/refreshes a GitHub Release with notes from `CHANGELOG.md`.
 
-Build, deploy, and release workflows use only the auto-scoped `GITHUB_TOKEN`. The Terraform
-workflow additionally assumes an AWS role via **OIDC** (no long-lived keys) using repo secrets
-(`AWS_ROLE_ARN`, `AWS_REGION`, `METRICS_ENDPOINT`).
+Build and release workflows use only the auto-scoped `GITHUB_TOKEN`. Deploys and Terraform
+assume AWS roles via **OIDC** (no long-lived keys) using repo secrets: `STAGING/PROD_TERRAFORM_ROLE_ARN`,
+`STAGING/PROD_DEPLOY_ROLE_ARN`, `PROJECT`, `AWS_REGION`, `PROD_ALLOWED_ORIGIN`.
 
 ## Infrastructure as Code (Terraform)
 
-The site's visitor-analytics backend is real AWS infrastructure, defined with **Terraform**:
+Real AWS infrastructure, defined with **Terraform** — a site-first stack:
 
-- **CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB** — **Free-Tier by
-  default**: least-privilege IAM (separate writer/reader roles) and a Lambda
-  origin gate (403 for non-site requests). WAF + a private VPC are opt-in
-  (~$14/mo combined) behind `enable_waf`/`enable_vpc`.
-- The Terraform definitions live in this repository (`terraform/`), applied via
-  GitHub Actions using OIDC — the environment is chosen by the trigger (main →
-  staging, `v*` tags → prod). **Staging applies automatically on `main`; prod
-  plans only — its apply stays manual.** No state or secrets are ever committed;
-  state lives in a private S3 backend with DynamoDB locking.
+- **Site (live)** — private S3 bucket + CloudFront (OAC, HTTP/2+3, localized error pages,
+  serving at `/`). The staging and prod sites deploy here via the workflows above; buckets are
+  **never public** (origin access control only).
+- **Metrics (gated, `enable_metrics=false` until the metrics phase)** — API Gateway → Lambda →
+  DynamoDB behind a geo-enabled CloudFront edge. **Free-Tier by default**: least-privilege IAM,
+  an edge origin-gate (403 for non-site origins, HTTPS only) and multi-origin CORS (auto-includes
+  the site's own CloudFront domain). WAF + a private VPC are opt-in behind `enable_waf`/`enable_vpc`.
+- **Per-environment roles split by job**: `-terraform` (stack plan/apply) and `-deploy` (S3
+  content sync + invalidation only — least privilege for the role that runs most).
+- Applied via GitHub Actions using OIDC — the environment comes from the trigger (main →
+  staging, `v*` tags → prod). **Staging applies automatically on `main`; prod plans only — its
+  apply stays manual.** No state or secrets are ever committed; state lives in per-env private
+  S3 backends with DynamoDB locking.
 
 ## Security
 

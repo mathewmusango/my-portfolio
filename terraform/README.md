@@ -1,4 +1,8 @@
-# Terraform — Site Metrics Backend (Lambda + API Gateway + DynamoDB)
+# Terraform — Site + Metrics stack (S3/CloudFront site · gated API Gateway/Lambda/DynamoDB)
+
+**Site-first:** the live stack is the static site (private S3 bucket + CloudFront via OAC,
+serving at `/`). The metrics backend (API Gateway → Lambda → DynamoDB, geo CloudFront edge) is
+gated behind `enable_metrics=false` until the metrics phase — `terraform/modules/metrics/`.
 
 Privacy-first visitor analytics for `my-portfolio`, built as real infrastructure:
 **CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB**, all defined in Terraform.
