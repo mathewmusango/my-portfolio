@@ -5,13 +5,20 @@ provider "aws" {
 data "aws_caller_identity" "current" {}
 
 locals {
-  provider_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
+  provider_arn = (
+    var.manage_provider
+    ? aws_iam_openid_connect_provider.github[0].arn
+    : data.aws_iam_openid_connect_provider.github[0].arn
+  )
 }
 
 # ---------------------------------------------------------------------------
 # OIDC identity provider for GitHub Actions
+# (account-global: created once by the first environment, reused by the rest)
 # ---------------------------------------------------------------------------
 resource "aws_iam_openid_connect_provider" "github" {
+  count = var.manage_provider ? 1 : 0
+
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
   # GitHub's OIDC signing certificate thumbprints (SHA-1 of the DER certs from
@@ -24,6 +31,11 @@ resource "aws_iam_openid_connect_provider" "github" {
     "38e9b30b3a023a1b72309921a69a42fcc496c42c", # current GitHub OIDC key
     "4f3e9ad8c9a6f5eb3173006f4fa630e28f43dce9", # current GitHub OIDC key
   ]
+}
+
+data "aws_iam_openid_connect_provider" "github" {
+  count = var.manage_provider ? 0 : 1
+  url   = "https://token.actions.githubusercontent.com"
 }
 
 # ---------------------------------------------------------------------------
@@ -45,9 +57,11 @@ resource "aws_iam_role" "github_actions" {
         StringLike = {
           "token.actions.githubusercontent.com:sub" : [
             # GitHub's sub claim includes node IDs since 2025:
-            #   repo:OWNER@<owner-id>/REPO@<repo-id>:ref:refs/heads/<branch>
-            # so each repo pattern wildcards both IDs with @*.
-            for repo in var.repos : "repo:${replace(repo, "/", "@*/")}@*:*"
+            #   repo:OWNER@<owner-id>/REPO@<repo-id>:ref:refs/<ref>
+            # so each repo pattern wildcards both IDs with @*; ref_patterns
+            # then scopes the ref (e.g. main only for staging, v* tags for prod).
+            for pair in setproduct(var.repos, var.ref_patterns) :
+            "repo:${replace(pair[0], "/", "@*/")}@*:${pair[1]}"
           ]
         }
       }
@@ -62,7 +76,7 @@ resource "aws_iam_role" "github_actions" {
 # `ec2:*`/`iam:*` are broad service-level grants — tighten to specific
 # resource ARNs if this ever leaves a personal portfolio.
 resource "aws_iam_policy" "metrics_terraform" {
-  name        = "my-portfolio-metrics-terraform"
+  name        = "${var.name_prefix}-${var.environment}-metrics-terraform"
   description = "Allow GitHub Actions to plan/apply the my-portfolio metrics terraform stack."
 
   policy = jsonencode({
@@ -148,7 +162,7 @@ resource "aws_iam_policy" "metrics_terraform" {
 
 # --- Policy: future S3 site deploy (gh-pages → S3 + CloudFront invalidation)
 resource "aws_iam_policy" "site_deploy" {
-  name        = "my-portfolio-site-deploy"
+  name        = "${var.name_prefix}-${var.environment}-site-deploy"
   description = "Allow GitHub Actions to publish the site to S3 and invalidate CloudFront."
 
   policy = jsonencode({

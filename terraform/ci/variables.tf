@@ -1,7 +1,17 @@
 variable "aws_region" {
-  description = "Region for the state bucket + lock table (the OIDC provider and role are global)."
+  description = "Region for the state bucket + lock table (the OIDC provider and role are global). Deployment value — supplied via TF_VAR_aws_region / -var at runtime (bootstrap script, CI secret), never hardcoded."
   type        = string
-  default     = "us-east-1"
+}
+
+variable "environment" {
+  description = "Environment label (staging|prod) — suffixed into account-global names (IAM policies)."
+  type        = string
+}
+
+variable "name_prefix" {
+  description = "Project prefix for account-global names (IAM policies)."
+  type        = string
+  default     = "my-portfolio"
 }
 
 variable "role_name" {
@@ -11,11 +21,23 @@ variable "role_name" {
 }
 
 variable "repos" {
-  description = "GitHub repos allowed to assume the role ('owner/repo'). Only mathewmusango/my-portfolio (the operational repo) — the test repo is a mirror and does not run terraform against real AWS."
+  description = "GitHub repos allowed to assume the role ('owner/repo')."
   type        = list(string)
   default = [
-    "mathewmusango/my-portfolio", # prod repo — runs terraform.yml
+    "mathewmusango/my-portfolio", # the operational repo
   ]
+}
+
+variable "ref_patterns" {
+  description = "GitHub ref patterns allowed to assume the role (wildcarded on the sub claim, e.g. 'ref:refs/heads/main' or 'ref:refs/tags/v*')."
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "manage_provider" {
+  description = "Create the account-level GitHub OIDC provider (true for the FIRST environment only; later environments reuse it via a data lookup)."
+  type        = bool
+  default     = true
 }
 
 variable "state_bucket" {

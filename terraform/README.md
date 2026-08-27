@@ -152,12 +152,25 @@ curl http://<api-id>.execute-api.localhost:4566/summary
 
 ### Backend (state)
 
-**Shared S3 backend** — `versions.tf` uses bucket `my-portfolio-tfstate`
-(versioned, encrypted) + DynamoDB lock `my-portfolio-tfstate-lock`, both created
-by the `terraform/ci` module. Local dev and CI therefore plan/apply the **same**
-state: local points at the bucket via `AWS_ENDPOINT_URL` (Ministack) or real
-S3; CI uses the OIDC role. The original local state was migrated with
-`terraform init -migrate-state`.
+**Portable S3 backend** — `versions.tf` declares `backend "s3" {}` with no values:
+bucket, key, region and the DynamoDB lock table are supplied at init via
+`-backend-config`, so the module works for any project/region. Per-environment
+buckets (`<project>-<env>-tfstate` + `<project>-<env>-tfstate-lock`) are created
+by the `terraform/ci` module (`scripts/bootstrap-aws.sh`). Example init:
+
+```sh
+terraform init \
+  -backend-config="bucket=my-portfolio-prod-tfstate" \
+  -backend-config="key=metrics/terraform.tfstate" \
+  -backend-config="region=us-east-1" \
+  -backend-config="dynamodb_table=my-portfolio-prod-tfstate-lock" \
+  -backend-config="encrypt=true"
+```
+
+CI does the same automatically from the repo variables `TF_STATE_BUCKET` /
+`TF_STATE_LOCK_TABLE` (with `my-portfolio-prod-*` fallbacks) and the
+`AWS_REGION` secret. Local dev points at the bucket via `AWS_ENDPOINT_URL`
+(Ministack) or real S3.
 
 ## Site integration (done on this branch)
 

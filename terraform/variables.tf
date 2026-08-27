@@ -1,7 +1,6 @@
 variable "aws_region" {
-  description = "AWS region for the metrics stack (CloudFront is global regardless)."
+  description = "AWS region for the metrics stack (CloudFront is global regardless). Deployment value — supplied via TF_VAR_aws_region / -var (CI secret), never hardcoded."
   type        = string
-  default     = "us-east-1"
 }
 
 variable "project" {
@@ -17,9 +16,8 @@ variable "environment" {
 }
 
 variable "allowed_origin" {
-  description = "CORS origin for the metrics API — the site that sends events."
+  description = "CORS origin for the metrics API — the site that sends events. Deployment value — supplied via -var (repo variable), never hardcoded."
   type        = string
-  default     = "https://mathewmusango.github.io"
 }
 
 variable "event_retention_days" {

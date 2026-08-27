@@ -12,14 +12,9 @@ terraform {
     }
   }
 
-  # State: shared S3 backend (bucket + lock table created by terraform/ci).
-  # Local dev points at the same backend via the AWS env vars (Ministack S3 when
-  # AWS_ENDPOINT_URL is set, real S3 otherwise) — every plan/apply shares one state.
-  backend "s3" {
-    bucket         = "my-portfolio-tfstate"
-    key            = "metrics/terraform.tfstate"
-    region         = "us-east-1"
-    dynamodb_table = "my-portfolio-tfstate-lock"
-    encrypt        = true
-  }
+  # State: S3 backend — bucket / key / region / lock table are supplied at init
+  # via -backend-config (workflow, bootstrap script, or local command) so this
+  # module is portable across projects and regions. Nothing account-specific
+  # lives in this file.
+  backend "s3" {}
 }

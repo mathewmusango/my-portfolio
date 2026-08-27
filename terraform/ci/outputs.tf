@@ -5,7 +5,11 @@ output "role_arn" {
 
 output "oidc_provider_arn" {
   description = "The GitHub OIDC identity provider ARN."
-  value       = aws_iam_openid_connect_provider.github.arn
+  value = (
+    var.manage_provider
+    ? aws_iam_openid_connect_provider.github[0].arn
+    : data.aws_iam_openid_connect_provider.github[0].arn
+  )
 }
 
 output "state_bucket" {

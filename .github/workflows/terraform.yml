@@ -43,8 +43,14 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Init (S3 backend — shared state with local dev)
-        run: terraform init -input=false
+      - name: Init (S3 backend — portable; values from repo vars/secrets)
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.TF_STATE_BUCKET || 'my-portfolio-prod-tfstate' }}" \
+            -backend-config="key=metrics/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}" \
+            -backend-config="dynamodb_table=${{ vars.TF_STATE_LOCK_TABLE || 'my-portfolio-prod-tfstate-lock' }}" \
+            -backend-config="encrypt=true"
 
       - name: Validate
         run: terraform validate
@@ -57,8 +63,9 @@ jobs:
           # controls. CloudFront is ON (geo headers + HTTPS edge). Flip
           # enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
-            -var environment=prod \
-            -var allowed_origin=https://mathewmusango.github.io \
+            -var "environment=${{ vars.TF_ENVIRONMENT || 'prod' }}" \
+            -var "aws_region=${{ secrets.AWS_REGION }}" \
+            -var "allowed_origin=${{ vars.ALLOWED_ORIGIN }}" \
             -var enable_vpc=false \
             -var enable_waf=false \
             -var enable_cloudfront=true
