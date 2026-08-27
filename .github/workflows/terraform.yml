@@ -84,6 +84,7 @@ jobs:
           # enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
             -var "environment=${{ steps.env.outputs.environment }}" \
+            -var "project=${{ secrets.PROJECT }}" \
             -var "aws_region=${{ secrets.AWS_REGION }}" \
             -var "allowed_origin=${{ steps.env.outputs.environment == 'prod' && secrets.PROD_ALLOWED_ORIGIN || secrets.STAGING_ALLOWED_ORIGIN }}" \
             -var enable_vpc=false \
