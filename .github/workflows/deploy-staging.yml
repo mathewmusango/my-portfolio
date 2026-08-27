@@ -22,10 +22,10 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 2
 
-      - name: Check docs changes (deploy only when docs/ changed)
+      - name: Check site changes (deploy only when docs/ overrides/ mkdocs.yml changed)
         id: docs
         run: |
-          if git rev-parse -q --verify HEAD~1 >/dev/null 2>&1 && ! git diff --name-only HEAD~1 HEAD -- docs/ | grep -q .; then
+          if git rev-parse -q --verify HEAD~1 >/dev/null 2>&1 && ! git diff --name-only HEAD~1 HEAD -- docs/ overrides/ mkdocs.yml | grep -q .; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
