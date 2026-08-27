@@ -95,6 +95,7 @@ resource "aws_iam_policy" "metrics_terraform" {
           "dynamodb:CreateTable", "dynamodb:DeleteTable", "dynamodb:DescribeTable",
           "dynamodb:UpdateTable", "dynamodb:ListTables", "dynamodb:TagResource",
           "dynamodb:UntagResource", "dynamodb:ListTagsOfResource",
+          "dynamodb:DescribeContinuousBackups", "dynamodb:DescribeTimeToLive",
           "lambda:CreateFunction", "lambda:UpdateFunctionCode", "lambda:UpdateFunctionConfiguration",
           "lambda:DeleteFunction", "lambda:GetFunction", "lambda:ListFunctions",
           "lambda:AddPermission", "lambda:RemovePermission", "lambda:TagResource", "lambda:UntagResource", "lambda:ListTags",
