@@ -19,7 +19,7 @@ jobs:
       - uses: ./.github/actions/build-site
         with:
           site_url: https://mathewmusango.github.io/my-portfolio/
-          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
+          metrics_endpoint: ${{ secrets.METRICS_ENDPOINT }}
 
       - name: Upload site artifact
         uses: actions/upload-artifact@v7
