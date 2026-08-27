@@ -93,6 +93,13 @@ resource "aws_cloudfront_distribution" "site" {
     cached_methods         = ["GET", "HEAD"]
     # Managed policy: CachingOptimized
     cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+
+    # S3 doesn't resolve directory URLs (/metrics/ -> metrics/index.html) the
+    # way GitHub Pages does — rewrite them at the edge.
+    function_association {
+      event_type   = "viewer-request"
+      function_arn = aws_cloudfront_function.site_index[0].arn
+    }
   }
 
   restrictions {
@@ -104,6 +111,26 @@ resource "aws_cloudfront_distribution" "site" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+}
+
+# Directory-URL resolution for the S3 origin: mkdocs builds /metrics/index.html
+# and links to /metrics/ — append index.html to trailing-slash requests.
+resource "aws_cloudfront_function" "site_index" {
+  count   = var.enable_site ? 1 : 0
+  name    = "${local.name_prefix}-site-index"
+  runtime = "cloudfront-js-2.0"
+  comment = "Resolve directory URLs (/path/ -> /path/index.html) on the S3 origin"
+  publish = true
+  code    = <<-EOT
+function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  if (uri.endsWith('/')) {
+    request.uri = uri + 'index.html';
+  }
+  return request;
+}
+EOT
 }
 
 # ---------------------------------------------------------------------------
