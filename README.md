@@ -51,9 +51,9 @@ The site's visitor-analytics backend is real AWS infrastructure, defined with **
   (~$14/mo combined) behind `enable_waf`/`enable_vpc`.
 - The Terraform definitions live in this repository (`terraform/`), applied via
   GitHub Actions using OIDC — the environment is chosen by the trigger (main →
-  staging, `v*` tags → prod); plans run automatically, **apply is manual only**.
-  No state or secrets are ever committed; state lives in a private S3 backend
-  with DynamoDB locking.
+  staging, `v*` tags → prod). **Staging applies automatically on `main`; prod
+  plans only — its apply stays manual.** No state or secrets are ever committed;
+  state lives in a private S3 backend with DynamoDB locking.
 
 ## Security
 

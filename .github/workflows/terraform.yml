@@ -1,10 +1,10 @@
 name: Terraform
 
 # Environment is controlled from GitHub by the trigger:
-#   push main (terraform/**)  -> staging (plan)
-#   push v* tag               -> prod   (plan)
+#   push main (terraform/**)  -> staging — plan + AUTO-APPLY
+#   push v* tag               -> prod   — plan only (apply stays manual)
 #   workflow_dispatch         -> choose environment + action
-# Apply is NEVER automatic — a blind auto-apply is how stacks get destroyed.
+# Prod is NEVER auto-applied — a blind auto-apply is how stacks get destroyed.
 # Uses OIDC. Secrets: STAGING/PROD_AWS_ROLE_ARN, PROJECT, AWS_REGION,
 # STAGING/PROD_ALLOWED_ORIGIN (see terraform/ci + scripts/bootstrap-aws.sh).
 on:
@@ -91,6 +91,6 @@ jobs:
             -var enable_waf=false \
             -var enable_cloudfront=true
 
-      - name: Apply (manual dispatch only)
-        if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+      - name: Apply (staging auto on main; prod only via manual dispatch)
+        if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
         run: terraform apply -input=false -no-color tf.plan
