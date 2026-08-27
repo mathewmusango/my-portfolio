@@ -45,9 +45,12 @@
   <meta property="og:image" content="{{ config.site_url }}assets/img/og-card.png">
   <meta name="twitter:card" content="summary_large_image">
   <!-- Site Metrics beacon endpoint — set via METRICS_ENDPOINT at build time;
-       absent when unset, and the beacon then no-ops. -->
+       absent when unset, and the beacon then no-ops. HTTPS is enforced: a
+       schemeless value gets https:// prepended (the beacon fetch needs a full URL). -->
   {% if config.extra.metrics_endpoint %}
-  <meta name="metrics-endpoint" content="{{ config.extra.metrics_endpoint }}">
+  {% set ep = config.extra.metrics_endpoint %}
+  {% if not ep.startswith('http') %}{% set ep = 'https://' ~ ep %}{% endif %}
+  <meta name="metrics-endpoint" content="{{ ep }}">
   {% endif %}
 {% endblock %}
 
