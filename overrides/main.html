@@ -1,5 +1,40 @@
 {% extends "base.html" %}
 
+{% block scripts %}
+  {{ super() }}
+  <!-- Language switcher: the i18n plugin builds alternate links from site_url
+       (/my-portfolio/es/ ...) which is right for gh-pages but wrong on the S3
+       sites (served at /). Rewrite them to page-relative links at runtime so
+       the switcher works on any host/base. -->
+  <script>
+  (function () {
+    var canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) return;
+    var base = canonical.href;
+    var basePath = new URL(base).pathname.replace(/\/$/, ''); // /my-portfolio
+    var cur = location.pathname;
+    if (basePath && cur.indexOf(basePath) === 0) cur = cur.slice(basePath.length); // strip the site base
+    if (!cur) cur = '/';
+    var links = document.querySelectorAll('.md-select__list a[href]');
+    for (var i = 0; i < links.length; i++) {
+      var a = links[i];
+      var href = a.getAttribute('href');
+      if (!href || href.indexOf(base) !== 0) continue;
+      var t = href.slice(base.length);
+      var curParts = cur.split('/').filter(Boolean);
+      var tParts = t.split('/').filter(Boolean);
+      var same = 0;
+      while (same < curParts.length && same < tParts.length && curParts[same] === tParts[same]) same++;
+      var up = curParts.length - same;
+      var rel = up ? new Array(up + 1).join('../') : '';
+      rel += tParts.slice(same).join('/');
+      if (t.slice(-1) === '/' && rel && rel.slice(-1) !== '/') rel += '/';
+      a.setAttribute('href', rel || '.');
+    }
+  })();
+  </script>
+{% endblock %}
+
 {% block extrahead %}
   <!-- Open Graph / social share tags (static card, no social plugin) -->
   <meta property="og:type" content="website">
