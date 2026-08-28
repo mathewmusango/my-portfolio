@@ -128,6 +128,8 @@ terraform apply -auto-approve -no-color -input=false \
   -var "name_prefix=$PROJECT" \
   -var "role_name=github-actions-$PROJECT-$ENV-terraform" \
   -var "deploy_role_name=github-actions-$PROJECT-$ENV-deploy" \
+  -var "invalidate_role_name=github-actions-$PROJECT-$ENV-invalidate" \
+  -var "toggle_role_name=github-actions-$PROJECT-$ENV-toggle" \
   -var "repos=$REPO_JSON" \
   -var "state_bucket=$STATE_BUCKET" \
   -var "state_lock_table=$STATE_LOCK" \
@@ -151,7 +153,9 @@ fi
 
 echo "Bootstrap complete for $PROJECT/$ENV ($AWS_REGION):"
 echo "  terraform role: github-actions-$PROJECT-$ENV-terraform"
-echo "  deploy role:    github-actions-$PROJECT-$ENV-deploy"
+echo "  deploy role:    github-actions-$PROJECT-$ENV-deploy (S3 sync)"
+echo "  invalidate role: github-actions-$PROJECT-$ENV-invalidate (edge purge)"
+echo "  toggle role:    github-actions-$PROJECT-$ENV-toggle (edge Enabled flip)"
 echo "  state bucket:   $STATE_BUCKET (key $STATE_KEY)"
 echo "  lock table:     $PROJECT-$ENV-tfstate-lock"
 echo "  site buckets:   $PROJECT-$ENV-site*"

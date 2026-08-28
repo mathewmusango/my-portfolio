@@ -120,10 +120,27 @@ resource "aws_iam_role" "terraform" {
   tags               = var.tags
 }
 
-# Deploy role — content sync (S3) + invalidation ONLY. Least privilege: this
-# role runs on every deploy; the wide terraform role never sees content writes.
+# Deploy role — content sync (S3) only. Least privilege: the sync token never
+# carries edge permissions (and vice versa); the wide terraform role never sees
+# content writes.
 resource "aws_iam_role" "deploy" {
   name = var.deploy_role_name
+
+  assume_role_policy = local.assume_role_policy_deploy
+  tags               = var.tags
+}
+
+# Edge invalidation role — CloudFront invalidation only.
+resource "aws_iam_role" "invalidate" {
+  name = var.invalidate_role_name
+
+  assume_role_policy = local.assume_role_policy_deploy
+  tags               = var.tags
+}
+
+# Edge toggle role — flip Enabled on the project's distributions only.
+resource "aws_iam_role" "toggle" {
+  name = var.toggle_role_name
 
   assume_role_policy = local.assume_role_policy_deploy
   tags               = var.tags
@@ -284,13 +301,10 @@ resource "aws_iam_policy" "metrics_terraform" {
   })
 }
 
-# --- Policy: future S3 site deploy (gh-pages → S3 + CloudFront invalidation)
-resource "aws_iam_policy" "site_deploy" {
-  name        = "${var.name_prefix}-${var.environment}-site-deploy"
-  description = "Allow GitHub Actions to publish the site to S3 and invalidate CloudFront."
-  # checkov:skip=CKV_AWS_355:CloudFront invalidation actions require Resource '*' (AWS API limitation); S3 actions are bucket-scoped
-  # checkov:skip=CKV_AWS_290:cloudfront:CreateInvalidation on '*' is required — invalidation actions are not resource-scopable (AWS limitation)
-  # checkov:skip=CKV_AWS_289:s3:PutBucketPolicy is permission management by design — the deploy role writes the site bucket policy
+# --- Policy: S3 site deploy (gh-pages → S3 sync) — content only ----------
+resource "aws_iam_policy" "site_sync" {
+  name        = "${var.name_prefix}-${var.environment}-site-sync"
+  description = "Allow GitHub Actions to sync the site content to the project S3 site bucket (no bucket-policy or edge permissions)."
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -300,19 +314,55 @@ resource "aws_iam_policy" "site_deploy" {
         Effect = "Allow"
         Action = [
           "s3:PutObject", "s3:DeleteObject", "s3:ListBucket",
-          "s3:GetBucketLocation", "s3:PutBucketPolicy"
+          "s3:GetBucketLocation",
         ]
         Resource = [
           "arn:aws:s3:::${var.site_bucket_prefix}*",
           "arn:aws:s3:::${var.site_bucket_prefix}*/*",
         ]
       },
+    ]
+  })
+}
+
+# --- Policy: CloudFront invalidation (edge purge) ------------------------
+resource "aws_iam_policy" "edge_invalidate" {
+  name        = "${var.name_prefix}-${var.environment}-edge-invalidate"
+  description = "Allow GitHub Actions to create CloudFront invalidations."
+  # checkov:skip=CKV_AWS_355:CloudFront invalidation actions require Resource '*' (AWS API limitation)
+  # checkov:skip=CKV_AWS_290:cloudfront:CreateInvalidation on '*' is required — invalidation actions are not resource-scopable (AWS limitation)
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
       {
-        Sid    = "CloudFrontEdge"
+        Sid    = "EdgeInvalidate"
         Effect = "Allow"
         Action = [
-          "cloudfront:CreateInvalidation", "cloudfront:GetDistribution",
-          "cloudfront:GetInvalidation", "cloudfront:ListDistributions",
+          "cloudfront:CreateInvalidation", "cloudfront:GetInvalidation",
+          "cloudfront:ListDistributions",
+        ]
+        Resource = "*"
+      },
+    ]
+  })
+}
+
+# --- Policy: CloudFront toggle (Enabled flip) ----------------------------
+resource "aws_iam_policy" "edge_toggle" {
+  name        = "${var.name_prefix}-${var.environment}-edge-toggle"
+  description = "Allow GitHub Actions to flip Enabled on the project's CloudFront distributions (toggle-env)."
+  # checkov:skip=CKV_AWS_355:CloudFront distribution actions require Resource '*' (AWS API limitation)
+  # checkov:skip=CKV_AWS_290:cloudfront:UpdateDistribution on '*' is required — not resource-scopable (AWS API limitation)
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "EdgeToggle"
+        Effect = "Allow"
+        Action = [
+          "cloudfront:GetDistribution", "cloudfront:ListDistributions",
           "cloudfront:UpdateDistribution",
         ]
         Resource = "*"
@@ -326,9 +376,19 @@ resource "aws_iam_role_policy_attachment" "metrics_terraform" {
   policy_arn = aws_iam_policy.metrics_terraform.arn
 }
 
-resource "aws_iam_role_policy_attachment" "site_deploy" {
+resource "aws_iam_role_policy_attachment" "site_sync" {
   role       = aws_iam_role.deploy.name
-  policy_arn = aws_iam_policy.site_deploy.arn
+  policy_arn = aws_iam_policy.site_sync.arn
+}
+
+resource "aws_iam_role_policy_attachment" "edge_invalidate" {
+  role       = aws_iam_role.invalidate.name
+  policy_arn = aws_iam_policy.edge_invalidate.arn
+}
+
+resource "aws_iam_role_policy_attachment" "edge_toggle" {
+  role       = aws_iam_role.toggle.name
+  policy_arn = aws_iam_policy.edge_toggle.arn
 }
 
 # ---------------------------------------------------------------------------

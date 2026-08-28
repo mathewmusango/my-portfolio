@@ -31,7 +31,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_DEPLOY_ROLE_ARN || secrets.STAGING_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_INVALIDATE_ROLE_ARN || secrets.STAGING_INVALIDATE_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
       - name: Invalidate CloudFront
         env:

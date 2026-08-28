@@ -56,6 +56,12 @@ jobs:
       - name: Sync site to staging S3 (bucket root — site serves at /)
         run: aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress
 
+      - name: Assume edge-invalidate role (least privilege)
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
       - name: Invalidate staging CloudFront (lookup by comment convention)
         run: |
           ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ secrets.PROJECT }}-staging-site'].Id" --output text)"

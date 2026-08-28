@@ -19,7 +19,17 @@ variable "role_name" {
 }
 
 variable "deploy_role_name" {
-  description = "Name of the GitHub Actions DEPLOY assume-role (S3 content sync + invalidation only)."
+  description = "Name of the GitHub Actions DEPLOY assume-role (S3 content sync only)."
+  type        = string
+}
+
+variable "invalidate_role_name" {
+  description = "Name of the GitHub Actions EDGE-INVALIDATE assume-role (CloudFront invalidation only)."
+  type        = string
+}
+
+variable "toggle_role_name" {
+  description = "Name of the GitHub Actions EDGE-TOGGLE assume-role (flip Enabled on the project's distributions only)."
   type        = string
 }
 

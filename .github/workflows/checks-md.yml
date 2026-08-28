@@ -1,0 +1,23 @@
+name: Checks Markdown
+
+# UTF-8 + frontmatter parse for docs/**/*.md — runs once on main (or dispatch)
+# when docs markdown changes. (Links/translations/structure are already
+# enforced by the strict mkdocs build on every push; this is fast feedback.)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**/*.md"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  md:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Markdown — UTF-8 + frontmatter parse (Ruby psych)
+        run: ruby scripts/check_md.rb

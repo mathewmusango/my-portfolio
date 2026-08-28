@@ -1,0 +1,23 @@
+name: Checks HTML
+
+# UTF-8 + Jinja tag balance for the overrides templates — runs once on main
+# (or dispatch) when overrides/** changes. (The strict mkdocs build renders
+# the templates on every push; this is fast file-change-time feedback.)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "overrides/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  html:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: HTML templates — UTF-8 + Jinja balance
+        run: python3 scripts/check_html.py

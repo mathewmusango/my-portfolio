@@ -1,0 +1,23 @@
+name: Checks CSS
+
+# Brace/paren balance + UTF-8 for the site's stylesheets — runs once on main
+# (or dispatch) when docs/stylesheets/** changes. (The strict mkdocs build also
+# runs a brace sanity check on every push; this is file-change-time feedback.)
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/stylesheets/**"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  css:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: CSS balance + UTF-8
+        run: python3 scripts/check_css.py
