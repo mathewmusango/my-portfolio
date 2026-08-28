@@ -11,6 +11,26 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [3.1.1] - 2026-08-28
+
+### Security
+- **IAM hardening**: the CI terraform role's IAM is scoped — role/policy management on project resources only; `iam:PassRole` limited to the two Lambda roles with a service condition (privilege-escalation vector closed).
+- **S3 encryption**: site + state buckets now use KMS (`aws:kms`, AWS-managed key — zero cost, no CMK).
+- **Security headers at the edge**: a CloudFront response-headers policy (nosniff, frame-DENY, referrer, HSTS) is attached to both distributions.
+- **TLS 1.2+** pinned explicitly on both CloudFront distributions.
+- Static security scanning (Checkov) in CI — every finding is fixed or annotated with the reason (Free-Tier constraint, public-by-design, AWS limitations).
+
+### Changed
+- **Terraform static checks** (fmt / validate / tflint / checkov) run in CI on every terraform change.
+- **S3-native state locking** (`use_lockfile`) replaces the deprecated DynamoDB lock config.
+- **`terraform/ci` state moved to S3** (per-env bucket, `ci/` key) — no more local-only state.
+- **CloudFront invalidation**: shared `scripts/invalidate-cloudfront.sh` + manual `invalidate.yml` workflow; deploys invalidate inline after each sync.
+- **CI workflow concurrency guard** per environment.
+
+### Fixed
+- Reserved concurrency reverted — the account's Lambda concurrency limit (10) makes it impossible (annotated accept).
+- Lambda/CloudFront permission gaps in the CI role closed (concurrency + response-headers-policy actions).
+
 ## [3.1.0] - 2026-08-28
 
 ### Fixed
