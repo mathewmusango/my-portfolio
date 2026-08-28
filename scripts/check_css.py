@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Brace/paren balance + UTF-8 for docs/stylesheets/*.css.
+"""Brace/paren balance + UTF-8 for CSS files.
 
-Runs from the repo root (or anywhere — paths resolve from this file).
-Exit 1 if any stylesheet has unbalanced braces/parens.
+No args: scan docs/stylesheets/**. With args: check only those files
+(relative to the repo root, e.g. scripts/check_css.py docs/stylesheets/extra.css).
+Exit 1 if any file has unbalanced braces/parens.
 """
 import sys
 from pathlib import Path
@@ -11,8 +12,9 @@ STYLESHEETS = Path(__file__).resolve().parent.parent / "docs" / "stylesheets"
 
 
 def main() -> int:
+    files = [Path(a) for a in sys.argv[1:]] or sorted(STYLESHEETS.rglob("*.css"))
     errors = 0
-    for css in sorted(STYLESHEETS.rglob("*.css")):
+    for css in files:
         text = css.read_text(encoding="utf-8")
         if text.count("{") != text.count("}"):
             print(f"ERROR {css}: unbalanced braces")

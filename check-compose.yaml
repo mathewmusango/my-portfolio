@@ -1,27 +1,30 @@
 # Local (stage-1) checks — one service per check, mirroring the checks-*.yml
-# GitHub workflows (same commands, purpose-built tool images). Run one:
+# GitHub workflows EXACTLY (same commands + repo-relative paths, purpose-built
+# tool images). Run one:
 #   podman-compose -f check-compose.yaml run --rm <service>
 # or all, one after another:
 #   for svc in shell python yaml yaml-syntax js css html md; do
 #     podman-compose -f check-compose.yaml run --rm "$svc" || exit 1
 #   done
+# Changed-files-only: scripts/check_changed.sh (pre-commit friendly).
 # The GitHub workflows remain the authoritative gate (stage 2 — attested,
-# per-commit results). The css/html/md checks run HERE only (dropped from
-# GitHub as redundant with the strict mkdocs build, which still runs in the
-# dev container + ci.yml).
+# per-commit results). The css/html/md services run HERE only (dropped from
+# GitHub as redundant with the strict mkdocs build).
 
 services:
   shell:
     image: docker.io/koalaman/shellcheck-alpine:latest
+    working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["shellcheck", "-S", "warning", "/repo/scripts/bootstrap-aws.sh", "/repo/scripts/invalidate-cloudfront.sh", "/repo/scripts/toggle-cloudfront.sh"]
+    command: ["sh", "-c", "shellcheck -S warning scripts/*.sh"]
 
   python:
     image: ghcr.io/astral-sh/ruff:latest
+    working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["check", "/repo/terraform/lambda", "/repo/scripts"]
+    command: ["check", "terraform/lambda", "scripts"]
 
   yaml:
     image: ghcr.io/rhysd/actionlint:latest
@@ -42,22 +45,25 @@ services:
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find docs/javascripts overrides -type f -name '*.js' -print | while IFS= read -r f; do node --check \"$f\" || exit 1; done"]
+    command: ["sh", "-c", "find docs overrides -type f -name '*.js' -print | while IFS= read -r f; do node --check \"$f\" || exit 1; done"]
 
   css:
     image: docker.io/library/python:3.12-alpine
+    working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["python3", "/repo/scripts/check_css.py"]
+    command: ["python3", "scripts/check_css.py"]
 
   html:
     image: docker.io/library/python:3.12-alpine
+    working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["python3", "/repo/scripts/check_html.py"]
+    command: ["python3", "scripts/check_html.py"]
 
   md:
     image: docker.io/library/ruby:alpine
+    working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["ruby", "/repo/scripts/check_md.rb"]
+    command: ["ruby", "scripts/check_md.rb"]

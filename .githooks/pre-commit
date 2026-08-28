@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+# git pre-commit hook — run the changed-files checks against staged files.
+# Install: git config core.hooksPath .githooks
+exec "$(dirname -- "$0")/../scripts/check_changed.sh" --cached

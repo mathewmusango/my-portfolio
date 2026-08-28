@@ -42,13 +42,15 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 - **Per-surface checks** (`.github/workflows/checks-{shell,python,js,terraform,yml}.yml`) —
   one workflow per surface, each running once per `main` push (or manual dispatch) when the files
   it checks change: `shellcheck` on `scripts/*.sh`, `ruff` on `terraform/lambda/**` + `scripts/*.py`,
-  `node --check` on `docs/javascripts/**`, and `actionlint` on
+  `node --check` on `docs/**/*.js` (project + vendored), and `actionlint` on
   `.github/**` YAML + `mkdocs.yml`/`compose.yaml`. Grouped by surface (Terraform stays its own
   file) so a change to one surface only runs that surface's checks — a checks file's own
   change does not re-trigger it (workflow files are linted by `checks-yml`).
 - **Local checks** (`check-compose.yaml`) — the same checks run locally as stage 1, one compose
   service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js|css|html|md>`),
-  mirroring the GitHub workflows exactly (same commands, purpose-built tool images). The
+  mirroring the GitHub workflows exactly (same commands + repo-relative paths, purpose-built
+  tool images). **Changed-files-only:** `scripts/check_changed.sh` (pre-commit friendly;
+  install with `git config core.hooksPath .githooks`). The
   css/html/md services are **local-only** — dropped from GitHub as redundant with the strict
   mkdocs build. The GitHub workflows remain the authoritative gate (stage 2).
 - **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:

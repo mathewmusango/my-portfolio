@@ -1,15 +1,17 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# UTF-8 + frontmatter parse for docs/**/*.md (Ruby psych — no installs).
-# Exit 1 if any markdown file has invalid frontmatter.
+# UTF-8 + frontmatter parse for markdown files (Ruby psych — no installs).
+# No args: scan docs/**. With args: check only those files (relative to the
+# repo root). Exit 1 if any file has invalid frontmatter.
 
 require "yaml"
 
 root = File.expand_path("../../docs", __FILE__)
+files = ARGV.empty? ? Dir.glob(File.join(root, "**", "*.md")).sort : ARGV
 errors = 0
 
-Dir.glob(File.join(root, "**", "*.md")).sort.each do |path|
+files.each do |path|
   content = File.read(path)
   if content.start_with?("---")
     parts = content.split(/^---\s*$/, 3)
