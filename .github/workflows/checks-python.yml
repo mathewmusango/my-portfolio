@@ -1,4 +1,4 @@
-name: Python checks
+name: Checks Python
 
 # Ruff lint on the Lambda + hook python — runs once on main (or dispatch)
 # when terraform/lambda/** or scripts/*.py (or this file) changes.

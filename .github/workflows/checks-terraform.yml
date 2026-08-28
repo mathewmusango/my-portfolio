@@ -1,4 +1,4 @@
-name: Terraform checks
+name: Checks Terraform
 
 # STATIC checks only (fmt / validate / tflint / checkov) — no AWS credentials
 # involved, runs on main pushes + v* tags + manual dispatch. This is NOT the

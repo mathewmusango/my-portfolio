@@ -1,4 +1,4 @@
-name: Shell checks
+name: Checks Shell
 
 # Shellcheck on the repo's shell scripts — runs once on main (or dispatch)
 # when scripts/*.sh (or this file) changes.

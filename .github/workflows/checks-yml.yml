@@ -1,4 +1,4 @@
-name: Workflow checks
+name: Checks YAML
 
 # actionlint on the GitHub Actions workflows — catches expression/context
 # errors the parser won't. Runs once on main (or dispatch) when any workflow
