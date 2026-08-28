@@ -23,6 +23,21 @@ resource "aws_s3_bucket" "site" {
   count  = var.enable_site ? 1 : 0
   bucket = "${local.name_prefix}-site"
   tags   = local.tags
+  # checkov:skip=CKV_AWS_21:Versioning declined by user (2026-08-28) — site content redeploys from the repo
+  # checkov:skip=CKV_AWS_144:Cross-region replication = extra cost — single-region personal site (free tier)
+  # checkov:skip=CKV2_AWS_62:No S3 event consumers — nothing triggers on bucket events
+}
+
+# KMS encryption with the AWS-managed key (aws:kms, no kms_key_id) — free, and
+# satisfies CKV_AWS_145 without a $1/mo CMK.
+resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
+  count  = var.enable_site ? 1 : 0
+  bucket = aws_s3_bucket.site[0].id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "aws:kms"
+    }
+  }
 }
 
 resource "aws_s3_bucket_public_access_block" "site" {
@@ -83,6 +98,7 @@ resource "aws_cloudfront_distribution" "site" {
   # checkov:skip=CKV_AWS_310:Single S3 origin — no secondary for failover (personal site)
   # checkov:skip=CKV_AWS_68:WAF excluded — outside the Free Tier (user constraint)
   # checkov:skip=CKV_AWS_174:Default cert is TLS 1.2+ by AWS guarantee; no custom domain for ACM (checkov wants ACM)
+  # checkov:skip=CKV2_AWS_42:No custom domain — default CloudFront cert is TLS 1.2+ by AWS guarantee
 
   origin {
     domain_name              = aws_s3_bucket.site[0].bucket_regional_domain_name
