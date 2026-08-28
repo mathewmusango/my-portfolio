@@ -1,3 +1,12 @@
+# CI bootstrap — GitHub→AWS identity + per-env state backend.
+#
+# WARNING (bootstrap drift, 2026-08-28): this module is applied ONLY by
+# scripts/bootstrap-aws.sh <staging|prod> with admin credentials. Changes to
+# the policies/roles below reach AWS only when that script is re-run — so
+# after ANY change to this file, re-run the bootstrap for BOTH environments.
+# Prod's role policy once lagged one run behind (missing ProjectDynamoDB /
+# dynamodb:* on project tables) and the prod apply failed on
+# dynamodb:UpdateTimeToLive while staging was fine — same code, drifted IAM.
 provider "aws" {
   region = var.aws_region
 }

@@ -11,6 +11,13 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [3.0.1] - 2026-08-28
+
+### Changed
+- **Bootstrap drift guard**: `terraform/ci` now carries a warning that the CI roles/policies only reach AWS when `scripts/bootstrap-aws.sh <env>` is re-run — after any `terraform/ci` change, re-run it for **both** environments (prod's role policy had drifted one run behind and failed the prod apply on `dynamodb:UpdateTimeToLive`).
+- **Versioning semantics documented**: tag-and-release policy (site-input deploy gate, MINOR/MAJOR/PATCH meanings) recorded in the project skill + private guide.
+- Docs: README + terraform README synced to the current architecture (metrics live on both environments, injected deployment values, single-repo flow).
+
 ## [3.0.0] - 2026-08-28
 
 ### Added
