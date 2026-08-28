@@ -154,9 +154,9 @@ resource "aws_iam_role_policy_attachment" "lambda_writer_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role_policy" "lambda_writer_dynamodb" {
-  name = "metrics-writer-dynamodb"
-  role = aws_iam_role.lambda_writer.id
+resource "aws_iam_policy" "lambda_writer_dynamodb" {
+  name        = "${local.name_prefix}-metrics-writer-dynamodb"
+  description = "Least-privilege DynamoDB write for the metrics writer (PutItem on the metrics table only)."
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -166,6 +166,13 @@ resource "aws_iam_role_policy" "lambda_writer_dynamodb" {
       Resource = aws_dynamodb_table.metrics.arn
     }]
   })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_writer_dynamodb" {
+  role       = aws_iam_role.lambda_writer.name
+  policy_arn = aws_iam_policy.lambda_writer_dynamodb.arn
 }
 
 resource "aws_lambda_function" "metrics_writer" {
@@ -228,9 +235,9 @@ resource "aws_iam_role_policy_attachment" "lambda_reader_basic_execution" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_iam_role_policy" "lambda_reader_dynamodb" {
-  name = "metrics-reader-dynamodb"
-  role = aws_iam_role.lambda_reader.id
+resource "aws_iam_policy" "lambda_reader_dynamodb" {
+  name        = "${local.name_prefix}-metrics-reader-dynamodb"
+  description = "Least-privilege DynamoDB read for the metrics reader (Scan + Query on the metrics table and its index)."
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -243,6 +250,13 @@ resource "aws_iam_role_policy" "lambda_reader_dynamodb" {
       ]
     }]
   })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_reader_dynamodb" {
+  role       = aws_iam_role.lambda_reader.name
+  policy_arn = aws_iam_policy.lambda_reader_dynamodb.arn
 }
 
 resource "aws_lambda_function" "metrics_reader" {
