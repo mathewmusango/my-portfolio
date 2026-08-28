@@ -48,12 +48,8 @@ jobs:
         if: steps.docs.outputs.changed == 'true'
         run: aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress
 
-      - name: Invalidate staging CloudFront (lookup by comment convention)
+      - name: Invalidate staging CloudFront
         if: steps.docs.outputs.changed == 'true'
-        run: |
-          ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ secrets.PROJECT }}-staging-site'].Id" --output text)"
-          if [ -n "$ID" ]; then
-            aws cloudfront create-invalidation --distribution-id "$ID" --paths "/*"
-          else
-            echo "distribution not found yet — skipping invalidation (content synced)"
-          fi
+        env:
+          PROJECT: ${{ secrets.PROJECT }}
+        run: scripts/invalidate-cloudfront.sh staging
