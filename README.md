@@ -42,9 +42,18 @@ checked, and deployed automatically by GitHub Actions (below).
   <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN`).
-- **CloudFront invalidation** — shared `scripts/invalidate-cloudfront.sh <staging|prod> [paths]`
-  (lookup by comment convention, `/*` by default). Auto-run after every deploy sync; also
-  triggerable manually from GitHub (`invalidate.yml`, `workflow_dispatch`) or locally.
+- **CloudFront invalidation** — the deploy jobs run their own **inline** `/*` invalidation
+  right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
+  convention, skip when the distro is absent). Manual purges (out-of-band content changes) go
+  through `invalidate.yml` (`workflow_dispatch`) or locally via
+  `scripts/invalidate-cloudfront.sh <staging|prod> [paths]` — the reference implementation if
+  the inline steps are ever centralized:
+
+  ```sh
+  # Reference — the script used by the manual paths (also the centralized pattern)
+  scripts/invalidate-cloudfront.sh staging            # full invalidation (/*)
+  scripts/invalidate-cloudfront.sh prod "/about/ /metrics/"   # specific paths
+  ```
 - **Release** (`.github/workflows/release.yml`) — on `v*` tags (or manual dispatch): builds,
   packages `site.zip`, generates a CycloneDX SBOM (`sbom.cdx.json`) from `requirements.txt`,
   and creates/refreshes a GitHub Release with notes from `CHANGELOG.md`.
