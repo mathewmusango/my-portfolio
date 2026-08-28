@@ -1,13 +1,13 @@
 name: Checks Terraform
 
 # STATIC checks only (fmt / validate / tflint / checkov) — no AWS credentials
-# involved, runs on main pushes + v* tags + manual dispatch. This is NOT the
-# deploy pipeline: terraform.yml plans/applies the real stack (staging
+# involved. Runs once on main (or dispatch) when terraform/ changes — a v* tag
+# points at already-checked main content, so tags don't re-run checks. This is
+# NOT the deploy pipeline: terraform.yml plans/applies the real stack (staging
 # auto-apply on main, prod plan-only on v* tags).
 on:
   push:
     branches: [main]
-    tags: ["v*"]
     paths:
       - "terraform/**"
       - ".tflint.hcl"

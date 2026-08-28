@@ -20,6 +20,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Shellcheck
-        uses: koalaman/shellcheck-action@v1.0.0
-        with:
-          severity: warning
+        # ubuntu-latest runners ship shellcheck; the koalaman/shellcheck-action
+        # repo no longer resolves on GitHub ("repository not found").
+        run: shellcheck -S warning scripts/*.sh

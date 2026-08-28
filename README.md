@@ -34,7 +34,8 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   check, CSS sanity check) with the production `site_url`; uploads the built `site/` as an
   artifact (7-day retention).
 - **Terraform checks** (`.github/workflows/checks-terraform.yml`) — static checks on the
-  terraform code (main pushes + tags + manual dispatch): `terraform fmt -check`, `validate`
+  terraform code (once per `main` push when `terraform/**` changes, or manual dispatch):
+  `terraform fmt -check`, `validate`
   (all three roots: `terraform/`, `terraform/ci/`, `modules/metrics`), TFLint, and a Checkov
   security scan (informational for now). No AWS credentials — this complements (does not
   replace) the `terraform.yml` plan/apply pipeline.
