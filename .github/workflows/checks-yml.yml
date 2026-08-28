@@ -1,15 +1,13 @@
 name: Checks YAML
 
-# actionlint on the GitHub Actions workflows + a YAML syntax parse of the
-# repo's other YAML files (mkdocs.yml, compose.yaml, composite action
-# metadata). Runs once on main (or dispatch) when any of those change —
-# not on this file's own change (workflow files are linted here anyway).
+# actionlint on the GitHub Actions workflows + a YAML syntax parse of every
+# yml/yaml in the repo (.github/**, mkdocs.yml, compose.yaml). Runs once on
+# main (or dispatch) when any of those change.
 on:
   push:
     branches: [main]
     paths:
-      - ".github/workflows/**"
-      - ".github/actions/**"
+      - ".github/**"
       - "mkdocs.yml"
       - "compose.yaml"
   workflow_dispatch: {}
@@ -19,18 +17,19 @@ permissions:
 
 jobs:
   yaml:
-    name: yaml syntax (mkdocs.yml / compose.yaml / action.yml)
+    name: yaml syntax (all .github yml/yaml + mkdocs.yml + compose.yaml)
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - name: Parse YAML (Ruby's built-in psych — no installs)
         run: |
-          for f in mkdocs.yml compose.yaml .github/actions/*/action.yml; do
-            [ -f "$f" ] || continue
+          find .github -type f \( -name '*.yml' -o -name '*.yaml' \) -print 2>/dev/null | while IFS= read -r f; do
             ruby -ryaml -e "YAML.load_file(ARGV[0])" "$f"
             echo "ok: $f"
           done
+          ruby -ryaml -e "YAML.load_file(ARGV[0])" mkdocs.yml
+          ruby -ryaml -e "YAML.load_file(ARGV[0])" compose.yaml
 
   actionlint:
     runs-on: ubuntu-latest
