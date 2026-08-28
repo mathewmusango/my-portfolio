@@ -29,7 +29,12 @@ variable "repos" {
 }
 
 variable "ref_patterns" {
-  description = "GitHub ref patterns allowed to assume the role (wildcarded on the sub claim, e.g. 'ref:refs/heads/main' or 'ref:refs/tags/v*')."
+  description = "GitHub ref patterns allowed to assume the TERRAFORM role (wildcarded on the sub claim, e.g. 'ref:refs/heads/main' or 'ref:refs/tags/v*')."
+  type        = list(string)
+}
+
+variable "deploy_ref_patterns" {
+  description = "GitHub ref patterns allowed to assume the DEPLOY role — the deploy workflows fire via workflow_run on the default branch, so this is 'ref:refs/heads/main' (the v*-tag-only intent is enforced by deploy.yml's own branch gate)."
   type        = list(string)
 }
 

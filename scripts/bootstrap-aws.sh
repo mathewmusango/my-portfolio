@@ -62,6 +62,12 @@ case "$ENV" in
     ;;
 esac
 
+# The DEPLOY role is assumed from deploy.yml / deploy-staging.yml, which fire
+# via workflow_run — those runs are always on the default branch (main), even
+# when triggered by a tag's CI success. So the deploy role trusts main only;
+# the v*-tag-only intent for prod is enforced by deploy.yml's own branch gate.
+DEPLOY_REF_PATTERNS='["ref:refs/heads/main"]'
+
 # Provider ownership is decided by THIS env's state, not by the live provider:
 # - if this env's state owns the resource -> keep managing it (never destroy it)
 # - else reuse the account-level provider (created by whichever env owns it)
@@ -89,6 +95,7 @@ AWS_PROFILE=prod terraform apply -auto-approve -no-color -input=false \
   -var "state_lock_table=$PROJECT-$ENV-tfstate-lock" \
   -var "site_bucket_prefix=$PROJECT-$ENV-site" \
   -var "ref_patterns=$REF_PATTERNS" \
+  -var "deploy_ref_patterns=$DEPLOY_REF_PATTERNS" \
   -var "manage_provider=$MANAGE_PROVIDER" \
   -var "tags={\"project\":\"$PROJECT\",\"managed_by\":\"terraform\",\"environment\":\"$ENV\"}"
 

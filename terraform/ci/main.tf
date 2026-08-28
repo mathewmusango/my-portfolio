@@ -20,8 +20,9 @@ locals {
     : data.aws_iam_openid_connect_provider.github[0].arn
   )
 
-  # Shared trust policy for BOTH roles (ref-scoped per environment).
-  assume_role_policy = jsonencode({
+  # Trust policy for the TERRAFORM role (ref-scoped per environment: main only
+  # for staging auto-applies, v* tags for prod plan/apply).
+  assume_role_policy_terraform = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
@@ -38,6 +39,31 @@ locals {
             # so each repo pattern wildcards both IDs with @*; ref_patterns
             # then scopes the ref (e.g. main only for staging, v* tags for prod).
             for pair in setproduct(var.repos, var.ref_patterns) :
+            "repo:${replace(pair[0], "/", "@*/")}@*:${pair[1]}"
+          ]
+        }
+      }
+    }]
+  })
+
+  # Trust policy for the DEPLOY role. The deploy workflows fire via
+  # workflow_run, which runs on the DEFAULT branch (main) even when triggered
+  # by a tag's CI success — so the deploy role must trust refs/heads/main; the
+  # tag-only intent is enforced by deploy.yml's own v*-branch gate (2026-08-28:
+  # the prod deploy failed AssumeRole because it trusted refs/tags/v* only).
+  assume_role_policy_deploy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = { Federated = local.provider_arn }
+      Action    = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" : "sts.amazonaws.com"
+        }
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" : [
+            for pair in setproduct(var.repos, var.deploy_ref_patterns) :
             "repo:${replace(pair[0], "/", "@*/")}@*:${pair[1]}"
           ]
         }
@@ -78,7 +104,7 @@ data "aws_iam_openid_connect_provider" "github" {
 resource "aws_iam_role" "terraform" {
   name = var.role_name
 
-  assume_role_policy = local.assume_role_policy
+  assume_role_policy = local.assume_role_policy_terraform
   tags               = var.tags
 }
 
@@ -87,7 +113,7 @@ resource "aws_iam_role" "terraform" {
 resource "aws_iam_role" "deploy" {
   name = var.deploy_role_name
 
-  assume_role_policy = local.assume_role_policy
+  assume_role_policy = local.assume_role_policy_deploy
   tags               = var.tags
 }
 
