@@ -68,11 +68,35 @@ esac
 # the v*-tag-only intent for prod is enforced by deploy.yml's own branch gate.
 DEPLOY_REF_PATTERNS='["ref:refs/heads/main"]'
 
+# State backend: the per-env S3 bucket THIS module creates. Each environment's
+# first run (greenfield — the bucket doesn't exist yet) applies with local
+# state, then migrates to S3; later runs read/write state directly in S3 at
+# s3://<project>-<env>-tfstate/ci/terraform.tfstate (same bucket as the main
+# module's state, different key; same lock table).
+STATE_BUCKET="$PROJECT-$ENV-tfstate"
+STATE_KEY="ci/terraform.tfstate"
+STATE_LOCK="$PROJECT-$ENV-tfstate-lock"
+
+if aws s3api head-bucket --bucket "$STATE_BUCKET" >/dev/null 2>&1; then
+  # Bucket exists -> S3 backend.
+  terraform init -input=false -no-color -reconfigure \
+    -backend-config="bucket=$STATE_BUCKET" \
+    -backend-config="key=$STATE_KEY" \
+    -backend-config="region=$AWS_REGION" \
+    -backend-config="dynamodb_table=$STATE_LOCK" \
+    -backend-config="encrypt=true" >/dev/null
+  GREENFIELD=false
+else
+  # Greenfield: the state bucket is created by this very apply.
+  terraform init -input=false -no-color -backend=false -reconfigure >/dev/null
+  GREENFIELD=true
+fi
+
 # Provider ownership is decided by THIS env's state, not by the live provider:
 # - if this env's state owns the resource -> keep managing it (never destroy it)
 # - else reuse the account-level provider (created by whichever env owns it)
 # - no state yet (first run) -> create it if no provider exists anywhere.
-if terraform state list -state="terraform.$ENV.tfstate" 2>/dev/null | grep -qE '^aws_iam_openid_connect_provider\.github'; then
+if terraform state list 2>/dev/null | grep -qE '^aws_iam_openid_connect_provider\.github'; then
   MANAGE_PROVIDER=true
   PROVIDER_NOTE="managing (owned by this env's state)"
 elif aws iam list-open-id-connect-providers --output text --query 'OpenIDConnectProviderList[].Arn' 2>/dev/null | grep -q "token.actions.githubusercontent.com"; then
@@ -83,26 +107,36 @@ else
   PROVIDER_NOTE="creating (provider not found)"
 fi
 
-AWS_PROFILE=prod terraform apply -auto-approve -no-color -input=false \
-  -state="terraform.$ENV.tfstate" \
+terraform apply -auto-approve -no-color -input=false \
   -var "environment=$ENV" \
   -var "aws_region=$AWS_REGION" \
   -var "name_prefix=$PROJECT" \
   -var "role_name=github-actions-$PROJECT-$ENV-terraform" \
   -var "deploy_role_name=github-actions-$PROJECT-$ENV-deploy" \
   -var "repos=$REPO_JSON" \
-  -var "state_bucket=$PROJECT-$ENV-tfstate" \
-  -var "state_lock_table=$PROJECT-$ENV-tfstate-lock" \
+  -var "state_bucket=$STATE_BUCKET" \
+  -var "state_lock_table=$STATE_LOCK" \
   -var "site_bucket_prefix=$PROJECT-$ENV-site" \
   -var "ref_patterns=$REF_PATTERNS" \
   -var "deploy_ref_patterns=$DEPLOY_REF_PATTERNS" \
   -var "manage_provider=$MANAGE_PROVIDER" \
   -var "tags={\"project\":\"$PROJECT\",\"managed_by\":\"terraform\",\"environment\":\"$ENV\"}"
 
+if [ "$GREENFIELD" = "true" ]; then
+  # The bucket now exists -> move this env's state into S3.
+  terraform init -input=false -no-color -migrate-state \
+    -backend-config="bucket=$STATE_BUCKET" \
+    -backend-config="key=$STATE_KEY" \
+    -backend-config="region=$AWS_REGION" \
+    -backend-config="dynamodb_table=$STATE_LOCK" \
+    -backend-config="encrypt=true" >/dev/null
+  rm -f terraform.tfstate
+fi
+
 echo "Bootstrap complete for $PROJECT/$ENV ($AWS_REGION):"
 echo "  terraform role: github-actions-$PROJECT-$ENV-terraform"
 echo "  deploy role:    github-actions-$PROJECT-$ENV-deploy"
-echo "  state bucket:   $PROJECT-$ENV-tfstate"
+echo "  state bucket:   $STATE_BUCKET (key $STATE_KEY)"
 echo "  lock table:     $PROJECT-$ENV-tfstate-lock"
 echo "  site buckets:   $PROJECT-$ENV-site*"
 echo "  oidc provider:  $PROVIDER_NOTE"
