@@ -166,6 +166,7 @@ resource "aws_iam_policy" "metrics_terraform" {
           "lambda:ListVersionsByFunction", "lambda:GetPolicy", "lambda:GetFunctionCodeSigningConfig",
           "lambda:GetRuntimeManagementConfig",
           "lambda:AddPermission", "lambda:RemovePermission", "lambda:TagResource", "lambda:UntagResource", "lambda:ListTags",
+          "lambda:PutFunctionConcurrency", "lambda:DeleteFunctionConcurrency", "lambda:GetFunctionConcurrency",
           "apigateway:POST", "apigateway:GET", "apigateway:PATCH", "apigateway:DELETE",
           "apigateway:PUT", "apigateway:CreateApiKey", "apigateway:TagResource", "apigateway:UntagResource",
           "apigateway:GetTags",
