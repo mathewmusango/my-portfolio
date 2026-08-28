@@ -49,7 +49,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 - **Local checks** (`check-compose.yaml`) — the same checks run locally as stage 1, one compose
   service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js|css|html|md>`),
   mirroring the GitHub workflows exactly (same commands + repo-relative paths, purpose-built
-  tool images). **Changed-files-only:** `scripts/check_changed.sh` (pre-commit friendly;
+  tool images). **Changed-files-only:** `scripts/check-changed.sh` (pre-commit friendly;
   install with `git config core.hooksPath .githooks`). The
   css/html/md services are **local-only** — dropped from GitHub as redundant with the strict
   mkdocs build. The GitHub workflows remain the authoritative gate (stage 2).
