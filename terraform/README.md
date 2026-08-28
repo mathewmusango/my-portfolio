@@ -9,7 +9,10 @@ Privacy-first visitor analytics for `my-portfolio`, built as real infrastructure
 
 > Single repo (`mathewmusango/my-portfolio`). The `terraform.yml` workflow plans on
 > any change to `terraform/**`: **main → staging (auto-apply), `v*` tags → prod
-> (plan only — apply stays manual)**. Local dev applies against Ministack; real-AWS
+> (plan only — apply stays manual)**. `toggle-env.yml` (manual dispatch)
+> disables/enables the **staging** site by setting `site_enabled` in `.github/site-enabled.tfvars`
+> (committed source of truth — read via `-var-file` by every apply, so the toggle persists) and applying:
+> attribute flip only, nothing removed. Local dev applies against Ministack; real-AWS
 > applies happen via the workflow (OIDC) or the CLI.
 
 ## Why CloudFront?

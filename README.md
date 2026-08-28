@@ -53,6 +53,10 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN`).
+- **Toggle env** (`.github/workflows/toggle-env.yml`) — manual dispatch: **disable/enable the
+  staging site** by setting `site_enabled` in `.github/site-enabled.tfvars` (committed source of
+  truth, read via `-var-file` by every apply) and applying — attribute flip only, nothing is
+  removed, and the toggle persists across future applies (staging-only for now).
 - **CloudFront invalidation** — the deploy jobs run their own **inline** `/*` invalidation
   right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
   convention, skip when the distro is absent). Manual purges (out-of-band content changes) go

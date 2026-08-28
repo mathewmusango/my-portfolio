@@ -48,6 +48,12 @@ variable "enable_site" {
   default     = true
 }
 
+variable "site_enabled" {
+  description = "Serve the site from CloudFront. false = DISABLE the distribution (viewers get 403) WITHOUT removing anything — the S3 bucket, OAC and functions stay; re-enable by applying with true. Attribute flip only (unlike enable_site, which counts and would destroy). Toggled by the toggle-env workflow."
+  type        = bool
+  default     = true
+}
+
 variable "enable_vpc" {
   description = "Run the Lambdas inside a private VPC (real AWS) — no internet path, only VPC endpoints for DynamoDB + CloudWatch Logs. OFF by default: the VPC's CloudWatch Logs interface endpoint (~$7/mo) is outside the Free Tier; the Lambda origin gate + least-privilege IAM still apply. Opt in for the hardened variant (also disable for Ministack, which has no real VPC)."
   type        = bool
