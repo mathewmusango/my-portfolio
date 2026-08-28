@@ -1,17 +1,16 @@
 # Terraform — Site + Metrics stack (S3/CloudFront site · gated API Gateway/Lambda/DynamoDB)
 
-**Site-first:** the live stack is the static site (private S3 bucket + CloudFront via OAC,
-serving at `/`). The metrics backend (API Gateway → Lambda → DynamoDB, geo CloudFront edge) is
-gated behind `enable_metrics=false` until the metrics phase — `terraform/modules/metrics/`.
+**Site + metrics (live):** the stack is the static site (private S3 bucket + CloudFront via
+OAC, serving at `/`) **plus** the metrics backend (API Gateway → Lambda → DynamoDB, geo
+CloudFront edge) — `terraform/modules/metrics/`. Both staging and prod run the full stack.
 
 Privacy-first visitor analytics for `my-portfolio`, built as real infrastructure:
 **CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB**, all defined in Terraform.
 
-> Branch: `feature/terraform-metrics-infra`. Terraform is **not promoted to prod**
-> and prod runs no terraform — the test repo's `terraform.yml` workflow plans on
-> any change to `terraform/**` and applies only via manual `workflow_dispatch`
-> (see `DEVOPS.md` §7.1 + §10.4). Local dev applies against Ministack; real-AWS
-> applies happen via the workflow or the CLI.
+> Single repo (`mathewmusango/my-portfolio`). The `terraform.yml` workflow plans on
+> any change to `terraform/**`: **main → staging (auto-apply), `v*` tags → prod
+> (plan only — apply stays manual)**. Local dev applies against Ministack; real-AWS
+> applies happen via the workflow (OIDC) or the CLI.
 
 ## Why CloudFront?
 
@@ -113,7 +112,11 @@ just `POST`s to it, allowed by CORS from the site origin.
 cd terraform
 terraform init          # downloads aws + archive providers
 export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_DEFAULT_REGION=us-east-1
-terraform plan -out=tf.plan   # default: environment=prod, CloudFront ON
+# All deployment values are injected — no variable has a default (see variables.tf):
+terraform plan -out=tf.plan \
+  -var "project=my-portfolio" -var "environment=prod" \
+  -var "aws_region=us-east-1" -var "allowed_origin=https://mathewmusango.github.io" \
+  -var 'tags={"project":"my-portfolio","managed_by":"terraform","repo":"mathewmusango/my-portfolio"}'
 terraform apply tf.plan
 terraform output api_url   # → https://<cloudfront>.cloudfront.net  ← beacon endpoint
 ```
@@ -243,9 +246,9 @@ still applies.
   and size-capped, and the origin gate (plus WAF when enabled) restrict who can call it.
 - **No secrets** in this directory; AWS access comes from the machine's credential
   chain.
-- **Test vs prod**: this is the live-site stack (prod metrics). Local dev applies
-  with `environment = "test"` (see `local.tfvars`) — resource names and the
-  table are prefixed, so both can coexist. **Terraform runs via GitHub
-  Actions** — `.github/workflows/terraform.yml` (identical in both repos) plans
-  on any change to `terraform/**` and applies only on manual `workflow_dispatch`
-  (OIDC, `AWS_ROLE_ARN` + `AWS_REGION` repo vars); prod is the operational repo.
+- **Test vs prod**: local dev applies with `environment = "test"` (see
+  `local.tfvars`) — resource names and the table are prefixed, so both can
+  coexist. **Terraform runs via GitHub Actions** — `.github/workflows/terraform.yml`
+  plans on any change to `terraform/**`; staging auto-applies on `main` pushes,
+  prod plans on `v*` tags and applies only via manual dispatch (OIDC —
+  `STAGING/PROD_TERRAFORM_ROLE_ARN` + `AWS_REGION` secrets).

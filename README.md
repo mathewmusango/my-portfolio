@@ -43,19 +43,24 @@ checked, and deployed automatically by GitHub Actions (below).
 
 Build and release workflows use only the auto-scoped `GITHUB_TOKEN`. Deploys and Terraform
 assume AWS roles via **OIDC** (no long-lived keys) using repo secrets: `STAGING/PROD_TERRAFORM_ROLE_ARN`,
-`STAGING/PROD_DEPLOY_ROLE_ARN`, `PROJECT`, `AWS_REGION`, `PROD_ALLOWED_ORIGIN`.
+`STAGING/PROD_DEPLOY_ROLE_ARN`, `PROJECT`, `AWS_REGION`, `STAGING/PROD_ALLOWED_ORIGIN`,
+`STAGING/PROD_METRICS_ENDPOINT`. No deployment value is hardcoded — terraform variables
+(`project`, `environment`, `aws_region`, `allowed_origin`, `tags`) are injected at runtime from
+secrets (CI) or `local.tfvars` (local dev).
 
 ## Infrastructure as Code (Terraform)
 
-Real AWS infrastructure, defined with **Terraform** — a site-first stack:
+Real AWS infrastructure, defined with **Terraform** — a site + metrics stack:
 
 - **Site (live)** — private S3 bucket + CloudFront (OAC, HTTP/2+3, localized error pages,
   serving at `/`). The staging and prod sites deploy here via the workflows above; buckets are
   **never public** (origin access control only).
-- **Metrics (gated, `enable_metrics=false` until the metrics phase)** — API Gateway → Lambda →
-  DynamoDB behind a geo-enabled CloudFront edge. **Free-Tier by default**: least-privilege IAM,
-  an edge origin-gate (403 for non-site origins, HTTPS only) and multi-origin CORS (auto-includes
-  the site's own CloudFront domain). WAF + a private VPC are opt-in behind `enable_waf`/`enable_vpc`.
+- **Metrics (live — both environments)** — API Gateway → Lambda → DynamoDB behind a
+  geo-enabled CloudFront edge (visitor country/city from CloudFront headers — no IPs are
+  stored, raw events expire after 90 days via DynamoDB TTL). **Free-Tier by default**: least-
+  privilege IAM, an edge origin-gate (403 for non-site origins, HTTPS only) and multi-origin
+  CORS (auto-includes the site's own CloudFront domain). WAF + a private VPC are opt-in behind
+  `enable_waf`/`enable_vpc`.
 - **Per-environment roles split by job**: `-terraform` (stack plan/apply) and `-deploy` (S3
   content sync + invalidation only — least privilege for the role that runs most).
 - Applied via GitHub Actions using OIDC — the environment comes from the trigger (main →
