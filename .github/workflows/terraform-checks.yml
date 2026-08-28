@@ -42,15 +42,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        dir: ["terraform", "terraform/ci", "terraform/modules/metrics"]
+        include:
+          # Root modules have committed .terraform.lock.hcl files — readonly
+          # detects drift. modules/metrics is a CHILD module (lock lives with
+          # its root), so no lockfile flag there.
+          - dir: terraform
+            lockfile: "-lockfile=readonly"
+          - dir: terraform/ci
+            lockfile: "-lockfile=readonly"
+          - dir: terraform/modules/metrics
+            lockfile: ""
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
-      - name: terraform init (no backend, lockfile readonly)
+      - name: terraform init (no backend)
         working-directory: ${{ matrix.dir }}
-        run: terraform init -backend=false -input=false -lockfile=readonly
+        run: terraform init -backend=false -input=false ${{ matrix.lockfile }}
       - name: terraform validate
         working-directory: ${{ matrix.dir }}
         run: terraform validate -no-color
