@@ -11,6 +11,13 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
 
+## [3.1.0] - 2026-08-28
+
+### Fixed
+- **Language switcher on the AWS sites** — the switcher now works on every page: root pages' language links (which carried the gh-pages `/my-portfolio/` base) are rewritten for root-hosted deployment, and subpages' page-relative links pass through unchanged.
+- **Directory URLs without a trailing slash** (`/es/about`) now resolve correctly on CloudFront + S3 instead of 404.
+- **404 page** — language switcher links and the Home button now point at the current host's root (they were baked to `/my-portfolio/`).
+
 ## [3.0.1] - 2026-08-28
 
 ### Changed
