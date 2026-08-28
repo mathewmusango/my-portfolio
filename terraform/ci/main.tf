@@ -296,11 +296,12 @@ resource "aws_iam_policy" "site_deploy" {
         ]
       },
       {
-        Sid    = "Invalidate"
+        Sid    = "CloudFrontEdge"
         Effect = "Allow"
         Action = [
           "cloudfront:CreateInvalidation", "cloudfront:GetDistribution",
           "cloudfront:GetInvalidation", "cloudfront:ListDistributions",
+          "cloudfront:UpdateDistribution",
         ]
         Resource = "*"
       },

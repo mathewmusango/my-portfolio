@@ -1,21 +1,35 @@
 name: Toggle env
 
-# DISABLE / ENABLE the test (staging) environment WITHOUT removing anything.
-# Sets `site_enabled` in .github/site-enabled.tfvars (committed — read via
-# -var-file by terraform.yml + this workflow, so the toggle persists across
-# future applies), commits + pushes it, then applies. That flips `enabled` on
-# the site CloudFront distribution — attribute flip only, no count, no
-# destroy; the S3 bucket, OAC, functions and the metrics stack all stay.
-# Disabled = viewers get a 403 from CloudFront. The toggle file lives outside
-# terraform/** so a toggle commit does NOT re-trigger the terraform apply
-# pipeline (only ci.yml runs).
-# Staging only for now: the prod terraform role trusts v* tags, so a
-# main-branch dispatch can't assume it (revisit if prod toggling is needed).
-# Uses OIDC. Secrets: STAGING_TERRAFORM_ROLE_ARN, PROJECT, AWS_REGION,
-# STAGING_ALLOWED_ORIGIN.
+# DISABLE / ENABLE a CloudFront distribution WITHOUT removing anything — the
+# invalidation-style toggle (scripts/toggle-cloudfront.sh): look up the distro
+# by comment convention (<project>-<env>-<component>) and flip Enabled in
+# place. No terraform apply runs here — nothing can be deleted.
+#   environment: staging | prod
+#   component:   site | metrics
+#   action:      disable | enable
+# DRIFT CAVEAT: Enabled lives outside terraform state — the next terraform
+# apply (staging on main pushes, prod on tag applies) restores it to true;
+# re-dispatch to disable again.
+# Uses OIDC. Secrets: STAGING/PROD_DEPLOY_ROLE_ARN, PROJECT, AWS_REGION.
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: "Target"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - prod
+      component:
+        description: "What to toggle"
+        required: true
+        default: "site"
+        type: choice
+        options:
+          - site
+          - metrics
       action:
         description: "disable or enable (attribute flip only — nothing is removed)"
         required: true
@@ -27,69 +41,20 @@ on:
 
 permissions:
   id-token: write
-  contents: write   # commits the toggle to terraform/env.auto.tfvars
-
-# Same concurrency group as staging applies — a toggle never races a
-# terraform.yml staging run for the state lock.
-concurrency:
-  group: terraform-staging
-  cancel-in-progress: false
+  contents: read
 
 jobs:
   toggle:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: terraform
     steps:
       - uses: actions/checkout@v7
 
-      - name: Set site_enabled in .github/site-enabled.tfvars
-        run: echo "site_enabled = ${{ github.event.inputs.action == 'enable' }}" > "$GITHUB_WORKSPACE/.github/site-enabled.tfvars"
-
-      - name: Commit + push the toggle (source of truth for future applies)
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/site-enabled.tfvars
-          git commit -m "ci: toggle staging site_enabled=${{ github.event.inputs.action == 'enable' }}" || echo "no change"
-          git push
-
-      - uses: hashicorp/setup-terraform@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
-          terraform_version: "1.15.9"
-
-      - name: Assume staging terraform role (OIDC)
-        uses: aws-actions/configure-aws-credentials@v6
-        with:
-          role-to-assume: ${{ secrets.STAGING_TERRAFORM_ROLE_ARN }}
+          role-to-assume: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_DEPLOY_ROLE_ARN || secrets.STAGING_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Init (S3 backend — S3-native locking)
-        run: |
-          terraform init -input=false \
-            -backend-config="bucket=${{ secrets.PROJECT }}-staging-tfstate" \
-            -backend-config="key=metrics/terraform.tfstate" \
-            -backend-config="region=${{ secrets.AWS_REGION }}" \
-            -backend-config="use_lockfile=true" \
-            -backend-config="encrypt=true"
-
-      - name: Validate
-        run: terraform validate
-
-      - name: Plan (staging — site_enabled read from .github/site-enabled.tfvars)
-        run: |
-          terraform plan -input=false -no-color -out=tf.plan \
-            -var "environment=staging" \
-            -var "project=${{ secrets.PROJECT }}" \
-            -var "aws_region=${{ secrets.AWS_REGION }}" \
-            -var "allowed_origin=${{ secrets.STAGING_ALLOWED_ORIGIN }}" \
-            -var 'tags={"project":"${{ secrets.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}' \
-            -var enable_vpc=false \
-            -var enable_waf=false \
-            -var enable_cloudfront=true \
-            -var enable_metrics=true \
-            -var-file="$GITHUB_WORKSPACE/.github/site-enabled.tfvars"
-
-      - name: Apply
-        run: terraform apply -input=false -no-color tf.plan
+      - name: Toggle CloudFront (${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} -> ${{ github.event.inputs.action }})
+        env:
+          PROJECT: ${{ secrets.PROJECT }}
+        run: scripts/toggle-cloudfront.sh ${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} ${{ github.event.inputs.action }}

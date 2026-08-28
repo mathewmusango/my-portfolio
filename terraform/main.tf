@@ -120,7 +120,7 @@ resource "aws_cloudfront_response_headers_policy" "site_headers" {
 
 resource "aws_cloudfront_distribution" "site" {
   count               = var.enable_site ? 1 : 0
-  enabled             = var.site_enabled
+  enabled             = true
   comment             = "${local.name_prefix}-site"
   default_root_object = "index.html"
   http_version        = "http2and3"

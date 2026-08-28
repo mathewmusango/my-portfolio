@@ -98,8 +98,7 @@ jobs:
             -var enable_vpc=false \
             -var enable_waf=false \
             -var enable_cloudfront=true \
-            -var enable_metrics=true \
-            -var-file="$GITHUB_WORKSPACE/.github/site-enabled.tfvars"
+            -var enable_metrics=true
 
       - name: Apply (staging auto on main; prod only via manual dispatch)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')
