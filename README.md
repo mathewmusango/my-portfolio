@@ -47,12 +47,10 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   file) so a change to one surface only runs that surface's checks — a checks file's own
   change does not re-trigger it (workflow files are linted by `checks-yml`).
 - **Local checks** (`check-compose.yaml`) — the same checks run locally as stage 1, one compose
-  service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js|css|html|md>`),
-  mirroring the GitHub workflows exactly (same commands + repo-relative paths, purpose-built
-  tool images). **Changed-files-only:** `scripts/check_changed.sh` (pre-commit friendly;
-  install with `git config core.hooksPath .githooks`). The
-  css/html/md services are **local-only** — dropped from GitHub as redundant with the strict
-  mkdocs build. The GitHub workflows remain the authoritative gate (stage 2).
+  service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js>`),
+  mirroring the GitHub workflows exactly (same commands + tool images). **Changed-files-only:**
+  `scripts/check_changed.sh` (pre-commit friendly; install with `git config core.hooksPath .githooks`).
+  The GitHub workflows remain the authoritative gate (stage 2).
 - **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) with the S3-only
   deploy role, then invalidates CloudFront with the edge-invalidate role (least privilege —

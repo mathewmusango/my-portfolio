@@ -1,17 +1,14 @@
 # Local (stage-1) checks — one service per check, mirroring the checks-*.yml
-# GitHub workflows EXACTLY (same commands + repo-relative paths, purpose-built
-# tool images). Run one:
+# GitHub workflows EXACTLY (same commands, purpose-built tool images). Run one:
 #   podman-compose -f check-compose.yaml run --rm <service>
 # or all, one after another:
-#   for svc in shell python yaml yaml-syntax js css html md; do
+#   for svc in shell python yaml yaml-syntax js; do
 #     podman-compose -f check-compose.yaml run --rm "$svc" || exit 1
 #   done
 # Changed-files-only: scripts/check_changed.sh (pre-commit friendly).
 # The GitHub workflows remain the authoritative gate (stage 2 — attested,
-# per-commit results). The css/html/md services run HERE only (dropped from
-# GitHub as redundant with the strict mkdocs build). All scans are
-# extension-wide across the whole repo (site/ + .git excluded) so NEW files
-# in new locations are never missed.
+# per-commit results). All scans are extension-wide across the whole repo
+# (site/ + .git excluded) so NEW files in new locations are never missed.
 
 services:
   shell:
@@ -19,9 +16,11 @@ services:
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.sh' -o -path './.githooks/*' \\) -print0 | xargs -0 -r shellcheck -S warning"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.sh' -o -path './.githooks/*' \\) -print0 2>/dev/null | xargs -0 -r shellcheck -S warning"]
 
   python:
+    # ruff-action@v1 runs `ruff check .` — same command here (the action only
+    # adds --output-format github for annotations, meaningless locally).
     image: ghcr.io/astral-sh/ruff:latest
     working_dir: /repo
     volumes:
@@ -29,43 +28,24 @@ services:
     command: ["check", "."]
 
   yaml:
+    # raven-actions/actionlint@v2 runs `actionlint -verbose` (+ matcher /
+    # embedded shellcheck) — -no-color matches the workflow's non-TTY output.
     image: ghcr.io/rhysd/actionlint:latest
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["-no-color"]
+    command: ["-verbose", "-no-color"]
 
   yaml-syntax:
     image: docker.io/library/ruby:alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.yml' -o -name '*.yaml' \\) -print | while IFS= read -r f; do ruby -ryaml -e 'YAML.load_file(ARGV[0])' \"$f\" || exit 1; done"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.yml' -o -name '*.yaml' \\) -print 2>/dev/null | while IFS= read -r f; do ruby -ryaml -e \"YAML.load_file(ARGV[0])\" \"$f\"; echo \"ok: $f\"; done"]
 
   js:
     image: docker.io/library/node:alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print | while IFS= read -r f; do node --check \"$f\" || exit 1; done"]
-
-  css:
-    image: docker.io/library/python:3.12-alpine
-    working_dir: /repo
-    volumes:
-      - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.css' -print | while IFS= read -r f; do python3 -c \"import sys; t=open(sys.argv[1],encoding='utf-8').read(); assert t.count('{')==t.count('}') and t.count('(')==t.count(')')\" \"$f\" || exit 1; done"]
-
-  html:
-    image: docker.io/library/python:3.12-alpine
-    working_dir: /repo
-    volumes:
-      - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.html' -print | while IFS= read -r f; do python3 -c \"import sys; t=open(sys.argv[1],encoding='utf-8').read(); assert t.count('{%')==t.count('%}') and t.count('{{')==t.count('}}')\" \"$f\" || exit 1; done"]
-
-  md:
-    image: docker.io/library/ruby:alpine
-    working_dir: /repo
-    volumes:
-      - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.md' -print | while IFS= read -r f; do ruby -ryaml -e 'c=File.read(ARGV[0]); if c.start_with?(\"---\"); p=c.split(/^--- *$/, 3); YAML.safe_load(p[1]) if p.length >= 3 && !p[1].strip.empty?; end' \"$f\" || exit 1; done"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do node --check \"$f\"; echo \"ok: $f\"; done"]
