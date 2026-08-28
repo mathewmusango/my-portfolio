@@ -2,13 +2,15 @@
 # GitHub workflows EXACTLY (same commands, purpose-built tool images). Run one:
 #   podman-compose -f check-compose.yaml run --rm <service>
 # or all, one after another:
-#   for svc in shell python yaml yaml-syntax js; do
+#   for svc in shell python yaml yaml-syntax js terraform-fmt terraform-validate \
+#              terraform-lint terraform-security; do
 #     podman-compose -f check-compose.yaml run --rm "$svc" || exit 1
 #   done
 # Changed-files-only: scripts/check_changed.sh (pre-commit friendly).
 # The GitHub workflows remain the authoritative gate (stage 2 — attested,
 # per-commit results). All scans are extension-wide across the whole repo
 # (site/ + .git excluded) so NEW files in new locations are never missed.
+# First run pulls the tool images (network).
 
 services:
   shell:
@@ -49,3 +51,39 @@ services:
     volumes:
       - .:/repo:ro
     command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do node --check \"$f\"; echo \"ok: $f\"; done"]
+
+  terraform-fmt:
+    # checks-terraform fmt job: terraform fmt -check -recursive -diff terraform/
+    image: hashicorp/terraform:1.15.9
+    working_dir: /repo
+    volumes:
+      - .:/repo:ro
+    command: ["terraform", "fmt", "-check", "-recursive", "-diff", "terraform/"]
+
+  terraform-validate:
+    # checks-terraform validate job (all three roots). TF_DATA_DIR keeps init's
+    # .terraform out of the read-only mount; -lockfile=readonly uses the
+    # committed lockfiles (all three roots now have one).
+    image: hashicorp/terraform:1.15.9
+    working_dir: /repo
+    volumes:
+      - .:/repo:ro
+    command: ["sh", "-c", "TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics validate -no-color"]
+
+  terraform-lint:
+    # checks-terraform lint job: tflint --init, then recursive on terraform/ + a
+    # plain run on terraform/ci, both with the root .tflint.hcl config.
+    image: ghcr.io/terraform-linters/tflint:latest
+    working_dir: /repo
+    volumes:
+      - .:/repo:ro
+    command: ["sh", "-c", "cd terraform && tflint --init && tflint --recursive --format compact --config /repo/.tflint.hcl && cd ci && tflint --format compact --config /repo/.tflint.hcl"]
+
+  terraform-security:
+    # checks-terraform security job: checkov-action@v12 (image 3.3.15) with
+    # quiet + soft_fail (informational until the audit backlog lands).
+    image: ghcr.io/bridgecrewio/checkov:3.3.15
+    working_dir: /repo
+    volumes:
+      - .:/repo:ro
+    command: ["checkov", "-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]

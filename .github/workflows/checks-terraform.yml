@@ -43,15 +43,15 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Root modules have committed .terraform.lock.hcl files — readonly
-          # detects drift. modules/metrics is a CHILD module (lock lives with
-          # its root), so no lockfile flag there.
+          # All three roots have committed .terraform.lock.hcl files — readonly
+          # detects drift (modules/metrics got its lockfile 2026-08-28 so the
+          # local check-compose validate can run on a read-only mount).
           - dir: terraform
             lockfile: "-lockfile=readonly"
           - dir: terraform/ci
             lockfile: "-lockfile=readonly"
           - dir: terraform/modules/metrics
-            lockfile: ""
+            lockfile: "-lockfile=readonly"
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
