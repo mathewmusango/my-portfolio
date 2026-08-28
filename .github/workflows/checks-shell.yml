@@ -1,13 +1,13 @@
 name: Checks Shell
 
 # Shellcheck on the repo's shell scripts — runs once on main (or dispatch)
-# when scripts/*.sh (or this file) changes.
+# when scripts/*.sh changes. (Not triggered by this file's own change — the
+# workflow files themselves are linted by checks-yml.)
 on:
   push:
     branches: [main]
     paths:
       - "scripts/*.sh"
-      - ".github/workflows/checks-shell.yml"
   workflow_dispatch: {}
 
 permissions:

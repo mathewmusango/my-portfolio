@@ -40,10 +40,11 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   security scan (informational for now). No AWS credentials — this complements (does not
   replace) the `terraform.yml` plan/apply pipeline.
 - **Per-surface checks** (`.github/workflows/{checks-shell,checks-python,checks-yml}.yml`) — one workflow
-  per language, each running once per `main` push (or manual dispatch) when its own files
+  per language, each running once per `main` push (or manual dispatch) when the files it checks
   change: `shellcheck` on `scripts/*.sh`, `ruff` on `terraform/lambda/**` + `scripts/*.py`,
   and `actionlint` on `.github/workflows/**`. Grouped by surface (Terraform stays its own
-  file) so a change to one language only runs that language's checks.
+  file) so a change to one language only runs that language's checks — a checks file's own
+  change does not re-trigger it (workflow files are linted by `checks-yml`).
 - **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) + CloudFront
   invalidation (OIDC `STAGING_DEPLOY_ROLE_ARN`).
