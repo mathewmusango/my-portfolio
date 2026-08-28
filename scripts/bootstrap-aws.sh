@@ -83,7 +83,7 @@ if aws s3api head-bucket --bucket "$STATE_BUCKET" >/dev/null 2>&1; then
     -backend-config="bucket=$STATE_BUCKET" \
     -backend-config="key=$STATE_KEY" \
     -backend-config="region=$AWS_REGION" \
-    -backend-config="dynamodb_table=$STATE_LOCK" \
+    -backend-config="use_lockfile=true" \
     -backend-config="encrypt=true" >/dev/null
   GREENFIELD=false
 else
@@ -128,7 +128,7 @@ if [ "$GREENFIELD" = "true" ]; then
     -backend-config="bucket=$STATE_BUCKET" \
     -backend-config="key=$STATE_KEY" \
     -backend-config="region=$AWS_REGION" \
-    -backend-config="dynamodb_table=$STATE_LOCK" \
+    -backend-config="use_lockfile=true" \
     -backend-config="encrypt=true" >/dev/null
   rm -f terraform.tfstate
 fi

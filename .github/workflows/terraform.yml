@@ -37,6 +37,13 @@ permissions:
   id-token: write
   contents: read
 
+# One run per environment at a time — a queued run waits for the in-flight
+# apply rather than racing it for the state lock (github context only, since
+# this resolves before the env step runs).
+concurrency:
+  group: terraform-${{ github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}
+  cancel-in-progress: false
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
@@ -63,13 +70,13 @@ jobs:
           role-to-assume: ${{ steps.env.outputs.environment == 'prod' && secrets.PROD_TERRAFORM_ROLE_ARN || secrets.STAGING_TERRAFORM_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Init (S3 backend — bucket/lock derived from the resolved environment)
+      - name: Init (S3 backend — bucket derived from the env; S3-native locking)
         run: |
           terraform init -input=false \
             -backend-config="bucket=${{ secrets.PROJECT }}-${{ steps.env.outputs.environment }}-tfstate" \
             -backend-config="key=metrics/terraform.tfstate" \
             -backend-config="region=${{ secrets.AWS_REGION }}" \
-            -backend-config="dynamodb_table=${{ secrets.PROJECT }}-${{ steps.env.outputs.environment }}-tfstate-lock" \
+            -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
       - name: Validate
