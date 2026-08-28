@@ -69,8 +69,12 @@ jobs:
         run: tflint --init
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run TFLint
-        run: tflint --recursive --format compact --config .tflint.hcl
+      - name: Run TFLint (terraform/ + modules)
+        working-directory: terraform
+        run: tflint --recursive --format compact --config "$GITHUB_WORKSPACE/.tflint.hcl"
+      - name: Run TFLint (terraform/ci)
+        working-directory: terraform/ci
+        run: tflint --format compact --config "$GITHUB_WORKSPACE/.tflint.hcl"
 
   security:
     name: security (checkov)
