@@ -42,6 +42,9 @@ checked, and deployed automatically by GitHub Actions (below).
   <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN`).
+- **CloudFront invalidation** — shared `scripts/invalidate-cloudfront.sh <staging|prod> [paths]`
+  (lookup by comment convention, `/*` by default). Auto-run after every deploy sync; also
+  triggerable manually from GitHub (`invalidate.yml`, `workflow_dispatch`) or locally.
 - **Release** (`.github/workflows/release.yml`) — on `v*` tags (or manual dispatch): builds,
   packages `site.zip`, generates a CycloneDX SBOM (`sbom.cdx.json`) from `requirements.txt`,
   and creates/refreshes a GitHub Release with notes from `CHANGELOG.md`.
