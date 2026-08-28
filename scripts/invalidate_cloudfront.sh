@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# scripts/invalidate-cloudfront.sh <staging|prod> [paths]
+# scripts/invalidate_cloudfront.sh <staging|prod> [paths]
 #
 # Look up the site distribution by the comment convention (<project>-<env>-site)
 # and create a CloudFront invalidation. PROJECT must be in the environment
@@ -9,10 +9,10 @@
 
 set -eu
 
-ENV="${1:?usage: scripts/invalidate-cloudfront.sh <staging|prod> [paths]}"
+ENV="${1:?usage: scripts/invalidate_cloudfront.sh <staging|prod> [paths]}"
 case "$ENV" in
   staging | prod) ;;
-  *) echo "usage: scripts/invalidate-cloudfront.sh <staging|prod> [paths]"; exit 1 ;;
+  *) echo "usage: scripts/invalidate_cloudfront.sh <staging|prod> [paths]"; exit 1 ;;
 esac
 PATHS="${2:-/*}"
 

@@ -10,7 +10,7 @@ terraform {
 
   # State: S3 backend, same per-env bucket as the main module but under the
   # 'ci/' key. Values are supplied at init via -backend-config
-  # (scripts/bootstrap-aws.sh) — nothing account-specific lives here. The
+  # (scripts/bootstrap_aws.sh) — nothing account-specific lives here. The
   # bucket is created by THIS module, so the very first run (greenfield) uses
   # local state and migrates after the bucket exists.
   backend "s3" {}

@@ -2,7 +2,7 @@ name: Invalidate CloudFront
 
 # MANUAL cache purge for out-of-band content changes (direct S3 uploads,
 # console edits, ...). The deploy workflows already invalidate automatically
-# after every sync (via scripts/invalidate-cloudfront.sh) — this is only the
+# after every sync (via scripts/invalidate_cloudfront.sh) — this is only the
 # manual trigger. Locally the same script works with your AWS profile.
 on:
   workflow_dispatch:
@@ -36,4 +36,4 @@ jobs:
       - name: Invalidate CloudFront
         env:
           PROJECT: ${{ secrets.PROJECT }}
-        run: scripts/invalidate-cloudfront.sh ${{ github.event.inputs.environment }} "${{ github.event.inputs.paths }}"
+        run: scripts/invalidate_cloudfront.sh ${{ github.event.inputs.environment }} "${{ github.event.inputs.paths }}"

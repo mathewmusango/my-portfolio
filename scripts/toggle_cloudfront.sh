@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# scripts/toggle-cloudfront.sh <staging|prod> <site|metrics> <disable|enable>
+# scripts/toggle_cloudfront.sh <staging|prod> <site|metrics> <disable|enable>
 #
 # Flip `Enabled` on a CloudFront distribution WITHOUT removing anything — the
 # invalidation-style toggle: look up the distro by the comment convention
@@ -13,12 +13,12 @@
 # disable again after any apply. No terraform run deletes anything here.
 #
 # Examples:
-#   scripts/toggle-cloudfront.sh staging site disable
-#   scripts/toggle-cloudfront.sh prod metrics enable
+#   scripts/toggle_cloudfront.sh staging site disable
+#   scripts/toggle_cloudfront.sh prod metrics enable
 
 set -eu
 
-USAGE="usage: scripts/toggle-cloudfront.sh <staging|prod> <site|metrics> <disable|enable>"
+USAGE="usage: scripts/toggle_cloudfront.sh <staging|prod> <site|metrics> <disable|enable>"
 ENV="${1:?$USAGE}"
 COMPONENT="${2:?$USAGE}"
 STATE="${3:?$USAGE}"

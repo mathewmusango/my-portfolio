@@ -6,7 +6,7 @@ name: Terraform
 #   workflow_dispatch         -> choose environment + action
 # Prod is NEVER auto-applied — a blind auto-apply is how stacks get destroyed.
 # Uses OIDC. Secrets: STAGING/PROD_TERRAFORM_ROLE_ARN, PROJECT, AWS_REGION,
-# STAGING/PROD_ALLOWED_ORIGIN (see terraform/ci + scripts/bootstrap-aws.sh).
+# STAGING/PROD_ALLOWED_ORIGIN (see terraform/ci + scripts/bootstrap_aws.sh).
 on:
   push:
     branches: [main]

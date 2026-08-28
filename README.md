@@ -49,7 +49,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 - **Local checks** (`check-compose.yaml`) — the same checks run locally as stage 1, one compose
   service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js|css|html|md>`),
   mirroring the GitHub workflows exactly (same commands + repo-relative paths, purpose-built
-  tool images). **Changed-files-only:** `scripts/check-changed.sh` (pre-commit friendly;
+  tool images). **Changed-files-only:** `scripts/check_changed.sh` (pre-commit friendly;
   install with `git config core.hooksPath .githooks`). The
   css/html/md services are **local-only** — dropped from GitHub as redundant with the strict
   mkdocs build. The GitHub workflows remain the authoritative gate (stage 2).
@@ -62,7 +62,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`).
-- **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle-cloudfront.sh`) — manual
+- **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
   dispatch: **disable/enable any CloudFront distribution** (dropdowns: environment `staging`|`prod`,
   component `site`|`metrics`, action disable|enable) by flipping `Enabled` in place via the AWS CLI —
   the invalidation-style toggle: no terraform apply runs, nothing can be deleted. Uses the
@@ -72,13 +72,13 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
   convention, skip when the distro is absent). Manual purges (out-of-band content changes) go
   through `invalidate-cloudfront.yml` (`workflow_dispatch`) or locally via
-  `scripts/invalidate-cloudfront.sh <staging|prod> [paths]` — the reference implementation if
+  `scripts/invalidate_cloudfront.sh <staging|prod> [paths]` — the reference implementation if
   the inline steps are ever centralized:
 
   ```sh
   # Reference — the script used by the manual paths (also the centralized pattern)
-  scripts/invalidate-cloudfront.sh staging            # full invalidation (/*)
-  scripts/invalidate-cloudfront.sh prod "/about/ /metrics/"   # specific paths
+  scripts/invalidate_cloudfront.sh staging            # full invalidation (/*)
+  scripts/invalidate_cloudfront.sh prod "/about/ /metrics/"   # specific paths
   ```
 - **Release** (`.github/workflows/release.yml`) — on `v*` tags (or manual dispatch): builds,
   packages `site.zip`, generates a CycloneDX SBOM (`sbom.cdx.json`) from `requirements.txt`,

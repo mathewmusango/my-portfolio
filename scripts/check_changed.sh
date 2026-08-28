@@ -5,8 +5,8 @@
 # images as check-compose.yaml. css/html/md run on the host python3/ruby.
 #
 # Usage:
-#   scripts/check-changed.sh            # staged + unstaged vs HEAD
-#   scripts/check-changed.sh --cached   # staged only (pre-commit hook)
+#   scripts/check_changed.sh            # staged + unstaged vs HEAD
+#   scripts/check_changed.sh --cached   # staged only (pre-commit hook)
 #
 # Install as the git pre-commit hook:
 #   git config core.hooksPath .githooks

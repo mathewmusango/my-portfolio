@@ -6,7 +6,7 @@
 #   for svc in shell python yaml yaml-syntax js css html md; do
 #     podman-compose -f check-compose.yaml run --rm "$svc" || exit 1
 #   done
-# Changed-files-only: scripts/check-changed.sh (pre-commit friendly).
+# Changed-files-only: scripts/check_changed.sh (pre-commit friendly).
 # The GitHub workflows remain the authoritative gate (stage 2 — attested,
 # per-commit results). The css/html/md services run HERE only (dropped from
 # GitHub as redundant with the strict mkdocs build). All scans are

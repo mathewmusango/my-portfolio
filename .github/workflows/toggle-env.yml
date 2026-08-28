@@ -1,7 +1,7 @@
 name: Toggle env
 
 # DISABLE / ENABLE a CloudFront distribution WITHOUT removing anything — the
-# invalidation-style toggle (scripts/toggle-cloudfront.sh): look up the distro
+# invalidation-style toggle (scripts/toggle_cloudfront.sh): look up the distro
 # by comment convention (<project>-<env>-<component>) and flip Enabled in
 # place. No terraform apply runs here — nothing can be deleted.
 #   environment: staging | prod
@@ -57,4 +57,4 @@ jobs:
       - name: Toggle CloudFront (${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} -> ${{ github.event.inputs.action }})
         env:
           PROJECT: ${{ secrets.PROJECT }}
-        run: scripts/toggle-cloudfront.sh ${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} ${{ github.event.inputs.action }}
+        run: scripts/toggle_cloudfront.sh ${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} ${{ github.event.inputs.action }}
