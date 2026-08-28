@@ -11,7 +11,7 @@
 # per-commit results). All scans are extension-wide across the whole repo
 # (site/ + .git excluded) so NEW files in new locations are never missed.
 # First run pulls the tool images (network).
-
+name: repo_check
 services:
   shell:
     image: docker.io/koalaman/shellcheck-alpine:latest
