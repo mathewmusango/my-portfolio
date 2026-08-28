@@ -179,8 +179,7 @@ resource "aws_lambda_function" "metrics_writer" {
   # checkov:skip=CKV_AWS_116:DLQ applies to async invocations; API Gateway invokes synchronously
   # checkov:skip=CKV_AWS_173:Env vars encrypted at rest by Lambda's default AWS-managed key (free tier)
   # checkov:skip=CKV_AWS_50:Observability via CloudWatch logs + the site's own metrics; X-Ray out (marginal value)
-  # Reserved concurrency caps a public unauthenticated endpoint — cost guard (free).
-  reserved_concurrent_executions = 2
+  # checkov:skip=CKV_AWS_115:Account Lambda concurrency limit is 10 — the unreserved minimum is 10, so reserved concurrency is impossible without a quota increase; the endpoint is origin-gated (403 non-site origins)
 
   environment {
     variables = {
@@ -257,8 +256,7 @@ resource "aws_lambda_function" "metrics_reader" {
   # checkov:skip=CKV_AWS_116:DLQ applies to async invocations; API Gateway invokes synchronously
   # checkov:skip=CKV_AWS_173:Env vars encrypted at rest by Lambda's default AWS-managed key (free tier)
   # checkov:skip=CKV_AWS_50:Observability via CloudWatch logs + the site's own metrics; X-Ray out (marginal value)
-  # Reserved concurrency caps a public unauthenticated endpoint — cost guard (free).
-  reserved_concurrent_executions = 2
+  # checkov:skip=CKV_AWS_115:Account Lambda concurrency limit is 10 — the unreserved minimum is 10, so reserved concurrency is impossible without a quota increase; the endpoint is origin-gated (403 non-site origins)
 
   environment {
     variables = {
