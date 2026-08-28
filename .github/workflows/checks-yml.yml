@@ -19,4 +19,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-      - uses: raven-actions/actionlint@v1
+      # v2 required: v1 is a composite wrapping github-script@v7 internally,
+      # which crashes on Node-24 runners (ERR_PACKAGE_PATH_NOT_EXPORTED).
+      - uses: raven-actions/actionlint@v2
