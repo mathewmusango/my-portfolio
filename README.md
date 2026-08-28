@@ -29,6 +29,11 @@ checked, and deployed automatically by GitHub Actions (below).
   build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
   check, CSS sanity check) with the production `site_url`; uploads the built `site/` as an
   artifact (7-day retention).
+- **Terraform checks** (`.github/workflows/terraform-checks.yml`) — static checks on the
+  terraform code (main pushes + tags + manual dispatch): `terraform fmt -check`, `validate`
+  (all three roots: `terraform/`, `terraform/ci/`, `modules/metrics`), TFLint, and a Checkov
+  security scan (informational for now). No AWS credentials — this complements (does not
+  replace) the `terraform.yml` plan/apply pipeline.
 - **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) + CloudFront
   invalidation (OIDC `STAGING_DEPLOY_ROLE_ARN`).
