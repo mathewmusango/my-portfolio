@@ -98,6 +98,18 @@ data "aws_iam_openid_connect_provider" "github" {
   url   = "https://token.actions.githubusercontent.com"
 }
 
+# IAM Access Analyzer — account-level findings (external access + unused
+# access, e.g. WAF/VPC actions unused while enable_waf/enable_vpc are off).
+# Account-global like the OIDC provider: one analyzer per region per account,
+# created by whichever env's state owns it (manage_analyzer), reused by the
+# other. Findings appear in the console: IAM -> Access Analyzer.
+resource "aws_accessanalyzer_analyzer" "account" {
+  count         = var.manage_analyzer ? 1 : 0
+  analyzer_name = "${var.name_prefix}-analyzer"
+  type          = "ACCOUNT"
+  tags          = var.tags
+}
+
 # ---------------------------------------------------------------------------
 # Role — assumed by GitHub Actions (OIDC), scoped per repo
 # ---------------------------------------------------------------------------

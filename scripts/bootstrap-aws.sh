@@ -108,6 +108,20 @@ else
   PROVIDER_NOTE="creating (provider not found)"
 fi
 
+# Same ownership rule for the account-level IAM Access Analyzer (one per
+# region per account — the env whose state owns it manages it, the other
+# env reuses the account analyzer).
+if terraform state list 2>/dev/null | grep -qE '^aws_accessanalyzer_analyzer\.account'; then
+  MANAGE_ANALYZER=true
+  ANALYZER_NOTE="managing (owned by this env's state)"
+elif aws accessanalyzer list-analyzers --output text --query 'Analyzers[].Name' 2>/dev/null | grep -q .; then
+  MANAGE_ANALYZER=false
+  ANALYZER_NOTE="reusing (analyzer exists)"
+else
+  MANAGE_ANALYZER=true
+  ANALYZER_NOTE="creating (analyzer not found)"
+fi
+
 terraform apply -auto-approve -no-color -input=false \
   -var "environment=$ENV" \
   -var "aws_region=$AWS_REGION" \
@@ -121,6 +135,7 @@ terraform apply -auto-approve -no-color -input=false \
   -var "ref_patterns=$REF_PATTERNS" \
   -var "deploy_ref_patterns=$DEPLOY_REF_PATTERNS" \
   -var "manage_provider=$MANAGE_PROVIDER" \
+  -var "manage_analyzer=$MANAGE_ANALYZER" \
   -var "tags={\"project\":\"$PROJECT\",\"managed_by\":\"terraform\",\"environment\":\"$ENV\"}"
 
 if [ "$GREENFIELD" = "true" ]; then
@@ -141,4 +156,5 @@ echo "  state bucket:   $STATE_BUCKET (key $STATE_KEY)"
 echo "  lock table:     $PROJECT-$ENV-tfstate-lock"
 echo "  site buckets:   $PROJECT-$ENV-site*"
 echo "  oidc provider:  $PROVIDER_NOTE"
+echo "  access analyzer: $ANALYZER_NOTE"
 echo "  trust refs:     $REF_PATTERNS"

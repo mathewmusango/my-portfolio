@@ -43,6 +43,11 @@ variable "manage_provider" {
   type        = bool
 }
 
+variable "manage_analyzer" {
+  description = "Create the account-level IAM Access Analyzer (true for the env whose state owns it; the other env reuses the account analyzer). Findings: external access + unused access."
+  type        = bool
+}
+
 variable "state_bucket" {
   description = "S3 bucket for the terraform state backend (created here)."
   type        = string
