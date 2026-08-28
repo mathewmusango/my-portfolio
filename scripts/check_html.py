@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""UTF-8 + Jinja tag balance for overrides HTML templates.
+"""UTF-8 + Jinja tag balance for HTML/Jinja templates.
 
-No args: scan overrides/**. With args: check only those files (relative to
-the repo root). Catches truncated template edits fast. (The strict mkdocs
-build renders the templates on every push; this is file-change-time feedback.)
+No args: scan every *.html in the repo (excluding site/ + .git). With args:
+check only those files (relative to the repo root). Catches truncated
+template edits fast. (The strict mkdocs build renders templates on every
+push; this is file-change-time feedback.)
 """
 import sys
 from pathlib import Path
 
-OVERRIDES = Path(__file__).resolve().parent.parent / "overrides"
+ROOT = Path(__file__).resolve().parent.parent
 
 
 def main() -> int:
-    files = [Path(a) for a in sys.argv[1:]] or sorted(OVERRIDES.rglob("*.html"))
+    files = [Path(a) for a in sys.argv[1:]]
+    if not files:
+        files = sorted(
+            p
+            for p in ROOT.rglob("*.html")
+            if p.relative_to(ROOT).parts[0] not in ("site", ".git")
+        )
     errors = 0
     for html in files:
         text = html.read_text(encoding="utf-8")

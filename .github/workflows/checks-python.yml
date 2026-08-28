@@ -1,14 +1,13 @@
 name: Checks Python
 
-# Ruff lint on the Lambda + hook python — runs once on main (or dispatch)
-# when terraform/lambda/** or scripts/*.py changes. (Not triggered by this
-# file's own change — workflow files are linted by checks-yml.)
+# Ruff lint on every python file in the repo — runs once on main (or dispatch)
+# when any .py changes, anywhere. Extension-wide so NEW python files in new
+# locations are never missed.
 on:
   push:
     branches: [main]
     paths:
-      - "terraform/lambda/**"
-      - "scripts/*.py"
+      - "**/*.py"
   workflow_dispatch: {}
 
 permissions:
@@ -20,6 +19,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+      # ruff . respects .gitignore (site/, .terraform/, … are skipped).
       - uses: astral-sh/ruff-action@v1
         with:
-          src: "terraform/lambda scripts"
+          src: "."

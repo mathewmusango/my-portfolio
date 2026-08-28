@@ -1,13 +1,13 @@
 name: Checks Shell
 
-# Shellcheck on the repo's shell scripts — runs once on main (or dispatch)
-# when scripts/*.sh changes. (Not triggered by this file's own change — the
-# workflow files themselves are linted by checks-yml.)
+# Shellcheck on every shell script in the repo (scripts/*.sh + .githooks/*) —
+# runs once on main (or dispatch) when any .sh changes, anywhere. Extension-wide
+# so NEW shell scripts in new locations are never missed.
 on:
   push:
     branches: [main]
     paths:
-      - "scripts/*.sh"
+      - "**/*.sh"
   workflow_dispatch: {}
 
 permissions:
@@ -22,4 +22,5 @@ jobs:
       - name: Shellcheck
         # ubuntu-latest runners ship shellcheck; the koalaman/shellcheck-action
         # repo no longer resolves on GitHub ("repository not found").
-        run: shellcheck -S warning scripts/*.sh
+        run: |
+          find . -path './site' -prune -o -path './.git' -prune -o -type f \( -name '*.sh' -o -path './.githooks/*' \) -print0 2>/dev/null | xargs -0 -r shellcheck -S warning

@@ -9,7 +9,9 @@
 # Changed-files-only: scripts/check_changed.sh (pre-commit friendly).
 # The GitHub workflows remain the authoritative gate (stage 2 — attested,
 # per-commit results). The css/html/md services run HERE only (dropped from
-# GitHub as redundant with the strict mkdocs build).
+# GitHub as redundant with the strict mkdocs build). All scans are
+# extension-wide across the whole repo (site/ + .git excluded) so NEW files
+# in new locations are never missed.
 
 services:
   shell:
@@ -17,14 +19,14 @@ services:
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "shellcheck -S warning scripts/*.sh"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.sh' -o -path './.githooks/*' \\) -print0 | xargs -0 -r shellcheck -S warning"]
 
   python:
     image: ghcr.io/astral-sh/ruff:latest
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["check", "terraform/lambda", "scripts"]
+    command: ["check", "."]
 
   yaml:
     image: ghcr.io/rhysd/actionlint:latest
@@ -38,14 +40,14 @@ services:
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find .github -type f \\( -name '*.yml' -o -name '*.yaml' \\) -print | while IFS= read -r f; do ruby -ryaml -e 'YAML.load_file(ARGV[0])' \"$f\" || exit 1; done; ruby -ryaml -e 'YAML.load_file(ARGV[0])' mkdocs.yml; ruby -ryaml -e 'YAML.load_file(ARGV[0])' compose.yaml; ruby -ryaml -e 'YAML.load_file(ARGV[0])' check-compose.yaml"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.yml' -o -name '*.yaml' \\) -print | while IFS= read -r f; do ruby -ryaml -e 'YAML.load_file(ARGV[0])' \"$f\" || exit 1; done"]
 
   js:
     image: docker.io/library/node:alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find docs overrides -type f -name '*.js' -print | while IFS= read -r f; do node --check \"$f\" || exit 1; done"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print | while IFS= read -r f; do node --check \"$f\" || exit 1; done"]
 
   css:
     image: docker.io/library/python:3.12-alpine

@@ -2,13 +2,21 @@
 # frozen_string_literal: true
 
 # UTF-8 + frontmatter parse for markdown files (Ruby psych — no installs).
-# No args: scan docs/**. With args: check only those files (relative to the
-# repo root). Exit 1 if any file has invalid frontmatter.
+# No args: scan every *.md in the repo (excluding site/ + .git). With args:
+# check only those files (relative to the repo root). Exit 1 if any file has
+# invalid frontmatter.
 
 require "yaml"
 
-root = File.expand_path("../../docs", __FILE__)
-files = ARGV.empty? ? Dir.glob(File.join(root, "**", "*.md")).sort : ARGV
+root = File.expand_path("../..", __FILE__)
+files =
+  if ARGV.empty?
+    Dir.glob(File.join(root, "**", "*.md")).sort.reject { |p|
+      p.include?("/site/") || p.include?("/.git/")
+    }
+  else
+    ARGV
+  end
 errors = 0
 
 files.each do |path|

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 confirmed feature batch lands (no fixed schedule). Releases are provenance
 snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
-for fixes only, major for breaking changes. Full policy in `DEVOPS.md` §5.1.
+for fixes only, major for breaking changes.
 
 ## [3.1.1] - 2026-08-28
 

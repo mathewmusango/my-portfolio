@@ -1,15 +1,14 @@
 name: Checks YAML
 
 # actionlint on the GitHub Actions workflows + a YAML syntax parse of every
-# yml/yaml in the repo (.github/**, mkdocs.yml, compose.yaml). Runs once on
-# main (or dispatch) when any of those change.
+# yml/yaml in the repo. Runs once on main (or dispatch) when any yml/yaml
+# changes, anywhere (extension-wide — new yaml files are never missed).
 on:
   push:
     branches: [main]
     paths:
-      - ".github/**"
-      - "mkdocs.yml"
-      - "compose.yaml"
+      - "**/*.yml"
+      - "**/*.yaml"
   workflow_dispatch: {}
 
 permissions:
@@ -24,12 +23,10 @@ jobs:
       - uses: actions/checkout@v7
       - name: Parse YAML (Ruby's built-in psych — no installs)
         run: |
-          find .github -type f \( -name '*.yml' -o -name '*.yaml' \) -print 2>/dev/null | while IFS= read -r f; do
+          find . -path './site' -prune -o -path './.git' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print 2>/dev/null | while IFS= read -r f; do
             ruby -ryaml -e "YAML.load_file(ARGV[0])" "$f"
             echo "ok: $f"
           done
-          ruby -ryaml -e "YAML.load_file(ARGV[0])" mkdocs.yml
-          ruby -ryaml -e "YAML.load_file(ARGV[0])" compose.yaml
 
   actionlint:
     runs-on: ubuntu-latest
