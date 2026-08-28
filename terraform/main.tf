@@ -80,6 +80,8 @@ resource "aws_cloudfront_distribution" "site" {
   is_ipv6_enabled     = true
   # checkov:skip=CKV_AWS_86:Access logging skipped for a low-traffic personal site (deliberate)
   # checkov:skip=CKV_AWS_374:Geo restriction deliberately none — the site is a public portfolio
+  # checkov:skip=CKV_AWS_310:Single S3 origin — no secondary for failover (personal site)
+  # checkov:skip=CKV_AWS_68:WAF excluded — outside the Free Tier (user constraint)
 
   origin {
     domain_name              = aws_s3_bucket.site[0].bucket_regional_domain_name
@@ -133,6 +135,7 @@ resource "aws_cloudfront_distribution" "site" {
 
   viewer_certificate {
     cloudfront_default_certificate = true
+    minimum_protocol_version       = "TLSv1.2_2021"
   }
 }
 

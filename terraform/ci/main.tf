@@ -127,6 +127,8 @@ resource "aws_iam_policy" "metrics_terraform" {
   description = "Allow GitHub Actions to plan/apply the ${var.name_prefix} metrics terraform stack."
   # checkov:skip=CKV_AWS_290:MetricsStack statement is broad because CloudFront/API GW/EC2 actions are not resource-scopable (AWS limitation)
   # checkov:skip=CKV_AWS_355:MetricsStack needs Resource '*' for CloudFront/API GW/EC2 actions; S3/DynamoDB/state/IAM are scoped in their own statements
+  # checkov:skip=CKV_AWS_289:MetricsStack includes permission-granting actions (lambda:AddPermission, ec2:AuthorizeSecurityGroupIngress) — AWS limitation + OIDC CI-role-only
+  # checkov:skip=CKV_AWS_286:MetricsStack's broad write surface is required to manage the stack; the role is assumable only by this repo's CI (OIDC)
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -271,6 +273,8 @@ resource "aws_iam_policy" "site_deploy" {
   name        = "${var.name_prefix}-${var.environment}-site-deploy"
   description = "Allow GitHub Actions to publish the site to S3 and invalidate CloudFront."
   # checkov:skip=CKV_AWS_355:CloudFront invalidation actions require Resource '*' (AWS API limitation); S3 actions are bucket-scoped
+  # checkov:skip=CKV_AWS_290:cloudfront:CreateInvalidation on '*' is required — invalidation actions are not resource-scopable (AWS limitation)
+  # checkov:skip=CKV_AWS_289:s3:PutBucketPolicy is permission management by design — the deploy role writes the site bucket policy
 
   policy = jsonencode({
     Version = "2012-10-17"
