@@ -25,6 +25,10 @@ checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD
 
+Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-staging.yml`,
+`checks-python.yml`, `invalidate-cloudfront.yml`); task-only names for single-purpose files
+(`ci.yml`, `release.yml`).
+
 - **CI** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
   build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
   check, CSS sanity check) with the production `site_url`; uploads the built `site/` as an
