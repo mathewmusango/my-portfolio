@@ -19,9 +19,10 @@ jobs:
 
       - uses: ./.github/actions/build-site
         with:
-          site_url: https://mathewmusango.github.io/my-portfolio/
-          # The metrics endpoint is baked into the artifact at build time, so the
-          # trigger picks the right one: tags -> prod, main -> staging.
+          # site_url + metrics endpoint are baked into the artifact at build
+          # time, so the trigger picks the right ones: tags -> prod, main ->
+          # staging (secrets: STAGING/PROD_SITE_URL, STAGING/PROD_METRICS_ENDPOINT).
+          site_url: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.PROD_SITE_URL || secrets.STAGING_SITE_URL }}
           metrics_endpoint: ${{ startsWith(github.ref, 'refs/tags/v') && secrets.PROD_METRICS_ENDPOINT || secrets.STAGING_METRICS_ENDPOINT }}
 
       - name: Upload site artifact

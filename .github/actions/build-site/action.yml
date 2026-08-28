@@ -18,8 +18,15 @@ runs:
       if: inputs.site_url != ''
       shell: bash
       run: |
-        # mkdocs.yml carries the canonical site_url now; only append if absent.
-        grep -q '^site_url:' mkdocs.yml || printf 'site_url: %s\n' "${{ inputs.site_url }}" >> mkdocs.yml
+        # Override the canonical site_url per environment — the artifact is
+        # deployed per-env (main -> staging, tags -> prod), so the baked
+        # canonical/OG/sitemap URLs must match. mkdocs.yml's value stays the
+        # local/prod default for builds that don't pass the input.
+        if grep -q '^site_url:' mkdocs.yml; then
+          sed -i "s|^site_url:.*|site_url: ${{ inputs.site_url }}|" mkdocs.yml
+        else
+          printf 'site_url: %s\n' "${{ inputs.site_url }}" >> mkdocs.yml
+        fi
 
     - name: Cache pip
       uses: actions/cache@v6

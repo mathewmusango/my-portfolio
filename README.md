@@ -31,7 +31,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 
 - **CI** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
   build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
-  check, CSS sanity check) with the production `site_url`; uploads the built `site/` as an
+  check, CSS sanity check) with the per-environment `site_url` (tags → prod, main → staging); uploads the built `site/` as an
   artifact (7-day retention).
 - **Terraform checks** (`.github/workflows/checks-terraform.yml`) — static checks on the
   terraform code (once per `main` push when `terraform/**` changes, or manual dispatch):
@@ -77,7 +77,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 Build and release workflows use only the auto-scoped `GITHUB_TOKEN`. Deploys and Terraform
 assume AWS roles via **OIDC** (no long-lived keys) using repo secrets: `STAGING/PROD_TERRAFORM_ROLE_ARN`,
 `STAGING/PROD_DEPLOY_ROLE_ARN`, `PROJECT`, `AWS_REGION`, `STAGING/PROD_ALLOWED_ORIGIN`,
-`STAGING/PROD_METRICS_ENDPOINT`. No deployment value is hardcoded — terraform variables
+`STAGING/PROD_METRICS_ENDPOINT`, `STAGING/PROD_SITE_URL`. No deployment value is hardcoded — terraform variables
 (`project`, `environment`, `aws_region`, `allowed_origin`, `tags`) are injected at runtime from
 secrets (CI) or `local.tfvars` (local dev).
 
