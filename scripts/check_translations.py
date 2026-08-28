@@ -44,6 +44,7 @@ def last_commit_ts(path: Path) -> int:
             capture_output=True,
             text=True,
             timeout=15,
+            check=False,
         ).stdout.strip()
         return int(out) if out.isdigit() else 0
     except (subprocess.SubprocessError, FileNotFoundError, ValueError):
@@ -53,7 +54,11 @@ def last_commit_ts(path: Path) -> int:
 def fmt_ts(ts: int) -> str:
     import datetime
 
-    return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d") if ts else "never"
+    return (
+        datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d")
+        if ts
+        else "never"
+    )
 
 
 def main() -> int:
@@ -62,7 +67,7 @@ def main() -> int:
     warnings = []
 
     if not en_dir.is_dir():
-        print(f"ERROR docs/en/ not found (is docs_structure: folder?)")
+        print("ERROR docs/en/ not found (is docs_structure: folder?)")
         return 1
 
     for en in sorted(en_dir.rglob("*.md")):

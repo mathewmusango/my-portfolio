@@ -12,7 +12,6 @@ from datetime import datetime, timezone
 from decimal import Decimal
 
 import boto3
-
 from metrics_common import origin_allowed, request_origin, response
 
 TABLE_NAME = os.environ["TABLE_NAME"]
@@ -102,7 +101,7 @@ def _summary():
                 v = item.get(k)
                 if isinstance(v, (int, float, Decimal)):
                     timing_acc[k] = timing_acc.get(k, 0) + v
-    timing = {k: int(round(v / timing_n)) for k, v in timing_acc.items()} if timing_n else {}
+    timing = {k: round(v / timing_n) for k, v in timing_acc.items()} if timing_n else {}
 
     # Visitors + sessions: group events by anonymous visitor id; a session
     # breaks when the gap between events exceeds 30 minutes.

@@ -44,6 +44,7 @@ def _last_updated(repo_root, locale):
             capture_output=True,
             text=True,
             timeout=15,
+            check=False,
         ).stdout.strip()
         if out.isdigit():
             return _fmt_month(int(out), locale)
@@ -76,5 +77,5 @@ def on_page_markdown(markdown, page, config, files):
         "last_updated": _last_updated(Path(config["docs_dir"]).parent, locale),
     }
     for key, value in replacements.items():
-        markdown = markdown.replace("{{%s}}" % key, value)
+        markdown = markdown.replace("{{" + key + "}}", value)
     return markdown

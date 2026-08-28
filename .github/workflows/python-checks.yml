@@ -1,0 +1,25 @@
+name: Python checks
+
+# Ruff lint on the Lambda + hook python — runs once on main (or dispatch)
+# when terraform/lambda/** or scripts/*.py (or this file) changes.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/lambda/**"
+      - "scripts/*.py"
+      - ".github/workflows/python-checks.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/ruff-action@v1
+        with:
+          src: "terraform/lambda scripts"

@@ -26,10 +26,10 @@ on:
       environment:
         description: "Target (default: v* tag -> prod, main -> staging)"
         required: false
-        default: ""
+        default: "auto"
         type: choice
         options:
-          - ""
+          - auto
           - staging
           - prod
 
@@ -41,7 +41,7 @@ permissions:
 # apply rather than racing it for the state lock (github context only, since
 # this resolves before the env step runs).
 concurrency:
-  group: terraform-${{ github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}
+  group: terraform-${{ github.event.inputs.environment != 'auto' && github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}
   cancel-in-progress: false
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
       - name: Resolve environment (dispatch override > v* tag > main)
         id: env
         run: |
-          ENV="${{ github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}"
+          ENV="${{ github.event.inputs.environment != 'auto' && github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}"
           echo "environment=$ENV" >> "$GITHUB_OUTPUT"
           echo "Resolved environment: $ENV"
 

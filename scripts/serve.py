@@ -124,4 +124,4 @@ def _parse_dev_addr(argv):
 
 if __name__ == "__main__":
     host, port = _parse_dev_addr(sys.argv[1:])
-    serve(dev_addr="%s:%d" % (host, port))
+    serve(dev_addr=f"{host}:{port}")

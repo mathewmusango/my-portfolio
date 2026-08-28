@@ -26,7 +26,7 @@ PREFIX_RE = re.compile(r"^/my-portfolio(?=/|$)")
 
 def aws(*args):
     cmd = ["aws", "--profile", PROFILE, "--region", REGION, *args]
-    out = subprocess.run(cmd, capture_output=True, text=True)
+    out = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if out.returncode != 0:
         sys.exit(f"aws {' '.join(args)} failed: {out.stderr.strip()}")
     return json.loads(out.stdout)

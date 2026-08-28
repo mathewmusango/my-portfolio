@@ -8,11 +8,18 @@ The reader function (metrics_reader.py) owns all reads.
 import os
 import time
 import uuid
-
-import boto3
 from decimal import Decimal
 
-from metrics_common import decode_body, geo, headers, origin_allowed, request_origin, response
+import boto3
+from botocore.exceptions import BotoCoreError, ClientError
+from metrics_common import (
+    decode_body,
+    geo,
+    headers,
+    origin_allowed,
+    request_origin,
+    response,
+)
 
 TABLE_NAME = os.environ["TABLE_NAME"]
 RETENTION_DAYS = int(os.environ.get("EVENT_RETENTION", "90"))
@@ -64,8 +71,11 @@ def handler(event, context):
 
     try:
         table.put_item(Item=item)
-    except Exception as exc:  # pragma: no cover
-        return response(500, {"error": f"write failed: {exc}"})
+    except (BotoCoreError, ClientError, ValueError, TypeError) as exc:  # pragma: no cover
+        # Log for CloudWatch; return a generic body — never leak internals
+        # (table names / request params) to the public beacon endpoint.
+        print(f"write failed: {exc!r}")
+        return response(500, {"error": "write failed"})
 
     # 204: the beacon never needs a body back
     return {

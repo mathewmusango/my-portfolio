@@ -34,6 +34,11 @@ checked, and deployed automatically by GitHub Actions (below).
   (all three roots: `terraform/`, `terraform/ci/`, `modules/metrics`), TFLint, and a Checkov
   security scan (informational for now). No AWS credentials — this complements (does not
   replace) the `terraform.yml` plan/apply pipeline.
+- **Per-surface checks** (`.github/workflows/{shell,python,yml}-checks.yml`) — one workflow
+  per language, each running once per `main` push (or manual dispatch) when its own files
+  change: `shellcheck` on `scripts/*.sh`, `ruff` on `terraform/lambda/**` + `scripts/*.py`,
+  and `actionlint` on `.github/workflows/**`. Grouped by surface (Terraform stays its own
+  file) so a change to one language only runs that language's checks.
 - **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) + CloudFront
   invalidation (OIDC `STAGING_DEPLOY_ROLE_ARN`).

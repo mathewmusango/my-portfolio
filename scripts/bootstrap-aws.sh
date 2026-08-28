@@ -24,6 +24,7 @@ case "$ENV" in
   *) echo "usage: scripts/bootstrap-aws.sh <staging|prod>"; exit 1 ;;
 esac
 
+# shellcheck disable=SC1007  # CDPATH= cd is the intentional empty-CD cd idiom
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 if [ -f "$ROOT/.env" ]; then
   set -a

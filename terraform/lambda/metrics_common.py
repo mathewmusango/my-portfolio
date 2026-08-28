@@ -35,7 +35,7 @@ def _hostname(url):
         from urllib.parse import urlparse
 
         return (urlparse(url).netloc or "").lower()
-    except Exception:
+    except (ValueError, TypeError):
         return ""
 
 
@@ -105,7 +105,7 @@ def decode_body(event):
     if event.get("isBase64Encoded"):
         try:
             body = base64.b64decode(body).decode("utf-8", "replace")
-        except Exception:
+        except (ValueError, TypeError):
             return None
     if len(body.encode("utf-8")) > MAX_BODY_BYTES:
         return None
