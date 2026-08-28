@@ -54,18 +54,18 @@ services:
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["python3", "scripts/check_css.py"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.css' -print | while IFS= read -r f; do python3 -c \"import sys; t=open(sys.argv[1],encoding='utf-8').read(); assert t.count('{')==t.count('}') and t.count('(')==t.count(')')\" \"$f\" || exit 1; done"]
 
   html:
     image: docker.io/library/python:3.12-alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["python3", "scripts/check_html.py"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.html' -print | while IFS= read -r f; do python3 -c \"import sys; t=open(sys.argv[1],encoding='utf-8').read(); assert t.count('{%')==t.count('%}') and t.count('{{')==t.count('}}')\" \"$f\" || exit 1; done"]
 
   md:
     image: docker.io/library/ruby:alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["ruby", "scripts/check_md.rb"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.md' -print | while IFS= read -r f; do ruby -ryaml -e 'c=File.read(ARGV[0]); if c.start_with?(\"---\"); p=c.split(/^--- *$/, 3); YAML.safe_load(p[1]) if p.length >= 3 && !p[1].strip.empty?; end' \"$f\" || exit 1; done"]

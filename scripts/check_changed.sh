@@ -56,17 +56,23 @@ fi
 
 if [ -n "$CSS_FILES" ]; then
   echo "== css (changed) =="
-  python3 scripts/check_css.py $CSS_FILES
+  printf '%s\n' "$CSS_FILES" | while IFS= read -r f; do
+    python3 -c "import sys; t=open(sys.argv[1],encoding='utf-8').read(); assert t.count('{')==t.count('}') and t.count('(')==t.count(')')" "$f"
+  done
 fi
 
 if [ -n "$HTML_FILES" ]; then
   echo "== html (changed) =="
-  python3 scripts/check_html.py $HTML_FILES
+  printf '%s\n' "$HTML_FILES" | while IFS= read -r f; do
+    python3 -c "import sys; t=open(sys.argv[1],encoding='utf-8').read(); assert t.count('{%')==t.count('%}') and t.count('{{')==t.count('}}')" "$f"
+  done
 fi
 
 if [ -n "$MD_FILES" ]; then
   echo "== md (changed) =="
-  ruby scripts/check_md.rb $MD_FILES
+  printf '%s\n' "$MD_FILES" | while IFS= read -r f; do
+    ruby -ryaml -e 'c=File.read(ARGV[0]); if c.start_with?("---"); p=c.split(/^--- *$/, 3); YAML.safe_load(p[1]) if p.length >= 3 && !p[1].strip.empty?; end' "$f"
+  done
 fi
 
 echo "changed-files checks passed"
