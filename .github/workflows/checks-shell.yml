@@ -7,7 +7,7 @@ on:
     branches: [main]
     paths:
       - "scripts/*.sh"
-      - ".github/workflows/shell-checks.yml"
+      - ".github/workflows/checks-shell.yml"
   workflow_dispatch: {}
 
 permissions:

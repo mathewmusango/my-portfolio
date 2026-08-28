@@ -8,7 +8,7 @@ on:
     paths:
       - "terraform/lambda/**"
       - "scripts/*.py"
-      - ".github/workflows/python-checks.yml"
+      - ".github/workflows/checks-python.yml"
   workflow_dispatch: {}
 
 permissions:

@@ -63,10 +63,10 @@ case "$ENV" in
     ;;
 esac
 
-# The DEPLOY role is assumed from deploy.yml / deploy-staging.yml, which fire
+# The DEPLOY role is assumed from deploy-prod.yml / deploy-staging.yml, which fire
 # via workflow_run — those runs are always on the default branch (main), even
 # when triggered by a tag's CI success. So the deploy role trusts main only;
-# the v*-tag-only intent for prod is enforced by deploy.yml's own branch gate.
+# the v*-tag-only intent for prod is enforced by deploy-prod.yml's own branch gate.
 DEPLOY_REF_PATTERNS='["ref:refs/heads/main"]'
 
 # State backend: the per-env S3 bucket THIS module creates. Each environment's

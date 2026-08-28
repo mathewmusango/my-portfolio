@@ -49,7 +49,7 @@ locals {
   # Trust policy for the DEPLOY role. The deploy workflows fire via
   # workflow_run, which runs on the DEFAULT branch (main) even when triggered
   # by a tag's CI success — so the deploy role must trust refs/heads/main; the
-  # tag-only intent is enforced by deploy.yml's own v*-branch gate (2026-08-28:
+  # tag-only intent is enforced by deploy-prod.yml's own v*-branch gate (2026-08-28:
   # the prod deploy failed AssumeRole because it trusted refs/tags/v* only).
   assume_role_policy_deploy = jsonencode({
     Version = "2012-10-17"

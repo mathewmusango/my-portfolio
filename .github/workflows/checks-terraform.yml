@@ -11,7 +11,7 @@ on:
     paths:
       - "terraform/**"
       - ".tflint.hcl"
-      - ".github/workflows/terraform-checks.yml"
+      - ".github/workflows/checks-terraform.yml"
   workflow_dispatch: {}
 
 env:

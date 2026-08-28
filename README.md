@@ -29,12 +29,12 @@ checked, and deployed automatically by GitHub Actions (below).
   build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
   check, CSS sanity check) with the production `site_url`; uploads the built `site/` as an
   artifact (7-day retention).
-- **Terraform checks** (`.github/workflows/terraform-checks.yml`) — static checks on the
+- **Terraform checks** (`.github/workflows/checks-terraform.yml`) — static checks on the
   terraform code (main pushes + tags + manual dispatch): `terraform fmt -check`, `validate`
   (all three roots: `terraform/`, `terraform/ci/`, `modules/metrics`), TFLint, and a Checkov
   security scan (informational for now). No AWS credentials — this complements (does not
   replace) the `terraform.yml` plan/apply pipeline.
-- **Per-surface checks** (`.github/workflows/{shell,python,yml}-checks.yml`) — one workflow
+- **Per-surface checks** (`.github/workflows/{checks-shell,checks-python,checks-yml}.yml`) — one workflow
   per language, each running once per `main` push (or manual dispatch) when its own files
   change: `shellcheck` on `scripts/*.sh`, `ruff` on `terraform/lambda/**` + `scripts/*.py`,
   and `actionlint` on `.github/workflows/**`. Grouped by surface (Terraform stays its own
@@ -42,7 +42,7 @@ checked, and deployed automatically by GitHub Actions (below).
 - **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) + CloudFront
   invalidation (OIDC `STAGING_DEPLOY_ROLE_ARN`).
-- **Deploy prod** (`.github/workflows/deploy.yml`) — on CI success for **`v*` tags only**: the
+- **Deploy prod** (`.github/workflows/deploy-prod.yml`) — on CI success for **`v*` tags only**: the
   `deploy-pages` job force-pushes the artifact to `gh-pages` (GitHub Pages — the public site at
   <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
@@ -50,7 +50,7 @@ checked, and deployed automatically by GitHub Actions (below).
 - **CloudFront invalidation** — the deploy jobs run their own **inline** `/*` invalidation
   right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
   convention, skip when the distro is absent). Manual purges (out-of-band content changes) go
-  through `invalidate.yml` (`workflow_dispatch`) or locally via
+  through `invalidate-cloudfront.yml` (`workflow_dispatch`) or locally via
   `scripts/invalidate-cloudfront.sh <staging|prod> [paths]` — the reference implementation if
   the inline steps are ever centralized:
 
