@@ -78,6 +78,8 @@ resource "aws_cloudfront_distribution" "site" {
   price_class         = var.price_class
   tags                = local.tags
   is_ipv6_enabled     = true
+  # checkov:skip=CKV_AWS_86:Access logging skipped for a low-traffic personal site (deliberate)
+  # checkov:skip=CKV_AWS_374:Geo restriction deliberately none — the site is a public portfolio
 
   origin {
     domain_name              = aws_s3_bucket.site[0].bucket_regional_domain_name

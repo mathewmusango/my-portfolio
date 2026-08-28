@@ -118,12 +118,15 @@ resource "aws_iam_role" "deploy" {
 }
 
 # --- Policy: terraform plan/apply on the metrics stack ---------------------
-# Read + write on the my-portfolio-* resources (scoped by name prefix). Note:
-# `ec2:*`/`iam:*` are broad service-level grants — tighten to specific
-# resource ARNs if this ever leaves a personal portfolio.
+# Read + write on the my-portfolio-* resources (scoped by name prefix). IAM is
+# scoped to project roles/policies (+ PassRole to the lambda roles only);
+# ec2:/apigateway:/cloudfront: stay broad because those APIs don't support
+# resource-level IAM conditions (AWS limitation).
 resource "aws_iam_policy" "metrics_terraform" {
   name        = "${var.name_prefix}-${var.environment}-metrics-terraform"
   description = "Allow GitHub Actions to plan/apply the ${var.name_prefix} metrics terraform stack."
+  # checkov:skip=CKV_AWS_290:MetricsStack statement is broad because CloudFront/API GW/EC2 actions are not resource-scopable (AWS limitation)
+  # checkov:skip=CKV_AWS_355:MetricsStack needs Resource '*' for CloudFront/API GW/EC2 actions; S3/DynamoDB/state/IAM are scoped in their own statements
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -220,15 +223,44 @@ resource "aws_iam_policy" "metrics_terraform" {
       {
         Sid    = "IAMManage"
         Effect = "Allow"
+        # Role + inline-policy management on THIS project's roles only (the
+        # metrics lambda roles the stack creates). GetRole is restrictable, so
+        # it's scoped too.
         Action = [
-          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:ListRoles",
+          "iam:CreateRole", "iam:DeleteRole", "iam:GetRole",
           "iam:PutRolePolicy", "iam:DeleteRolePolicy", "iam:GetRolePolicy",
           "iam:ListRolePolicies", "iam:ListAttachedRolePolicies", "iam:UpdateAssumeRolePolicy",
-          "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:TagRole", "iam:UntagRole",
-          "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy", "iam:ListPolicies",
-          "iam:PassRole"
+          "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:TagRole", "iam:UntagRole"
         ]
+        Resource = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-*"
+      },
+      {
+        Sid    = "IAMList"
+        Effect = "Allow"
+        # Read-only list actions — not resource-restrictable (IAM API limitation).
+        Action   = ["iam:ListRoles", "iam:ListPolicies"]
         Resource = "*"
+      },
+      {
+        Sid    = "IAMPolicy"
+        Effect = "Allow"
+        Action = ["iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy"]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.name_prefix}-*",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+        ]
+      },
+      {
+        Sid    = "IAMPassRole"
+        Effect = "Allow"
+        Action = ["iam:PassRole"]
+        Resource = [
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-${var.environment}-metrics-writer-role",
+          "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${var.name_prefix}-${var.environment}-metrics-reader-role",
+        ]
+        Condition = {
+          StringEquals = { "iam:PassedToService" = "lambda.amazonaws.com" }
+        }
       },
     ]
   })
@@ -238,6 +270,7 @@ resource "aws_iam_policy" "metrics_terraform" {
 resource "aws_iam_policy" "site_deploy" {
   name        = "${var.name_prefix}-${var.environment}-site-deploy"
   description = "Allow GitHub Actions to publish the site to S3 and invalidate CloudFront."
+  # checkov:skip=CKV_AWS_355:CloudFront invalidation actions require Resource '*' (AWS API limitation); S3 actions are bucket-scoped
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -311,7 +344,9 @@ resource "aws_s3_bucket_public_access_block" "tfstate" {
 }
 
 resource "aws_dynamodb_table" "tfstate_lock" {
-  name         = var.state_lock_table
+  name = var.state_lock_table
+  # checkov:skip=CKV_AWS_119:Default AWS-managed KMS encryption is sufficient (lock table holds only lock tokens)
+  # checkov:skip=CKV_AWS_28:Point-in-time recovery not needed for the state lock table (recreatable)
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "LockID"
 

@@ -84,7 +84,9 @@ resource "aws_vpc_endpoint" "metrics_logs" {
 # DynamoDB — raw metric events (PAY_PER_REQUEST: free-tier friendly at low traffic)
 # ---------------------------------------------------------------------------
 resource "aws_dynamodb_table" "metrics" {
-  name         = "${local.name_prefix}-metrics"
+  name = "${local.name_prefix}-metrics"
+  # checkov:skip=CKV_AWS_119:Default AWS-managed KMS encryption suffices — raw events hold no PII (privacy-first beacon)
+  # checkov:skip=CKV_AWS_28:Point-in-time recovery not needed — raw events are ephemeral (90-day TTL by design)
   billing_mode = "PAY_PER_REQUEST"
   hash_key     = "date"
   range_key    = "sk"
@@ -384,6 +386,8 @@ resource "aws_cloudfront_distribution" "metrics" {
   price_class     = var.price_class
   tags            = var.tags
   is_ipv6_enabled = true
+  # checkov:skip=CKV_AWS_86:Access logging skipped for a low-traffic personal site (deliberate)
+  # checkov:skip=CKV_AWS_374:Geo restriction deliberately none — the metrics edge is public by design
 
   origin {
     domain_name = replace(aws_apigatewayv2_api.metrics.api_endpoint, "https://", "")
