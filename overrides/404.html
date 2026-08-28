@@ -89,6 +89,9 @@
       var i = h.indexOf("/es/");
       if (i > 0) base = h.slice(0, i);
     }
+    // The baked base (e.g. /my-portfolio) applies only when this page is served
+    // under it; on root-hosted sites (AWS) the base is empty.
+    if (path.indexOf(base) !== 0) base = "";
 
     // Current path minus the base, then strip any language prefix.
     var rest = path.slice(base.length);
@@ -179,6 +182,7 @@
     if (btns[0]) {
       var label = btns[0].querySelector("span");
       if (label) label.textContent = t.home;
+      btns[0].setAttribute("href", base + "/"); // Home — root of the current host/base
     }
     if (btns[1]) {
       var label2 = btns[1].querySelector("span");

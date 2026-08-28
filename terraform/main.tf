@@ -148,6 +148,11 @@ function handler(event) {
   var uri = request.uri;
   if (uri.endsWith('/')) {
     request.uri = uri + 'index.html';
+  } else if (uri.indexOf('.', uri.lastIndexOf('/')) === -1) {
+    // Extension-less last segment -> directory URL without the trailing slash
+    // (/es/about -> /es/about/index.html). Files (logo.jpg, resume.pdf, …)
+    // keep a dot after the last slash and pass through untouched.
+    request.uri = uri + '/index.html';
   }
   return request;
 }

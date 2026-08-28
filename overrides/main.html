@@ -2,26 +2,32 @@
 
 {% block scripts %}
   {{ super() }}
-  <!-- Language switcher: static-i18n bakes the site_url base (/my-portfolio/)
-       into the switcher links — right on gh-pages/dev (served under that base)
-       but a 404 on the AWS sites (served at root). Detect the base from the
-       canonical URL and strip it ONLY when the current page isn't served under
-       it (i.e. root-hosted) — gh-pages/dev keep their links unchanged. -->
+  <!-- Language switcher: static-i18n renders the switcher links differently
+       per page — root pages get root-relative links with the site_url base
+       baked in (/my-portfolio/es/…), subpages get page-relative links that
+       already work everywhere. The base-baked links 404 on the AWS sites
+       (served at root). Detect the common prefix of the root-relative links
+       and strip it ONLY when the current page isn't served under it. -->
   <script>
   (function () {
-    var canonical = document.querySelector('link[rel="canonical"]');
-    if (!canonical) return;
-    var basePath = new URL(canonical.href).pathname.replace(/\/$/, ''); // /my-portfolio
-    if (!basePath) return;
-    var cur = location.pathname;
-    var underBase = cur === basePath || cur.indexOf(basePath + '/') === 0;
-    if (underBase) return; // gh-pages / dev — links already correct
     var links = document.querySelectorAll('.md-select__list a[href]');
+    if (!links.length) return;
+    var prefix = null;
     for (var i = 0; i < links.length; i++) {
-      var a = links[i];
-      var href = a.getAttribute('href');
-      if (!href || href.indexOf(basePath) !== 0) continue;
-      a.setAttribute('href', href.slice(basePath.length) || '/');
+      var href = links[i].getAttribute('href');
+      if (!href || href.charAt(0) !== '/') { prefix = ''; break; }
+      if (prefix === null) { prefix = href; continue; }
+      var j = 0;
+      while (j < prefix.length && j < href.length && prefix.charAt(j) === href.charAt(j)) j++;
+      prefix = prefix.slice(0, j);
+    }
+    if (!prefix || prefix === '/') return; // already root-relative or none
+    var cur = location.pathname;
+    if (cur === prefix.slice(0, -1) || cur.indexOf(prefix) === 0) return; // served under the base
+    for (var k = 0; k < links.length; k++) {
+      var a = links[k];
+      var h = a.getAttribute('href');
+      if (h && h.indexOf(prefix) === 0) a.setAttribute('href', h.slice(prefix.length) || '/');
     }
   })();
   </script>
