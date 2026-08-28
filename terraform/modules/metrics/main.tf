@@ -338,12 +338,14 @@ resource "aws_apigatewayv2_route" "get_health" {
   route_key = "GET /health"
   target    = "integrations/${aws_apigatewayv2_integration.read.id}"
   # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
+}
 
 resource "aws_apigatewayv2_route" "get_views" {
   api_id    = aws_apigatewayv2_api.metrics.id
   route_key = "GET /views"
   target    = "integrations/${aws_apigatewayv2_integration.read.id}"
   # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
+}
 
 resource "aws_lambda_permission" "apigw_writer" {
   action        = "lambda:InvokeFunction"
