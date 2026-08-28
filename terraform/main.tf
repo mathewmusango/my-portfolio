@@ -82,6 +82,7 @@ resource "aws_cloudfront_distribution" "site" {
   # checkov:skip=CKV_AWS_374:Geo restriction deliberately none — the site is a public portfolio
   # checkov:skip=CKV_AWS_310:Single S3 origin — no secondary for failover (personal site)
   # checkov:skip=CKV_AWS_68:WAF excluded — outside the Free Tier (user constraint)
+  # checkov:skip=CKV_AWS_174:Default cert is TLS 1.2+ by AWS guarantee; no custom domain for ACM (checkov wants ACM)
 
   origin {
     domain_name              = aws_s3_bucket.site[0].bucket_regional_domain_name

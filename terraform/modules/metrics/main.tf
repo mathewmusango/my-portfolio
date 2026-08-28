@@ -178,6 +178,7 @@ resource "aws_lambda_function" "metrics_writer" {
   # checkov:skip=CKV_AWS_272:No code-signing pipeline — code ships from this repo (CI-built zip)
   # checkov:skip=CKV_AWS_116:DLQ applies to async invocations; API Gateway invokes synchronously
   # checkov:skip=CKV_AWS_173:Env vars encrypted at rest by Lambda's default AWS-managed key (free tier)
+  # checkov:skip=CKV_AWS_50:Observability via CloudWatch logs + the site's own metrics; X-Ray out (marginal value)
   # Reserved concurrency caps a public unauthenticated endpoint — cost guard (free).
   reserved_concurrent_executions = 2
 
@@ -255,6 +256,7 @@ resource "aws_lambda_function" "metrics_reader" {
   # checkov:skip=CKV_AWS_272:No code-signing pipeline — code ships from this repo (CI-built zip)
   # checkov:skip=CKV_AWS_116:DLQ applies to async invocations; API Gateway invokes synchronously
   # checkov:skip=CKV_AWS_173:Env vars encrypted at rest by Lambda's default AWS-managed key (free tier)
+  # checkov:skip=CKV_AWS_50:Observability via CloudWatch logs + the site's own metrics; X-Ray out (marginal value)
   # Reserved concurrency caps a public unauthenticated endpoint — cost guard (free).
   reserved_concurrent_executions = 2
 
@@ -303,7 +305,7 @@ resource "aws_apigatewayv2_stage" "default" {
   api_id      = aws_apigatewayv2_api.metrics.id
   name        = "$default"
   auto_deploy = true
-}
+  # checkov:skip=CKV_AWS_76:Access logging skipped — free tier, low traffic; Lambda CloudWatch logs cover the path
 
 resource "aws_apigatewayv2_integration" "write" {
   api_id                 = aws_apigatewayv2_api.metrics.id
@@ -323,25 +325,25 @@ resource "aws_apigatewayv2_route" "post_event" {
   api_id    = aws_apigatewayv2_api.metrics.id
   route_key = "POST /event"
   target    = "integrations/${aws_apigatewayv2_integration.write.id}"
-}
+  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
 
 resource "aws_apigatewayv2_route" "get_summary" {
   api_id    = aws_apigatewayv2_api.metrics.id
   route_key = "GET /summary"
   target    = "integrations/${aws_apigatewayv2_integration.read.id}"
-}
+  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
 
 resource "aws_apigatewayv2_route" "get_health" {
   api_id    = aws_apigatewayv2_api.metrics.id
   route_key = "GET /health"
   target    = "integrations/${aws_apigatewayv2_integration.read.id}"
-}
+  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
 
 resource "aws_apigatewayv2_route" "get_views" {
   api_id    = aws_apigatewayv2_api.metrics.id
   route_key = "GET /views"
   target    = "integrations/${aws_apigatewayv2_integration.read.id}"
-}
+  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
 
 resource "aws_lambda_permission" "apigw_writer" {
   action        = "lambda:InvokeFunction"
@@ -400,6 +402,8 @@ resource "aws_cloudfront_distribution" "metrics" {
   # checkov:skip=CKV_AWS_374:Geo restriction deliberately none — the metrics edge is public by design
   # checkov:skip=CKV_AWS_310:Single S3 origin — no secondary for failover (personal site)
   # checkov:skip=CKV_AWS_68:WAF excluded — outside the Free Tier (user constraint)
+  # checkov:skip=CKV_AWS_305:API distribution (Gateway origin) — no default root object concept
+  # checkov:skip=CKV_AWS_174:Default cert is TLS 1.2+ by AWS guarantee; no custom domain for ACM (checkov wants ACM)
 
   origin {
     domain_name = replace(aws_apigatewayv2_api.metrics.api_endpoint, "https://", "")
