@@ -3,6 +3,7 @@ name: Terraform
 # Environment is controlled from GitHub by the trigger:
 #   push main (terraform/**)  -> staging — plan + AUTO-APPLY
 #   push v* tag               -> prod   — plan only (apply stays manual)
+#   pull_request (terraform/**) -> staging — plan only, commented on the PR
 #   workflow_dispatch         -> choose environment + action
 # Prod is NEVER auto-applied — a blind auto-apply is how stacks get destroyed.
 # Uses OIDC. Secrets: STAGING/PROD_TERRAFORM_ROLE_ARN, PROJECT, AWS_REGION,
@@ -11,6 +12,10 @@ on:
   push:
     branches: [main]
     tags: ["v*"]
+    paths:
+      - "terraform/**"
+  pull_request:
+    branches: [main]
     paths:
       - "terraform/**"
   workflow_dispatch:
@@ -36,6 +41,7 @@ on:
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
 
 # One run per environment at a time — a queued run waits for the in-flight
 # apply rather than racing it for the state lock (github context only, since
@@ -83,7 +89,9 @@ jobs:
         run: terraform validate
 
       - name: Plan (${{ steps.env.outputs.environment }})
+        id: plan
         run: |
+          set -o pipefail
           # Free-Tier default: WAF + private VPC are OFF (the Logs VPC endpoint
           # and WAF are outside the Free Tier). The Lambda origin gate (403 for
           # non-site origins) + least-privilege IAM are the free security
@@ -98,7 +106,43 @@ jobs:
             -var enable_vpc=false \
             -var enable_waf=false \
             -var enable_cloudfront=true \
-            -var enable_metrics=true
+            -var enable_metrics=true \
+            | tee "$GITHUB_WORKSPACE/terraform-plan.txt"
+
+      - name: Comment plan on PR (staging)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        with:
+          # Read the plan from the file (not the step output) so plan content
+          # can't inject expressions; update the bot's previous comment.
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync(
+              `${process.env.GITHUB_WORKSPACE}/terraform-plan.txt`, 'utf8'
+            ).slice(0, 60000);
+            const marker = '<!-- terraform-plan -->';
+            const body = `${marker}\n#### Terraform plan (staging)\n\`\`\`diff\n${plan}\n\`\`\``;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Apply (staging auto on main; prod only via manual dispatch)
         if: (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply')

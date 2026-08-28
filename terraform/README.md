@@ -9,7 +9,8 @@ Privacy-first visitor analytics for `my-portfolio`, built as real infrastructure
 
 > Single repo (`mathewmusango/my-portfolio`). The `terraform.yml` workflow plans on
 > any change to `terraform/**`: **main → staging (auto-apply), `v*` tags → prod
-> (plan only — apply stays manual)**. Local dev applies against Ministack; real-AWS
+> (plan only — apply stays manual), PRs → staging plan-only, commented on the PR**.
+> Local dev applies against Ministack; real-AWS
 > applies happen via the workflow (OIDC) or the CLI.
 
 ## Why CloudFront?
@@ -250,5 +251,6 @@ still applies.
   `local.tfvars`) — resource names and the table are prefixed, so both can
   coexist. **Terraform runs via GitHub Actions** — `.github/workflows/terraform.yml`
   plans on any change to `terraform/**`; staging auto-applies on `main` pushes,
-  prod plans on `v*` tags and applies only via manual dispatch (OIDC —
+  prod plans on `v*` tags and applies only via manual dispatch, and PRs get a
+  staging plan-only run whose output is commented on the PR (OIDC —
   `STAGING/PROD_TERRAFORM_ROLE_ARN` + `AWS_REGION` secrets).
