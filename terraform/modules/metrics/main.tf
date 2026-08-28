@@ -306,6 +306,7 @@ resource "aws_apigatewayv2_stage" "default" {
   name        = "$default"
   auto_deploy = true
   # checkov:skip=CKV_AWS_76:Access logging skipped — free tier, low traffic; Lambda CloudWatch logs cover the path
+}
 
 resource "aws_apigatewayv2_integration" "write" {
   api_id                 = aws_apigatewayv2_api.metrics.id
