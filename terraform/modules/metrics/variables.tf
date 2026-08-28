@@ -36,6 +36,11 @@ variable "price_class" {
   default     = "PriceClass_All"
 }
 
+variable "response_headers_policy_id" {
+  description = "CloudFront response headers policy id to attach to the metrics distribution (security headers)."
+  type        = string
+}
+
 variable "enable_cloudfront" {
   description = "Create the CloudFront distribution + geo origin-request policy."
   type        = bool

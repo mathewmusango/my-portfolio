@@ -26,6 +26,10 @@ resource "aws_s3_bucket" "site" {
   # checkov:skip=CKV_AWS_21:Versioning declined by user (2026-08-28) — site content redeploys from the repo
   # checkov:skip=CKV_AWS_144:Cross-region replication = extra cost — single-region personal site (free tier)
   # checkov:skip=CKV2_AWS_62:No S3 event consumers — nothing triggers on bucket events
+  # checkov:skip=CKV_AWS_145:KMS (aws:kms, AWS-managed key) is set via the separate SSE resource — graph check can't resolve the count-gated association
+  # checkov:skip=CKV_AWS_18:Access logging skipped — low-traffic personal site (deliberate)
+  # checkov:skip=CKV2_AWS_61:No lifecycle needed — sync --delete self-manages content; no expiry/transition use case
+  # checkov:skip=CKV2_AWS_6:Public access block exists (aws_s3_bucket_public_access_block.site) — graph check can't resolve the count-gated resource
 }
 
 # KMS encryption with the AWS-managed key (aws:kms, no kms_key_id) — free, and
@@ -35,7 +39,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
   bucket = aws_s3_bucket.site[0].id
   rule {
     apply_server_side_encryption_by_default {
-      sse_algorithm = "aws:kms"
+      # AWS-managed key (alias/aws/s3) — KMS encryption at zero cost, no CMK.
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = "alias/aws/s3"
     }
   }
 }
@@ -84,6 +90,34 @@ resource "aws_s3_bucket_policy" "site" {
   policy = data.aws_iam_policy_document.site_oac[0].json
 }
 
+# Security headers at the edge (free) — attached to both distributions. No CSP:
+# the site runs inline scripts (language switcher, metrics beacon) which a CSP
+# would break; the safe trio + HSTS is the free win.
+resource "aws_cloudfront_response_headers_policy" "site_headers" {
+  name    = "${local.name_prefix}-site-headers"
+  comment = "Security headers (nosniff, frame DENY, referrer, HSTS) — no CSP (inline scripts)"
+
+  security_headers_config {
+    content_type_options {
+      override = true
+    }
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      preload                    = true
+      override                   = true
+    }
+  }
+}
+
 resource "aws_cloudfront_distribution" "site" {
   count               = var.enable_site ? 1 : 0
   enabled             = true
@@ -99,6 +133,7 @@ resource "aws_cloudfront_distribution" "site" {
   # checkov:skip=CKV_AWS_68:WAF excluded — outside the Free Tier (user constraint)
   # checkov:skip=CKV_AWS_174:Default cert is TLS 1.2+ by AWS guarantee; no custom domain for ACM (checkov wants ACM)
   # checkov:skip=CKV2_AWS_42:No custom domain — default CloudFront cert is TLS 1.2+ by AWS guarantee
+  # checkov:skip=CKV2_AWS_47:WAF excluded — outside the Free Tier (user constraint)
 
   origin {
     domain_name              = aws_s3_bucket.site[0].bucket_regional_domain_name
@@ -113,7 +148,8 @@ resource "aws_cloudfront_distribution" "site" {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     # Managed policy: CachingOptimized
-    cache_policy_id = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    cache_policy_id            = "658327ea-f89d-4fab-a63d-7e88639e58f6"
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.site_headers.id
 
     # S3 doesn't resolve directory URLs (/metrics/ -> metrics/index.html) the
     # way GitHub Pages does — rewrite them at the edge.
@@ -223,11 +259,12 @@ module "metrics" {
   environment    = var.environment
   allowed_origin = var.allowed_origin
   # The site's own CloudFront domain is always allowed (auto-derived, HTTPS).
-  extra_allowed_origins = var.enable_site ? ["https://${aws_cloudfront_distribution.site[0].domain_name}"] : []
-  event_retention_days  = var.event_retention_days
-  price_class           = var.price_class
-  enable_cloudfront     = var.enable_cloudfront
-  enable_vpc            = var.enable_vpc
-  enable_waf            = var.enable_waf
-  tags                  = local.tags
+  extra_allowed_origins      = var.enable_site ? ["https://${aws_cloudfront_distribution.site[0].domain_name}"] : []
+  event_retention_days       = var.event_retention_days
+  price_class                = var.price_class
+  enable_cloudfront          = var.enable_cloudfront
+  enable_vpc                 = var.enable_vpc
+  enable_waf                 = var.enable_waf
+  response_headers_policy_id = aws_cloudfront_response_headers_policy.site_headers.id
+  tags                       = local.tags
 }

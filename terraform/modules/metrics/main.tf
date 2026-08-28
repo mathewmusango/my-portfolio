@@ -29,6 +29,8 @@ resource "aws_vpc" "metrics" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags                 = var.tags
+  # checkov:skip=CKV2_AWS_11:VPC flow logging costs — the VPC is count-gated OFF (enable_vpc=false, Free-Tier)
+  # checkov:skip=CKV2_AWS_12:Default SG untouched — the VPC is count-gated OFF (enable_vpc=false, Free-Tier)
 }
 
 resource "aws_subnet" "metrics" {
@@ -407,6 +409,8 @@ resource "aws_cloudfront_distribution" "metrics" {
   # checkov:skip=CKV_AWS_68:WAF excluded — outside the Free Tier (user constraint)
   # checkov:skip=CKV_AWS_305:API distribution (Gateway origin) — no default root object concept
   # checkov:skip=CKV_AWS_174:Default cert is TLS 1.2+ by AWS guarantee; no custom domain for ACM (checkov wants ACM)
+  # checkov:skip=CKV2_AWS_42:No custom domain — default CloudFront cert is TLS 1.2+ by AWS guarantee
+  # checkov:skip=CKV2_AWS_47:WAF excluded — outside the Free Tier (user constraint)
 
   origin {
     domain_name = replace(aws_apigatewayv2_api.metrics.api_endpoint, "https://", "")
@@ -426,8 +430,9 @@ resource "aws_cloudfront_distribution" "metrics" {
     allowed_methods        = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
     cached_methods         = ["GET", "HEAD"]
     # Managed policy: CachingDisabled (dynamic API — never cache)
-    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.geo[0].id
+    cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.geo[0].id
+    response_headers_policy_id = var.response_headers_policy_id
     function_association {
       event_type   = "viewer-request"
       function_arn = aws_cloudfront_function.origin_gate[0].arn
@@ -509,6 +514,7 @@ resource "aws_wafv2_web_acl" "metrics" {
   count = var.enable_waf ? 1 : 0
   name  = "${local.name_prefix}-metrics-acl"
   scope = "CLOUDFRONT"
+  # checkov:skip=CKV2_AWS_31:WAF excluded from the Free-Tier constraint — resource is count-gated off (not deployed)
 
   default_action {
     block {}

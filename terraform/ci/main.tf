@@ -324,6 +324,8 @@ resource "aws_s3_bucket" "tfstate" {
   tags   = var.tags
   # checkov:skip=CKV_AWS_144:Cross-region replication = extra cost — single-region personal site (free tier)
   # checkov:skip=CKV2_AWS_62:No S3 event consumers — nothing triggers on bucket events
+  # checkov:skip=CKV_AWS_18:Access logging skipped — low-traffic personal site (deliberate)
+  # checkov:skip=CKV2_AWS_61:No lifecycle — state versions kept indefinitely for recovery
 }
 
 resource "aws_s3_bucket_versioning" "tfstate" {
@@ -337,8 +339,9 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "tfstate" {
   bucket = aws_s3_bucket.tfstate.id
   rule {
     apply_server_side_encryption_by_default {
-      # aws:kms with the AWS-managed key (no kms_key_id) — KMS encryption at $0.
-      sse_algorithm = "aws:kms"
+      # aws:kms with the AWS-managed key (alias/aws/s3) — KMS encryption at zero cost.
+      sse_algorithm     = "aws:kms"
+      kms_master_key_id = "alias/aws/s3"
     }
   }
 }
