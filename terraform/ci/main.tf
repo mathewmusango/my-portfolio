@@ -279,7 +279,16 @@ resource "aws_iam_policy" "metrics_terraform" {
       {
         Sid    = "IAMPolicy"
         Effect = "Allow"
-        Action = ["iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy"]
+        # Policy lifecycle + version management for this project's managed
+        # policies (the metrics lambda policies carry tags, so TagPolicy is
+        # required on create/update; version actions cover in-place updates
+        # and the 5-version delete dance on destroy).
+        Action = [
+          "iam:CreatePolicy", "iam:DeletePolicy", "iam:GetPolicy",
+          "iam:CreatePolicyVersion", "iam:DeletePolicyVersion",
+          "iam:GetPolicyVersion", "iam:ListPolicyVersions",
+          "iam:TagPolicy", "iam:UntagPolicy",
+        ]
         Resource = [
           "arn:aws:iam::${data.aws_caller_identity.current.account_id}:policy/${var.name_prefix}-*",
           "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
