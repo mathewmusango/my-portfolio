@@ -50,7 +50,7 @@ if [ -z "$ID" ]; then
 fi
 
 ETAG="$(aws cloudfront get-distribution --id "$ID" --query ETag --output text)"
-aws cloudfront get-distribution --id "$ID" --query DistributionConfig > /tmp/cf-toggle-config.json
+aws cloudfront get-distribution --id "$ID" --query Distribution.DistributionConfig > /tmp/cf-toggle-config.json
 jq --argjson enabled "$ENABLED" '.Enabled = $enabled' /tmp/cf-toggle-config.json > /tmp/cf-toggle-config-new.json
 aws cloudfront update-distribution --id "$ID" --if-match "$ETAG" --distribution-config file:///tmp/cf-toggle-config-new.json
 echo "cloudfront $COMMENT -> $STATE (distribution $ID)"
