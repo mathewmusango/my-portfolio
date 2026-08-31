@@ -2,8 +2,9 @@ name: Deploy prod
 
 # Tag-only (v*): publishes the site to gh-pages (prod public) AND the prod S3
 # bucket + CloudFront. Never runs on main — staging deploys via deploy-staging.yml.
-# A changes job gates both deploy jobs: when the tagged commit didn't change
-# the site (docs/ overrides/ mkdocs.yml), they report SKIPPED.
+# Always deploys when CI succeeds on a v* tag: the artifact is built by CI with
+# the per-environment site_url/metrics_endpoint, so a successful CI run always
+# has a fresh site to publish.
 on:
   workflow_run:
     workflows: ["CI"]
@@ -15,29 +16,8 @@ permissions:
   contents: write
 
 jobs:
-  changes:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
-    outputs:
-      changed: ${{ steps.docs.outputs.changed }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 2
-
-      - name: Check site changes (deploy only when docs/ overrides/ mkdocs.yml changed)
-        id: docs
-        run: |
-          if git rev-parse -q --verify HEAD~1 >/dev/null 2>&1 && ! git diff --name-only HEAD~1 HEAD -- docs/ overrides/ mkdocs.yml | grep -q .; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          fi
-
   deploy-pages:
-    needs: changes
-    if: needs.changes.outputs.changed == 'true'
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download site artifact
@@ -61,8 +41,7 @@ jobs:
           git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:gh-pages"
 
   deploy-s3:
-    needs: changes
-    if: needs.changes.outputs.changed == 'true'
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     steps:
       - name: Download site artifact
