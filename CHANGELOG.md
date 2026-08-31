@@ -11,6 +11,15 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes.
 
+## [Unreleased]
+
+### Fixed
+- **Site bucket SSE reverted to AES256** (`aee25c6`): SSE-KMS (even the AWS-managed key) is **incompatible with CloudFront OAC** — CloudFront can't get `kms:Decrypt`, so a content deploy after the KMS change made the staging site 403 on every object (prod would have hit the same on its next deploy). The state bucket keeps KMS (not OAC-served). Checkov CKV_AWS_145 is satisfied by AES256.
+- **Deploys no longer skip on multi-commit batches** (`1bf9bd9`): the deploy gate diffed only `HEAD~1..HEAD`, so a batch whose last commit wasn't a site change never deployed — staging went stale. Deploy workflows now run on every successful CI build (no changes gate).
+
+### Changed
+- `deploy-staging.yml` / `deploy-prod.yml`: deploy whenever CI succeeds on the right ref (main → staging; `v*` tags → prod). The site-changes gate is removed entirely.
+
 ## [3.1.1] - 2026-08-28
 
 ### Security
