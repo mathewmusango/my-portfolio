@@ -5,7 +5,7 @@
 #
 # Ministack vs real AWS is a VARIABLES-only difference (same code):
 #   environment / allowed_origin / enable_vpc / enable_waf / enable_cloudfront
-environment    = "test"
+environment = "test"
 # Local https origins that pass the gate — the dev domain (after /etc/hosts),
 # localhost, and 127.0.0.1 (any of the three hosts the dev cert covers).
 allowed_origin = "https://portfolio.mathewmusango.test:8000,https://localhost:8000,https://127.0.0.1:8000"
