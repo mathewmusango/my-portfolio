@@ -1,5 +1,5 @@
 site_name: Mathew Musango Peter
-site_description: Platform Engineering and Infrastructure Leader | Kubernetes · Cloud · DevSecOps · Observability
+site_description: Platform Engineering Manager | Kubernetes · Cloud · DevSecOps · Observability
 # Canonical URL — the prod/gh-pages default. CI overrides it per environment
 # at build time (site_url input: tags -> prod, main -> staging) so the baked
 # canonical/OG/sitemap URLs match where the artifact will be served.

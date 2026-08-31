@@ -13,7 +13,7 @@ icon: material/account
 </button>
 -->
 
-<p class="about-tagline">Platform Engineering and Infrastructure Leader</p>
+<p class="about-tagline">Platform Engineering Manager</p>
 
 <p class="about-subtitle">Over 10 years of experience creating secure, resilient and seamless infrastructure – meet the engineer.</p>
 
