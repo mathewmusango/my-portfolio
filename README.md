@@ -1,6 +1,7 @@
 # Mathew Musango Peter
 
 [![Mathew Musango Peter - Portfolio](https://img.shields.io/badge/Mathew_Musango_Peter_--_Portfolio-00897b?style=for-the-badge)](https://mathewmusango.github.io/my-portfolio/)
+[![My Portfolio](https://img.shields.io/github/v/release/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/releases)
 
 Personal portfolio site for **Mathew Musango Peter** — Platform Engineering & Infrastructure Leader.
 Built with **MkDocs + Material for MkDocs**, dark-teal theme.
