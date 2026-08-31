@@ -62,10 +62,11 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`).
 - **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
-  dispatch: **disable/enable any CloudFront distribution** (dropdowns: environment `staging`|`prod`,
-  component `site`|`metrics`, action disable|enable) by flipping `Enabled` in place via the AWS CLI —
-  the invalidation-style toggle: no terraform apply runs, nothing can be deleted. Uses the
-  edge-toggle role only (`STAGING/PROD_TOGGLE_ROLE_ARN`). Caveat: the flag
+  dispatch: **disable/enable STAGING CloudFront distributions** (component `site`|`metrics`,
+  action disable|enable) by flipping `Enabled` in place via the AWS CLI —
+  the invalidation-style toggle: no terraform apply runs, nothing can be deleted. **Staging only by
+  design** — prod has no toggle role (an accidental disable on the prod metrics edge would stop
+  collection). Uses the staging edge-toggle role (`STAGING_TOGGLE_ROLE_ARN`). Caveat: the flag
   lives outside terraform state, so the next apply restores it to enabled.
 - **CloudFront invalidation** — the deploy jobs run their own **inline** `/*` invalidation
   right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
@@ -85,7 +86,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 
 Build and release workflows use only the auto-scoped `GITHUB_TOKEN`. Deploys and Terraform
 assume AWS roles via **OIDC** (no long-lived keys) using repo secrets: `STAGING/PROD_TERRAFORM_ROLE_ARN`,
-`STAGING/PROD_DEPLOY_ROLE_ARN`, `STAGING/PROD_INVALIDATE_ROLE_ARN`, `STAGING/PROD_TOGGLE_ROLE_ARN`,
+`STAGING/PROD_DEPLOY_ROLE_ARN`, `STAGING/PROD_INVALIDATE_ROLE_ARN`, `STAGING_TOGGLE_ROLE_ARN`,
 `PROJECT`, `AWS_REGION`, `STAGING/PROD_ALLOWED_ORIGIN`,
 `STAGING/PROD_METRICS_ENDPOINT`, `STAGING/PROD_SITE_URL`. No deployment value is hardcoded — terraform variables
 (`project`, `environment`, `aws_region`, `allowed_origin`, `tags`) are injected at runtime from
@@ -106,7 +107,7 @@ Real AWS infrastructure, defined with **Terraform** — a site + metrics stack:
   `enable_waf`/`enable_vpc`.
 - **Per-environment roles split by job (least privilege)**: `-terraform` (stack plan/apply,
   tag-locked for prod) · `-deploy` (S3 content sync only) · `-invalidate` (edge purge) ·
-  `-toggle` (edge `Enabled` flip) — each workflow assumes only the role its step needs.
+  `-toggle` (edge `Enabled` flip, staging only) — each workflow assumes only the role its step needs.
 - Applied via GitHub Actions using OIDC — the environment comes from the trigger (main →
   staging, `v*` tags → prod). **Staging applies automatically on `main`; prod plans only — its
   apply stays manual.** No state or secrets are ever committed; state lives in per-env private

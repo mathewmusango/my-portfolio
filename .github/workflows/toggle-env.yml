@@ -1,27 +1,20 @@
 name: Toggle env
 
-# DISABLE / ENABLE a CloudFront distribution WITHOUT removing anything — the
-# invalidation-style toggle (scripts/toggle_cloudfront.sh): look up the distro
-# by comment convention (<project>-<env>-<component>) and flip Enabled in
-# place. No terraform apply runs here — nothing can be deleted.
-#   environment: staging | prod
+# DISABLE / ENABLE the STAGING CloudFront distributions WITHOUT removing
+# anything — the invalidation-style toggle (scripts/toggle_cloudfront.sh):
+# look up the distro by comment convention (<project>-staging-<component>)
+# and flip Enabled in place. No terraform apply runs here — nothing can be
+# deleted.
 #   component:   site | metrics
 #   action:      disable | enable
-# DRIFT CAVEAT: Enabled lives outside terraform state — the next terraform
-# apply (staging on main pushes, prod on tag applies) restores it to true;
-# re-dispatch to disable again.
-# Uses OIDC. Secrets: STAGING/PROD_DEPLOY_ROLE_ARN, PROJECT, AWS_REGION.
+# STAGING ONLY by design (user decision 2026-08-29): prod has no toggle role —
+# an accidental disable on the prod metrics edge would stop collection.
+# DRIFT CAVEAT: Enabled lives outside terraform state — the next staging
+# terraform apply restores it to true; re-dispatch to disable again.
+# Uses OIDC. Secrets: STAGING_TOGGLE_ROLE_ARN, PROJECT, AWS_REGION.
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: "Target"
-        required: true
-        default: "staging"
-        type: choice
-        options:
-          - staging
-          - prod
       component:
         description: "What to toggle"
         required: true
@@ -51,10 +44,10 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v6
         with:
-          role-to-assume: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_TOGGLE_ROLE_ARN || secrets.STAGING_TOGGLE_ROLE_ARN }}
+          role-to-assume: ${{ secrets.STAGING_TOGGLE_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Toggle CloudFront (${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} -> ${{ github.event.inputs.action }})
+      - name: Toggle CloudFront (staging ${{ github.event.inputs.component }} -> ${{ github.event.inputs.action }})
         env:
           PROJECT: ${{ secrets.PROJECT }}
-        run: scripts/toggle_cloudfront.sh ${{ github.event.inputs.environment }} ${{ github.event.inputs.component }} ${{ github.event.inputs.action }}
+        run: scripts/toggle_cloudfront.sh staging ${{ github.event.inputs.component }} ${{ github.event.inputs.action }}
