@@ -11,4 +11,5 @@ __pycache__/
 *.tfstate
 *.tfstate.*
 terraform/lambda.zip
+certs/
 crash.log

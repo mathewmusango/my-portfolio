@@ -160,13 +160,13 @@ Then verify the pipeline (LocalStack's own `/health` shadows the API's `/health`
 route locally — test with `/event` and `/summary` instead):
 
 ```sh
-# The origin gate is HTTPS-only — cleartext origins are always rejected, so
-# the local beacon (http://localhost:8000) can't pass it. Use the site's
-# CloudFront domain (auto-allowed) to exercise the pipeline locally:
+# The origin gate is HTTPS-only — cleartext origins are always rejected. The
+# dev site is HTTPS (mkcert CA, certs/), so use its https origin — the same
+# one local.tfvars allows — to exercise the pipeline locally:
 curl -X POST http://<api-id>.execute-api.localhost:4566/event \
-  -H 'Content-Type: application/json' -H 'Origin: https://<site-cf-domain>' \
+  -H 'Content-Type: application/json' -H 'Origin: https://portfolio.mathewmusango.test:8000' \
   -d '{"type":"pageview","page":"/","lang":"en"}'
-curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://<site-cf-domain>'
+curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://portfolio.mathewmusango.test:8000'
 ```
 
 > The API Gateway route `GET /health` is deployed but locally shadowed by

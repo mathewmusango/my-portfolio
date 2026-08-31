@@ -6,7 +6,7 @@
 # Ministack vs real AWS is a VARIABLES-only difference (same code):
 #   environment / allowed_origin / enable_vpc / enable_waf / enable_cloudfront
 environment    = "test"
-allowed_origin = "http://localhost:8000"
+allowed_origin = "https://portfolio.mathewmusango.test:8000"
 
 # Required deployment values (no defaults in variables.tf — real AWS gets them
 # from CI secrets, never from code). These local values are test-only:

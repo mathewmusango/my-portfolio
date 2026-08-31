@@ -27,11 +27,16 @@ It also teaches the dev server to render the styled 500 page
 mirroring how 404.html is served.
 
 Usage:
-    python serve.py [--dev-addr HOST:PORT]
+    python serve.py [--dev-addr HOST:PORT] [--tls-cert FILE --tls-key FILE]
+
+HTTPS (optional): when both --tls-cert and --tls-key point at existing files,
+the server is wrapped in TLS (mkcert local CA certs — see certs/). Missing
+files fall back to plain HTTP with a warning.
 """
 
 import json
 import os
+import ssl
 import sys
 import time
 
@@ -42,6 +47,9 @@ from mkdocs.livereload import LiveReloadServer
 SERVICE_NAME = "my-portfolio"
 SERVICE_VERSION = "1.0.0"
 HEALTH_PATHS = ("/health", "/healthz")
+
+TLS_CERT = None
+TLS_KEY = None
 
 _original_init = LiveReloadServer.__init__
 
@@ -90,6 +98,14 @@ _patch_error_handler()
 
 def _patched_init(self, *args, **kwargs):
     _original_init(self, *args, **kwargs)
+    # Optional TLS (mkcert local CA): wrap the bound socket before serving.
+    if TLS_CERT and TLS_KEY and os.path.isfile(TLS_CERT) and os.path.isfile(TLS_KEY):
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(TLS_CERT, TLS_KEY)
+        self.socket = context.wrap_socket(self.socket, server_side=True)
+        print(f"[serve.py] HTTPS on {self.server_address} (cert {TLS_CERT})")
+    elif TLS_CERT or TLS_KEY:
+        print("[serve.py] WARNING: TLS flags set but cert/key files missing — serving plain HTTP")
     original_app = self.get_app()
     started_at = time.time()
 
@@ -122,6 +138,18 @@ def _parse_dev_addr(argv):
     return "0.0.0.0", 8000
 
 
+def _parse_tls(argv):
+    def _val(flag):
+        if flag in argv:
+            i = argv.index(flag)
+            if i + 1 < len(argv):
+                return argv[i + 1]
+        return None
+
+    return _val("--tls-cert"), _val("--tls-key")
+
+
 if __name__ == "__main__":
     host, port = _parse_dev_addr(sys.argv[1:])
+    TLS_CERT, TLS_KEY = _parse_tls(sys.argv[1:])
     serve(dev_addr=f"{host}:{port}")

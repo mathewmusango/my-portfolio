@@ -20,7 +20,10 @@ Live: <https://mathewmusango.github.io/my-portfolio/>
 
 This is the **single source of truth** — local development and deployment both run from here.
 Local development uses the live-reload dev server (`compose.yaml` → podman, backed by
-`scripts/serve.py`, which also exposes a `/health` endpoint). Commits to `main` are built,
+`scripts/serve.py`, which also exposes a `/health` endpoint). The dev server serves **HTTPS**
+via a local mkcert CA (certs in `certs/`, gitignored) — visit `https://portfolio.mathewmusango.test:8000`
+(needs `127.0.0.1 portfolio.mathewmusango.test` in `/etc/hosts`); regenerated per machine with
+`mkcert portfolio.mathewmusango.test localhost 127.0.0.1`. Commits to `main` are built,
 checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD

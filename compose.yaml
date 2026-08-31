@@ -11,13 +11,27 @@ services:
       - ./docs:/app/docs
       - ./overrides:/app/overrides
       - ./scripts:/app/scripts
+      - ./certs:/app/certs:ro
       - ./.git:/app/.git:ro
     # Metrics beacon endpoint (host env → container; empty = beacon disabled)
     environment:
       - METRICS_ENDPOINT
-    command: ["python", "/app/scripts/serve.py", "--dev-addr", "0.0.0.0:8000"]
+    command: ["python", "/app/scripts/serve.py", "--dev-addr", "0.0.0.0:8000", "--tls-cert", "/app/certs/portfolio.pem", "--tls-key", "/app/certs/portfolio-key.pem"]
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request,sys; r=urllib.request.urlopen('http://localhost:8000/health', timeout=3); sys.exit(0 if r.status==200 else 1)"]
+      test:
+        - CMD
+        - python
+        - -c
+        - |
+          import urllib.request,ssl,sys,contextlib
+          ctx=ssl._create_unverified_context()
+          ok=False
+          for u in ('https://localhost:8000/health','http://localhost:8000/health'):
+              with contextlib.suppress(Exception):
+                  if urllib.request.urlopen(u,timeout=3,context=ctx).status==200:
+                      ok=True
+                      break
+          sys.exit(0 if ok else 1)
       interval: 30s
       timeout: 5s
       retries: 3
