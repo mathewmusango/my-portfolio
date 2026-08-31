@@ -139,11 +139,17 @@ region, `test` keys) — no env file to source:
 
 ```sh
 cd terraform
-terraform init
+# Point state at Ministack S3 (recreate the bucket after a reset: aws s3 mb s3://my-portfolio-tfstate)
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
+  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=metrics/terraform.tfstate" \
+  -backend-config="region=us-east-1" -backend-config="encrypt=true"
 export METRICS_ENDPOINT=$(terraform output -raw api_gateway_url)  # for the site beacon
-terraform plan -var-file=local.tfvars
-terraform apply -var-file=local.tfvars
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform plan -var-file=local.tfvars
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 ```
+
+`local.tfvars` mirrors staging/prod (same flags the `terraform.yml` plan step
+passes): `enable_cloudfront`/`enable_metrics`/`enable_site` ON, VPC/WAF OFF.
 
 CloudFront is created here too (Ministack implements the management plane), but
 it has **no real edge locally** — `https://<dist>.cloudfront.net` only resolves
@@ -154,10 +160,13 @@ Then verify the pipeline (LocalStack's own `/health` shadows the API's `/health`
 route locally — test with `/event` and `/summary` instead):
 
 ```sh
+# The origin gate is HTTPS-only — cleartext origins are always rejected, so
+# the local beacon (http://localhost:8000) can't pass it. Use the site's
+# CloudFront domain (auto-allowed) to exercise the pipeline locally:
 curl -X POST http://<api-id>.execute-api.localhost:4566/event \
-  -H 'Content-Type: application/json' -H 'Origin: http://localhost:8000' \
+  -H 'Content-Type: application/json' -H 'Origin: https://<site-cf-domain>' \
   -d '{"type":"pageview","page":"/","lang":"en"}'
-curl http://<api-id>.execute-api.localhost:4566/summary
+curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://<site-cf-domain>'
 ```
 
 > The API Gateway route `GET /health` is deployed but locally shadowed by

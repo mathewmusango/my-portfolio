@@ -19,9 +19,12 @@ tags = {
   repo       = "mathewmusango/my-portfolio"
 }
 
-# Ministack has no real VPC, WAF, or CloudFront — the lambda origin gate still
-# applies. Real AWS keeps VPC/WAF/CloudFront OFF by default (Free Tier) except
-# CloudFront, which is ON (the workflow passes the flags explicitly).
+# Feature flags — mirror staging/prod exactly (see terraform.yml plan step):
+# VPC + WAF stay OFF (Free Tier; no real VPC/WAF on Ministack), the metrics
+# stack + site + CloudFront are ON (Ministack implements the CF management
+# plane; geo headers are just "unknown" locally — no real edge).
 enable_vpc        = false
 enable_waf        = false
-enable_cloudfront = false
+enable_cloudfront = true
+enable_metrics    = true
+enable_site       = true
