@@ -4,10 +4,6 @@ name: Checks Python
 # when any .py changes, anywhere. Extension-wide so NEW python files in new
 # locations are never missed.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "**/*.py"
   pull_request:
     branches: [main]
     paths:

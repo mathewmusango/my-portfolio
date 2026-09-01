@@ -4,10 +4,6 @@ name: Checks Shell
 # runs once on main (or dispatch) when any .sh changes, anywhere. Extension-wide
 # so NEW shell scripts in new locations are never missed.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "**/*.sh"
   pull_request:
     branches: [main]
     paths:

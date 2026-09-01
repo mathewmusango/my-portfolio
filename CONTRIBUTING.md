@@ -1,5 +1,11 @@
 # Contributing
 
+> **Note:** this is a **personal project developed in the open** — the
+> OSS-style process below (branch protection, PRs, checks, releases, CoC) is a
+> deliberate *practice*, not a community project. Expect the maintainer's own
+> changes to dominate; external contributions are welcome but the process is
+> primarily how the maintainer works with themselves.
+
 Thanks for taking the time to contribute! This project follows standard
 open-source practices — even the maintainer's own changes go through pull
 requests.

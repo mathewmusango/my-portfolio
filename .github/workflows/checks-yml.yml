@@ -4,11 +4,6 @@ name: Checks YAML
 # yml/yaml in the repo. Runs once on main (or dispatch) when any yml/yaml
 # changes, anywhere (extension-wide — new yaml files are never missed).
 on:
-  push:
-    branches: [main]
-    paths:
-      - "**/*.yml"
-      - "**/*.yaml"
   pull_request:
     branches: [main]
     paths:

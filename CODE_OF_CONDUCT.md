@@ -1,5 +1,10 @@
 # Contributor Covenant Code of Conduct
 
+> **Note:** this is a **personal project developed in the open** — the code of
+> conduct is adopted as standard OSS hygiene for the repository's public
+> surface, not because this is a community project. It applies to interactions
+> on the repo (issues, PRs, discussions).
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our

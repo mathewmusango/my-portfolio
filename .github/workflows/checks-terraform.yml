@@ -7,11 +7,6 @@ name: Checks Terraform
 # This is NOT the deploy pipeline: terraform.yml plans/applies the real stack
 # (staging auto-apply on main, prod plan-only on v* tags).
 on:
-  push:
-    branches: [main]
-    paths:
-      - "terraform/**"
-      - ".tflint.hcl"
   pull_request:
     branches: [main]
     paths:

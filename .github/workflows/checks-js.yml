@@ -4,10 +4,6 @@ name: Checks JS
 # vendored) — runs once on main (or dispatch) when any .js changes, anywhere.
 # Extension-wide so NEW js files in new locations are never missed.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "**/*.js"
   pull_request:
     branches: [main]
     paths:
