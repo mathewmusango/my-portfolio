@@ -1,8 +1,8 @@
 name: Checks JS
 
 # node --check syntax validation of every JS file in the repo (project +
-# vendored) — runs once on main (or dispatch) when any .js changes, anywhere.
-# Extension-wide so NEW js files in new locations are never missed.
+# vendored) — runs on pull requests (or dispatch) when any .js changes,
+# anywhere. Extension-wide so NEW js files in new locations are never missed.
 on:
   pull_request:
     branches: [main]
@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  node-check:
-    name: Checks JS
+  checks-js-node-check:
+    name: checks-js-node-check
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

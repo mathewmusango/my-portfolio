@@ -1,9 +1,10 @@
 name: Checks YAML
 
 # actionlint on the GitHub Actions workflows + a YAML syntax parse of every
-# yml/yaml in the repo. Runs on pull requests + main (or dispatch) when any
-# yml/yaml changes, anywhere (extension-wide — new yaml files are never
-# missed). Single job so the check name matches the workflow name.
+# yml/yaml in the repo. Runs on pull requests (or dispatch) when any yml/yaml
+# changes, anywhere (extension-wide — new yaml files are never missed). One job
+# per stage so branch protection can gate each check independently
+# (checks-yaml-syntax / checks-yaml-actionlint).
 on:
   pull_request:
     branches: [main]
@@ -16,13 +17,12 @@ permissions:
   contents: read
 
 jobs:
-  checks-yaml:
-    name: Checks YAML
+  checks-yaml-syntax:
+    name: checks-yaml-syntax
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-
       - name: Parse YAML (Ruby's built-in psych — no installs)
         run: |
           find . -path './site' -prune -o -path './.git' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print 2>/dev/null | while IFS= read -r f; do
@@ -30,6 +30,12 @@ jobs:
             echo "ok: $f"
           done
 
+  checks-yaml-actionlint:
+    name: checks-yaml-actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
       # v2 required: v1 is a composite wrapping github-script@v7 internally,
       # which crashes on Node-24 runners (ERR_PACKAGE_PATH_NOT_EXPORTED).
       - uses: raven-actions/actionlint@v2

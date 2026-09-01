@@ -1,8 +1,8 @@
 name: Checks Python
 
-# Ruff lint on every python file in the repo — runs once on main (or dispatch)
-# when any .py changes, anywhere. Extension-wide so NEW python files in new
-# locations are never missed.
+# Ruff lint on every python file in the repo — runs on pull requests (or
+# dispatch) when any .py changes, anywhere. Extension-wide so NEW python files
+# in new locations are never missed.
 on:
   pull_request:
     branches: [main]
@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  ruff:
-    name: Checks Python
+  checks-python-ruff:
+    name: checks-python-ruff
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
