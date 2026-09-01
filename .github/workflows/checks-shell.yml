@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   shellcheck:
+    name: Checks Shell
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

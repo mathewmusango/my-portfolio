@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   ruff:
+    name: Checks Python
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

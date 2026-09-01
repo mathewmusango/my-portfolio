@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   node-check:
+    name: Checks JS
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
