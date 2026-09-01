@@ -1,12 +1,10 @@
 # My Portfolio
 
 [![Email](https://img.shields.io/badge/email-join-blue.svg)](mailto:musangomathew@gmail.com)
-[![Documentation](https://img.shields.io/badge/docs-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
 [![Web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
 [![My Portfolio](https://img.shields.io/github/v/release/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/releases)
 [![License](https://img.shields.io/github/license/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/blob/main/LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/ci.yml?branch=main)](https://github.com/mathewmusango/my-portfolio/actions)
-[![Website](https://img.shields.io/website?url=https://mathewmusango.github.io/my-portfolio/&label=site)](https://mathewmusango.github.io/my-portfolio/)
 
 Personal portfolio site for **Mathew Musango Peter** — Platform Engineering Manager.
 Built with **MkDocs + Material for MkDocs**, dark-teal theme.
