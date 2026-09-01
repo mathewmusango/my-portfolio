@@ -8,6 +8,10 @@ on:
     branches: [main]
     paths:
       - "**/*.js"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.js"
   workflow_dispatch: {}
 
 permissions:

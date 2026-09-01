@@ -9,6 +9,11 @@ on:
     paths:
       - "**/*.yml"
       - "**/*.yaml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.yml"
+      - "**/*.yaml"
   workflow_dispatch: {}
 
 permissions:

@@ -12,6 +12,11 @@ on:
     paths:
       - "terraform/**"
       - ".tflint.hcl"
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - ".tflint.hcl"
   workflow_dispatch: {}
 
 env:

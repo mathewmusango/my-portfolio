@@ -1,0 +1,33 @@
+name: Feature request
+description: Suggest an idea for the portfolio site
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: A clear and concise description of the problem or gap.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you'd like to see implemented.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Any workarounds or alternatives you've thought of.
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Scope
+      description: How does this touch the site?
+      options:
+        - label: Page/content change (one page, with es/zh if content)
+        - label: Global file (extra.css / main.html / mkdocs.yml / javascripts)
+        - label: Infra / tooling (workflows, terraform, scripts)
