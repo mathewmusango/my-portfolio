@@ -1,10 +1,10 @@
-name: Deploy prod
+name: Deploy prod s3
 
-# Tag-only (v*): publishes the site to gh-pages (prod public) AND the prod S3
-# bucket + CloudFront. Never runs on main — staging deploys via deploy-staging.yml.
-# Always deploys when CI succeeds on a v* tag: the artifact is built by CI with
-# the per-environment site_url/metrics_endpoint, so a successful CI run always
-# has a fresh site to publish.
+# Tag-only (v*): syncs the CI-built site to the prod S3 bucket + CloudFront.
+# Never runs on main — staging deploys via deploy-staging.yml, the GitHub Pages
+# copy via deploy-prod-pages.yml. Always deploys when CI succeeds on a v* tag:
+# the artifact is built by CI with the per-environment site_url/metrics_endpoint,
+# so a successful CI run always has a fresh site to sync.
 on:
   workflow_run:
     workflows: ["CI"]
@@ -13,33 +13,9 @@ on:
 permissions:
   id-token: write
   actions: read
-  contents: write
+  contents: read
 
 jobs:
-  deploy-pages:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download site artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: site
-          path: site
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ github.event.workflow_run.id }}
-
-      - name: Deploy to gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cd site
-          git init -b gh-pages
-          git config user.name "mathewmusango"
-          git config user.email "mathewmusango@gmail.com"
-          git add -A
-          git commit -m "Deploy ${GITHUB_SHA:0:7}"
-          git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:gh-pages"
-
   deploy-s3:
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest

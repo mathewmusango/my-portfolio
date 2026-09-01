@@ -1,7 +1,8 @@
 name: Deploy staging
 
 # Deploys the built site to the STAGING S3 bucket on main-push CI success.
-# gh-pages and prod S3 are tag-only (deploy-prod.yml) — never from main.
+# gh-pages and prod S3 are tag-only (deploy-prod-pages.yml / deploy-prod-s3.yml) —
+# never from main.
 # Always deploys when CI succeeds on main: the artifact is built by CI with the
 # per-environment site_url/metrics_endpoint, so a successful CI run always has
 # a fresh site to sync.

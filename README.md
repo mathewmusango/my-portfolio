@@ -70,10 +70,14 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) with the S3-only
   deploy role, then invalidates CloudFront with the edge-invalidate role (least privilege —
   `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`).
-- **Deploy prod** (`.github/workflows/deploy-prod.yml`) — on CI success for **`v*` tags only**: the
-  `deploy-pages` job force-pushes the artifact to `gh-pages` (GitHub Pages — the public site at
-  <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
-  `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
+- **Deploy prod pages** (`.github/workflows/deploy-prod-pages.yml`) — on CI success for **`v*` tags
+  only**: publishes the artifact to **GitHub Pages** (the public site at
+  <https://mathewmusango.github.io/my-portfolio/>) via the official Pages actions
+  (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) — **least privilege**: only
+  `pages: write` + `id-token: write`, no `contents: write`. Requires the repo Pages setting:
+  source = **GitHub Actions** (flip right before the next `v*` deploy).
+- **Deploy prod s3** (`.github/workflows/deploy-prod-s3.yml`) — on CI success for **`v*` tags only**:
+  syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`).
 - **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
   dispatch: **disable/enable STAGING CloudFront distributions** (component `site`|`metrics`,
