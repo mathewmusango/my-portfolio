@@ -11,6 +11,9 @@ Built with **MkDocs + Material for MkDocs**, dark-teal theme.
 
 Live: <https://mathewmusango.github.io/my-portfolio/>
 
+> Code is MIT-licensed (see [LICENSE](LICENSE)). All personal content — text, resume,
+> certifications, and images — © Mathew Musango Peter, all rights reserved.
+
 ## Tech Stack
 
 | Layer      | Tooling                                                               |
