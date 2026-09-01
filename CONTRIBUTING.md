@@ -29,7 +29,9 @@ requests.
    Reference the issue when one exists (`fix #12`).
 3. **Push + open a pull request** — the PR template guides you. Checks run
    automatically on the PR; fix anything red.
-4. **Review & merge** — squash-merge to keep `main` history clean.
+4. **Review & merge** — PRs require **one approval** before merging (the
+   maintainer reviews with a separate GitHub account to keep the process
+   honest). Squash-merge to keep `main` history clean.
 
 ## Checks
 
