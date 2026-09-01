@@ -21,6 +21,6 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       # ruff . respects .gitignore (site/, .terraform/, … are skipped).
-      - uses: astral-sh/ruff-action@v1
+      - uses: astral-sh/ruff-action@v3
         with:
           src: "."
