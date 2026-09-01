@@ -35,16 +35,23 @@ requests.
 
 ## Checks
 
-Each surface is linted by its own workflow (all run on PRs and on `main`):
+Each surface is linted by its own workflow; checks run on PRs (path-filtered
+— only the workflows matching your changed files run) and via manual dispatch.
+**Branch protection requires checks by job name** (not workflow name) — the
+names below are what you'll see on PRs:
 
-| Workflow | Covers |
+| Required check | Covers |
 | --- | --- |
-| `CI` | strict `mkdocs build`, pip-audit, internal link + translation checks |
-| `checks-python` | `ruff` on `terraform/lambda/**` + `scripts/*.py` |
-| `checks-shell` | `shellcheck` on `scripts/*.sh` |
-| `checks-js` | JS lint on `docs/**/*.js` |
-| `checks-terraform` | `terraform fmt`/`validate`, tflint, checkov |
-| `checks-yml` | actionlint on workflows + YAML parsing |
+| `ci-build` | strict `mkdocs build`, pip-audit, internal link + translation checks |
+| `checks-python-ruff` | `ruff` on `terraform/lambda/**` + `scripts/*.py` |
+| `checks-shell-shellcheck` | `shellcheck` on `scripts/*.sh` |
+| `checks-js-node-check` | JS syntax check on `docs/**/*.js` |
+| `checks-terraform-fmt` | `terraform fmt -check` |
+| `checks-terraform-validate` | `terraform validate` (all three roots) |
+| `checks-terraform-lint` | TFLint |
+| `checks-terraform-security` | Checkov security scan |
+| `checks-yaml-syntax` | YAML parse of every yml/yaml |
+| `checks-yaml-actionlint` | actionlint on workflows + compose/mkdocs YAML |
 
 ## Translations
 

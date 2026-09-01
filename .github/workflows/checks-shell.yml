@@ -1,8 +1,8 @@
 name: Checks Shell
 
 # Shellcheck on every shell script in the repo (scripts/*.sh + .githooks/*) —
-# runs once on main (or dispatch) when any .sh changes, anywhere. Extension-wide
-# so NEW shell scripts in new locations are never missed.
+# runs on pull requests (or dispatch) when any .sh changes, anywhere.
+# Extension-wide so NEW shell scripts in new locations are never missed.
 on:
   pull_request:
     branches: [main]
@@ -14,8 +14,8 @@ permissions:
   contents: read
 
 jobs:
-  shellcheck:
-    name: Checks Shell
+  checks-shell-shellcheck:
+    name: checks-shell-shellcheck
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

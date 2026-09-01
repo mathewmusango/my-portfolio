@@ -1,8 +1,9 @@
 name: Checks Terraform
 
 # STATIC checks only (fmt / validate / tflint / checkov) — no AWS credentials
-# involved. Runs on pull requests + main (or dispatch) when terraform/ changes.
-# Single job so the check name matches the workflow name. This is NOT the
+# involved. Runs on pull requests (or dispatch) when terraform/ changes. One
+# job per stage so branch protection can gate each check independently
+# (checks-terraform-fmt / -validate / -lint / -security). This is NOT the
 # deploy pipeline: terraform.yml plans/applies the real stack (staging
 # auto-apply on main, prod plan-only on v* tags).
 on:
@@ -20,19 +21,27 @@ permissions:
   contents: read
 
 jobs:
-  checks-terraform:
-    name: Checks Terraform
+  checks-terraform-fmt:
+    name: checks-terraform-fmt
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
-
       - name: terraform fmt -check
         run: terraform fmt -check -recursive -diff terraform/
 
+  checks-terraform-validate:
+    name: checks-terraform-validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
       # All three roots have committed .terraform.lock.hcl files — readonly
       # detects drift (modules/metrics got its lockfile 2026-08-28 so the
       # local check-compose validate can run on a read-only mount).
@@ -41,19 +50,23 @@ jobs:
         run: |
           terraform init -backend=false -input=false -lockfile=readonly
           terraform validate -no-color
-
       - name: terraform init + validate (terraform/ci)
         working-directory: terraform/ci
         run: |
           terraform init -backend=false -input=false -lockfile=readonly
           terraform validate -no-color
-
       - name: terraform init + validate (terraform/modules/metrics)
         working-directory: terraform/modules/metrics
         run: |
           terraform init -backend=false -input=false -lockfile=readonly
           terraform validate -no-color
 
+  checks-terraform-lint:
+    name: checks-terraform-lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
       - uses: terraform-linters/setup-tflint@v6
         with:
           tflint_version: latest
@@ -68,6 +81,12 @@ jobs:
         working-directory: terraform/ci
         run: tflint --format compact --config "$GITHUB_WORKSPACE/.tflint.hcl"
 
+  checks-terraform-security:
+    name: checks-terraform-security
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
       - name: Checkov
         uses: bridgecrewio/checkov-action@v12
         with:

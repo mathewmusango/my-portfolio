@@ -8,8 +8,8 @@ on:
     branches: [main]
 
 jobs:
-  build:
-    name: CI
+  ci-build:
+    name: ci-build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
