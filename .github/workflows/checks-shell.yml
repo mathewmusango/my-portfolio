@@ -4,7 +4,7 @@ name: Checks Shell
 # runs once on main (or dispatch) when any .sh changes, anywhere. Extension-wide
 # so NEW shell scripts in new locations are never missed.
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - "**/*.sh"
@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   shellcheck:
+    name: Checks Shell
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

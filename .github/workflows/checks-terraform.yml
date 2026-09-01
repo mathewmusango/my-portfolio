@@ -1,13 +1,12 @@
 name: Checks Terraform
 
 # STATIC checks only (fmt / validate / tflint / checkov) — no AWS credentials
-# involved. Runs once on main (or dispatch) when terraform/ changes — a v* tag
-# points at already-checked main content, so tags don't re-run checks. (Not
-# triggered by this file's own change — workflow files are linted by checks-yml.)
-# This is NOT the deploy pipeline: terraform.yml plans/applies the real stack
-# (staging auto-apply on main, prod plan-only on v* tags).
+# involved. Runs on pull requests + main (or dispatch) when terraform/ changes.
+# Single job so the check name matches the workflow name. This is NOT the
+# deploy pipeline: terraform.yml plans/applies the real stack (staging
+# auto-apply on main, prod plan-only on v* tags).
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - "terraform/**"
@@ -21,77 +20,54 @@ permissions:
   contents: read
 
 jobs:
-
-  fmt:
-    name: fmt
+  checks-terraform:
+    name: Checks Terraform
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: ${{ env.TF_VERSION }}
+
       - name: terraform fmt -check
         run: terraform fmt -check -recursive -diff terraform/
 
-  validate:
-    name: validate (${{ matrix.dir }})
-    runs-on: ubuntu-latest
-    needs: fmt
-    timeout-minutes: 10
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # All three roots have committed .terraform.lock.hcl files — readonly
-          # detects drift (modules/metrics got its lockfile 2026-08-28 so the
-          # local check-compose validate can run on a read-only mount).
-          - dir: terraform
-            lockfile: "-lockfile=readonly"
-          - dir: terraform/ci
-            lockfile: "-lockfile=readonly"
-          - dir: terraform/modules/metrics
-            lockfile: "-lockfile=readonly"
-    steps:
-      - uses: actions/checkout@v7
-      - uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: ${{ env.TF_VERSION }}
-      - name: terraform init (no backend)
-        working-directory: ${{ matrix.dir }}
-        run: terraform init -backend=false -input=false ${{ matrix.lockfile }}
-      - name: terraform validate
-        working-directory: ${{ matrix.dir }}
-        run: terraform validate -no-color
+      # All three roots have committed .terraform.lock.hcl files — readonly
+      # detects drift (modules/metrics got its lockfile 2026-08-28 so the
+      # local check-compose validate can run on a read-only mount).
+      - name: terraform init + validate (root)
+        working-directory: terraform
+        run: |
+          terraform init -backend=false -input=false -lockfile=readonly
+          terraform validate -no-color
 
-  lint:
-    name: tflint
-    runs-on: ubuntu-latest
-    needs: fmt
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
+      - name: terraform init + validate (terraform/ci)
+        working-directory: terraform/ci
+        run: |
+          terraform init -backend=false -input=false -lockfile=readonly
+          terraform validate -no-color
+
+      - name: terraform init + validate (terraform/modules/metrics)
+        working-directory: terraform/modules/metrics
+        run: |
+          terraform init -backend=false -input=false -lockfile=readonly
+          terraform validate -no-color
+
       - uses: terraform-linters/setup-tflint@v6
         with:
           tflint_version: latest
-      - name: Init TFLint plugins
+      - name: TFLint — init plugins
         run: tflint --init
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Run TFLint (terraform/ + modules)
+      - name: TFLint (terraform/ + modules)
         working-directory: terraform
         run: tflint --recursive --format compact --config "$GITHUB_WORKSPACE/.tflint.hcl"
-      - name: Run TFLint (terraform/ci)
+      - name: TFLint (terraform/ci)
         working-directory: terraform/ci
         run: tflint --format compact --config "$GITHUB_WORKSPACE/.tflint.hcl"
 
-  security:
-    name: security (checkov)
-    runs-on: ubuntu-latest
-    needs: fmt
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
       - name: Checkov
         uses: bridgecrewio/checkov-action@v12
         with:

@@ -4,7 +4,7 @@ name: Checks JS
 # vendored) — runs once on main (or dispatch) when any .js changes, anywhere.
 # Extension-wide so NEW js files in new locations are never missed.
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - "**/*.js"
@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   node-check:
+    name: Checks JS
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

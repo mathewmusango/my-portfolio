@@ -9,6 +9,9 @@
 Personal portfolio site for **Mathew Musango Peter** — Platform Engineering Manager.
 Built with **MkDocs + Material for MkDocs**, dark-teal theme.
 
+> **Personal project developed in the open** — the OSS-style process (PRs, checks,
+> releases) is a deliberate practice, not a community project.
+
 Live: <https://mathewmusango.github.io/my-portfolio/>
 
 > Code is MIT-licensed (see [LICENSE](LICENSE)). All personal content — text, resume,

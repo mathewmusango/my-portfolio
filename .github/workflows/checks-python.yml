@@ -4,7 +4,7 @@ name: Checks Python
 # when any .py changes, anywhere. Extension-wide so NEW python files in new
 # locations are never missed.
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - "**/*.py"
@@ -15,6 +15,7 @@ permissions:
 
 jobs:
   ruff:
+    name: Checks Python
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
