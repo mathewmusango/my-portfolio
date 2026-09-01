@@ -1,4 +1,4 @@
-name: Checks Shell
+name: "Checks: Shell"
 
 # Shellcheck on every shell script in the repo (scripts/*.sh + .githooks/*).
 # Runs on pull requests (or dispatch); a job-level gate (dorny/paths-filter)

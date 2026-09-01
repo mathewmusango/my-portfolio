@@ -1,4 +1,4 @@
-name: Invalidate CloudFront
+name: "Infra: Invalidate"
 
 # MANUAL cache purge for out-of-band content changes (direct S3 uploads,
 # console edits, ...). The deploy workflows already invalidate automatically

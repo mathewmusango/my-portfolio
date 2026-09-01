@@ -1,4 +1,4 @@
-name: Deploy prod pages
+name: "Deploy: Prod Pages"
 
 # Tag-only (v*): publishes the CI-built site to GitHub Pages (the public prod
 # site at /my-portfolio/) via the official Pages actions — least privilege:
@@ -12,7 +12,7 @@ name: Deploy prod pages
 # has a fresh site.
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Build"]
     types: [completed]
 
 permissions:

@@ -40,9 +40,11 @@ checked, and deployed automatically by GitHub Actions (below).
 
 Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-staging.yml`,
 `checks-python.yml`, `invalidate-cloudfront.yml`); task-only names for single-purpose files
-(`ci.yml`, `release.yml`).
+(`ci.yml`, `release.yml`). Display `name:` fields use `{Category}: {Task}` (quoted — a colon+space
+is invalid unquoted YAML): `Build` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}` —
+and `workflow_run` triggers match display names (the deploy workflows watch `Build`).
 
-- **CI** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
+- **Build** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
   build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
   check, CSS sanity check) with the per-environment `site_url` (tags → prod, main → staging); uploads the built `site/` as an
   artifact (7-day retention).

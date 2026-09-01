@@ -14,7 +14,7 @@ requests.
 
 - **`main` is protected** — no direct pushes, no force pushes, no deletions.
   Every change lands via a pull request.
-- All PRs must pass the required checks (CI + the per-language checks) before
+- All PRs must pass the required checks (Build + the per-surface checks) before
   merging.
 - Follow the existing conventions: page-scoped changes, per-locale translation
   rules (English first, then `es`/`zh`), teal `#00897b` theme.

@@ -1,4 +1,4 @@
-name: Deploy prod s3
+name: "Deploy: Prod S3"
 
 # Tag-only (v*): syncs the CI-built site to the prod S3 bucket + CloudFront.
 # Never runs on main — staging deploys via deploy-staging.yml, the GitHub Pages
@@ -7,7 +7,7 @@ name: Deploy prod s3
 # so a successful CI run always has a fresh site to sync.
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Build"]
     types: [completed]
 
 permissions:

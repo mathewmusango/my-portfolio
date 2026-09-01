@@ -1,4 +1,4 @@
-name: Checks Python
+name: "Checks: Python"
 
 # Ruff lint on every python file in the repo. Runs on pull requests (or
 # dispatch); a job-level gate (dorny/paths-filter) makes the check SKIP —

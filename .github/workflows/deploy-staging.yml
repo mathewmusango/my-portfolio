@@ -1,6 +1,6 @@
-name: Deploy staging
+name: "Deploy: Staging"
 
-# Deploys the built site to the STAGING S3 bucket on main-push CI success.
+# Deploys the built site to the STAGING S3 bucket on main-push Build success.
 # gh-pages and prod S3 are tag-only (deploy-prod-pages.yml / deploy-prod-s3.yml) —
 # never from main.
 # Always deploys when CI succeeds on main: the artifact is built by CI with the
@@ -8,7 +8,7 @@ name: Deploy staging
 # a fresh site to sync.
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Build"]
     types: [completed]
 
 permissions:
