@@ -6,7 +6,7 @@ icon: material/account
 
 <div class="about-hero" markdown>
 
-<p class="about-tagline">平台工程与基础设施领导者</p>
+<p class="about-tagline">平台工程经理</p>
 
 <p class="about-subtitle">超过10年创建安全、弹性、无缝基础设施的经验——认识这位工程师。</p>
 

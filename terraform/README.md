@@ -10,9 +10,10 @@ Privacy-first visitor analytics for `my-portfolio`, built as real infrastructure
 > Single repo (`mathewmusango/my-portfolio`). The `terraform.yml` workflow plans on
 > any change to `terraform/**`: **main → staging (auto-apply), `v*` tags → prod
 > (plan only — apply stays manual)**. `toggle-env.yml` + `scripts/toggle_cloudfront.sh` (manual
-> dispatch) flip `Enabled` on any CloudFront distribution in place — environment `staging`|`prod` ×
-> component `site`|`metrics` × `disable|enable` — the invalidation-style toggle: no terraform apply,
-> nothing deleted. Caveat: the flag lives outside terraform state — the next apply restores it to
+> dispatch) flip `Enabled` on STAGING CloudFront distributions in place — component `site`|`metrics`
+> × `disable|enable` — the invalidation-style toggle: no terraform apply, nothing deleted. Staging
+> only by design — prod has no toggle role. Caveat: the flag lives outside terraform state — the next
+> apply restores it to
 > enabled. Local dev applies against Ministack; real-AWS
 > applies happen via the workflow (OIDC) or the CLI.
 
@@ -138,11 +139,17 @@ region, `test` keys) — no env file to source:
 
 ```sh
 cd terraform
-terraform init
+# Point state at Ministack S3 (recreate the bucket after a reset: aws s3 mb s3://my-portfolio-tfstate)
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
+  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=metrics/terraform.tfstate" \
+  -backend-config="region=us-east-1" -backend-config="encrypt=true"
 export METRICS_ENDPOINT=$(terraform output -raw api_gateway_url)  # for the site beacon
-terraform plan -var-file=local.tfvars
-terraform apply -var-file=local.tfvars
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform plan -var-file=local.tfvars
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 ```
+
+`local.tfvars` mirrors staging/prod (same flags the `terraform.yml` plan step
+passes): `enable_cloudfront`/`enable_metrics`/`enable_site` ON, VPC/WAF OFF.
 
 CloudFront is created here too (Ministack implements the management plane), but
 it has **no real edge locally** — `https://<dist>.cloudfront.net` only resolves
@@ -153,10 +160,13 @@ Then verify the pipeline (LocalStack's own `/health` shadows the API's `/health`
 route locally — test with `/event` and `/summary` instead):
 
 ```sh
+# The origin gate is HTTPS-only — cleartext origins are always rejected. The
+# dev site is HTTPS (mkcert CA, certs/), so use its https origin — the same
+# one local.tfvars allows — to exercise the pipeline locally:
 curl -X POST http://<api-id>.execute-api.localhost:4566/event \
-  -H 'Content-Type: application/json' -H 'Origin: http://localhost:8000' \
+  -H 'Content-Type: application/json' -H 'Origin: https://portfolio.mathewmusango.test:8000' \
   -d '{"type":"pageview","page":"/","lang":"en"}'
-curl http://<api-id>.execute-api.localhost:4566/summary
+curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://portfolio.mathewmusango.test:8000'
 ```
 
 > The API Gateway route `GET /health` is deployed but locally shadowed by

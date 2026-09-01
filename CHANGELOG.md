@@ -11,6 +11,22 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes.
 
+## [3.2.0] - 2026-09-01
+
+### Added
+- **Local HTTPS dev server** — one mkcert root CA per machine (`certs/` gitignored); `serve.py` TLS flags; `compose.yaml` cert mount + https-first healthcheck. Per-project certs for `*.mathewmusango.test`.
+- GitHub release badge in the repo README (latest release incl. pre-releases).
+
+### Changed
+- **Title standardized to "Platform Engineering Manager"** across the site (about tagline en/es/zh + meta description) — previously "…and Infrastructure Leader".
+- **Resume PDFs updated** in all three locales (headline: `Senior Platform Engineer · Tech Lead, Platform Engineering`).
+- **Deploy workflows deploy on every successful CI build** — the site-changes gate (which only diffed `HEAD~1..HEAD`) is removed.
+- CloudFront toggle is **staging-only** (prod has no toggle role).
+
+### Fixed
+- **Site bucket SSE reverted to AES256** (`aee25c6`): SSE-KMS (even the AWS-managed key) is **incompatible with CloudFront OAC** — CloudFront can't get `kms:Decrypt`, so a content deploy after the KMS change made the staging site 403 on every object (prod would have hit the same on its next deploy). The state bucket keeps KMS (not OAC-served). Checkov CKV_AWS_145 is satisfied by AES256.
+- **Deploys no longer skip on multi-commit batches** (`1bf9bd9`): the deploy gate diffed only `HEAD~1..HEAD`, so a batch whose last commit wasn't a site change never deployed — staging went stale.
+
 ## [3.1.1] - 2026-08-28
 
 ### Security

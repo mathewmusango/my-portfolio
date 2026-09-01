@@ -32,16 +32,17 @@ resource "aws_s3_bucket" "site" {
   # checkov:skip=CKV2_AWS_6:Public access block exists (aws_s3_bucket_public_access_block.site) — graph check can't resolve the count-gated resource
 }
 
-# KMS encryption with the AWS-managed key (aws:kms, no kms_key_id) — free, and
-# satisfies CKV_AWS_145 without a $1/mo CMK.
+# SSE-S3 (AES256) — NOT KMS: CloudFront's OAC cannot read SSE-KMS objects (no
+# kms:Decrypt is grantable to CloudFront for the AWS-managed key, and a CMK
+# would cost ~$1/mo — outside the Free-Tier constraint). The site is public
+# content behind OAC, so AES256 is free and satisfies CKV_AWS_145. (The tfstate
+# bucket keeps KMS — it is not OAC-served.)
 resource "aws_s3_bucket_server_side_encryption_configuration" "site" {
   count  = var.enable_site ? 1 : 0
   bucket = aws_s3_bucket.site[0].id
   rule {
     apply_server_side_encryption_by_default {
-      # AWS-managed key (alias/aws/s3) — KMS encryption at zero cost, no CMK.
-      sse_algorithm     = "aws:kms"
-      kms_master_key_id = "alias/aws/s3"
+      sse_algorithm = "AES256"
     }
   }
 }

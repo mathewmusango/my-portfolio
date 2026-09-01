@@ -5,8 +5,10 @@
 #
 # Ministack vs real AWS is a VARIABLES-only difference (same code):
 #   environment / allowed_origin / enable_vpc / enable_waf / enable_cloudfront
-environment    = "test"
-allowed_origin = "http://localhost:8000"
+environment = "test"
+# Local https origins that pass the gate — the dev domain (after /etc/hosts),
+# localhost, and 127.0.0.1 (any of the three hosts the dev cert covers).
+allowed_origin = "https://portfolio.mathewmusango.test:8000,https://localhost:8000,https://127.0.0.1:8000"
 
 # Required deployment values (no defaults in variables.tf — real AWS gets them
 # from CI secrets, never from code). These local values are test-only:
@@ -19,9 +21,12 @@ tags = {
   repo       = "mathewmusango/my-portfolio"
 }
 
-# Ministack has no real VPC, WAF, or CloudFront — the lambda origin gate still
-# applies. Real AWS keeps VPC/WAF/CloudFront OFF by default (Free Tier) except
-# CloudFront, which is ON (the workflow passes the flags explicitly).
+# Feature flags — mirror staging/prod exactly (see terraform.yml plan step):
+# VPC + WAF stay OFF (Free Tier; no real VPC/WAF on Ministack), the metrics
+# stack + site + CloudFront are ON (Ministack implements the CF management
+# plane; geo headers are just "unknown" locally — no real edge).
 enable_vpc        = false
 enable_waf        = false
-enable_cloudfront = false
+enable_cloudfront = true
+enable_metrics    = true
+enable_site       = true

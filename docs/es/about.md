@@ -6,7 +6,7 @@ icon: material/account
 
 <div class="about-hero" markdown>
 
-<p class="about-tagline">Líder en Ingeniería de Plataformas e Infraestructura</p>
+<p class="about-tagline">Gerente de Ingeniería de Plataformas</p>
 
 <p class="about-subtitle">Más de 10 años de experiencia creando infraestructura segura, resiliente y sin fricción – conoce al ingeniero.</p>
 

@@ -1,11 +1,18 @@
-# Mathew Musango Peter
+# My Portfolio
 
-[![Mathew Musango Peter - Portfolio](https://img.shields.io/badge/Mathew_Musango_Peter_--_Portfolio-00897b?style=for-the-badge)](https://mathewmusango.github.io/my-portfolio/)
+[![Email](https://img.shields.io/badge/email-join-blue.svg)](mailto:musangomathew@gmail.com)
+[![Web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
+[![My Portfolio](https://img.shields.io/github/v/release/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/releases)
+[![License](https://img.shields.io/github/license/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/blob/main/LICENSE)
+[![CI](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/ci.yml?branch=main)](https://github.com/mathewmusango/my-portfolio/actions)
 
-Personal portfolio site for **Mathew Musango Peter** — Platform Engineering & Infrastructure Leader.
+Personal portfolio site for **Mathew Musango Peter** — Platform Engineering Manager.
 Built with **MkDocs + Material for MkDocs**, dark-teal theme.
 
 Live: <https://mathewmusango.github.io/my-portfolio/>
+
+> Code is MIT-licensed (see [LICENSE](LICENSE)). All personal content — text, resume,
+> certifications, and images — © Mathew Musango Peter, all rights reserved.
 
 ## Tech Stack
 
@@ -20,7 +27,10 @@ Live: <https://mathewmusango.github.io/my-portfolio/>
 
 This is the **single source of truth** — local development and deployment both run from here.
 Local development uses the live-reload dev server (`compose.yaml` → podman, backed by
-`scripts/serve.py`, which also exposes a `/health` endpoint). Commits to `main` are built,
+`scripts/serve.py`, which also exposes a `/health` endpoint). The dev server serves **HTTPS**
+via a local mkcert CA (certs in `certs/`, gitignored) — visit `https://portfolio.mathewmusango.test:8000`
+(needs `127.0.0.1 portfolio.mathewmusango.test` in `/etc/hosts`); regenerated per machine with
+`mkcert portfolio.mathewmusango.test localhost 127.0.0.1`. Commits to `main` are built,
 checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD
@@ -61,10 +71,11 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`).
 - **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
-  dispatch: **disable/enable any CloudFront distribution** (dropdowns: environment `staging`|`prod`,
-  component `site`|`metrics`, action disable|enable) by flipping `Enabled` in place via the AWS CLI —
-  the invalidation-style toggle: no terraform apply runs, nothing can be deleted. Uses the
-  edge-toggle role only (`STAGING/PROD_TOGGLE_ROLE_ARN`). Caveat: the flag
+  dispatch: **disable/enable STAGING CloudFront distributions** (component `site`|`metrics`,
+  action disable|enable) by flipping `Enabled` in place via the AWS CLI —
+  the invalidation-style toggle: no terraform apply runs, nothing can be deleted. **Staging only by
+  design** — prod has no toggle role (an accidental disable on the prod metrics edge would stop
+  collection). Uses the staging edge-toggle role (`STAGING_TOGGLE_ROLE_ARN`). Caveat: the flag
   lives outside terraform state, so the next apply restores it to enabled.
 - **CloudFront invalidation** — the deploy jobs run their own **inline** `/*` invalidation
   right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
@@ -84,7 +95,7 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
 
 Build and release workflows use only the auto-scoped `GITHUB_TOKEN`. Deploys and Terraform
 assume AWS roles via **OIDC** (no long-lived keys) using repo secrets: `STAGING/PROD_TERRAFORM_ROLE_ARN`,
-`STAGING/PROD_DEPLOY_ROLE_ARN`, `STAGING/PROD_INVALIDATE_ROLE_ARN`, `STAGING/PROD_TOGGLE_ROLE_ARN`,
+`STAGING/PROD_DEPLOY_ROLE_ARN`, `STAGING/PROD_INVALIDATE_ROLE_ARN`, `STAGING_TOGGLE_ROLE_ARN`,
 `PROJECT`, `AWS_REGION`, `STAGING/PROD_ALLOWED_ORIGIN`,
 `STAGING/PROD_METRICS_ENDPOINT`, `STAGING/PROD_SITE_URL`. No deployment value is hardcoded — terraform variables
 (`project`, `environment`, `aws_region`, `allowed_origin`, `tags`) are injected at runtime from
@@ -105,7 +116,7 @@ Real AWS infrastructure, defined with **Terraform** — a site + metrics stack:
   `enable_waf`/`enable_vpc`.
 - **Per-environment roles split by job (least privilege)**: `-terraform` (stack plan/apply,
   tag-locked for prod) · `-deploy` (S3 content sync only) · `-invalidate` (edge purge) ·
-  `-toggle` (edge `Enabled` flip) — each workflow assumes only the role its step needs.
+  `-toggle` (edge `Enabled` flip, staging only) — each workflow assumes only the role its step needs.
 - Applied via GitHub Actions using OIDC — the environment comes from the trigger (main →
   staging, `v*` tags → prod). **Staging applies automatically on `main`; prod plans only — its
   apply stays manual.** No state or secrets are ever committed; state lives in per-env private
