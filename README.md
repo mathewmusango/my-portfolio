@@ -1,6 +1,5 @@
 # My Portfolio
 
-[![Slack](https://img.shields.io/badge/slack-join-blue.svg)](https://mathewmusango.github.io/my-portfolio/contact/)
 [![Email](https://img.shields.io/badge/email-join-blue.svg)](mailto:musangomathew@gmail.com)
 [![Documentation](https://img.shields.io/badge/docs-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
 [![Web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
