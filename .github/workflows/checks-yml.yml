@@ -1,24 +1,40 @@
 name: Checks YAML
 
 # actionlint on the GitHub Actions workflows + a YAML syntax parse of every
-# yml/yaml in the repo. Runs on pull requests (or dispatch) when any yml/yaml
-# changes, anywhere (extension-wide — new yaml files are never missed). One job
-# per stage so branch protection can gate each check independently
-# (checks-yaml-syntax / checks-yaml-actionlint).
+# yml/yaml in the repo. Runs on pull requests (or dispatch); a job-level gate
+# (dorny/paths-filter) makes the checks SKIP — reporting success — when the PR
+# touches no yml/yaml files, so requiring them never blocks unrelated PRs.
+# Extension-wide — new yaml files are never missed, and workflow-file edits
+# trigger actionlint (self-validation). One job per stage so branch protection
+# can gate each check independently (checks-yaml-syntax / checks-yaml-actionlint).
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "**/*.yml"
-      - "**/*.yaml"
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - '**/*.yml'
+              - '**/*.yaml'
+
   checks-yaml-syntax:
     name: checks-yaml-syntax
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -32,6 +48,8 @@ jobs:
 
   checks-yaml-actionlint:
     name: checks-yaml-actionlint
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

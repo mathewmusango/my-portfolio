@@ -1,17 +1,16 @@
 name: Checks Terraform
 
 # STATIC checks only (fmt / validate / tflint / checkov) — no AWS credentials
-# involved. Runs on pull requests (or dispatch) when terraform/ changes. One
-# job per stage so branch protection can gate each check independently
+# involved. Runs on pull requests (or dispatch); a job-level gate
+# (dorny/paths-filter) makes the checks SKIP — reporting success — when the PR
+# touches no terraform files, so requiring them never blocks unrelated PRs.
+# One job per stage so branch protection can gate each check independently
 # (checks-terraform-fmt / -validate / -lint / -security). This is NOT the
 # deploy pipeline: terraform.yml plans/applies the real stack (staging
 # auto-apply on main, prod plan-only on v* tags).
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "terraform/**"
-      - ".tflint.hcl"
   workflow_dispatch: {}
 
 env:
@@ -21,8 +20,25 @@ permissions:
   contents: read
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - 'terraform/**'
+              - '.tflint.hcl'
+
   checks-terraform-fmt:
     name: checks-terraform-fmt
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -35,6 +51,8 @@ jobs:
 
   checks-terraform-validate:
     name: checks-terraform-validate
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -63,6 +81,8 @@ jobs:
 
   checks-terraform-lint:
     name: checks-terraform-lint
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -83,6 +103,8 @@ jobs:
 
   checks-terraform-security:
     name: checks-terraform-security
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

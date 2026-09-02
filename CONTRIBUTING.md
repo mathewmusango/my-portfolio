@@ -35,8 +35,9 @@ requests.
 
 ## Checks
 
-Each surface is linted by its own workflow; checks run on PRs (path-filtered
-— only the workflows matching your changed files run) and via manual dispatch.
+Each surface is linted by its own workflow; checks run on PRs and via manual dispatch.
+A surface check whose files aren't touched **skips and reports success** (GitHub treats
+skipped required checks as success), so requiring all checks never blocks unrelated PRs.
 **Branch protection requires checks by job name** (not workflow name) — the
 names below are what you'll see on PRs:
 
