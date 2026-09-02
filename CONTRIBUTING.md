@@ -53,6 +53,25 @@ names below are what you'll see on PRs:
 | `checks-yaml-syntax` | YAML parse of every yml/yaml |
 | `checks-yaml-actionlint` | actionlint on workflows + compose/mkdocs YAML |
 
+## Issues
+
+Issues follow a fixed structure (enforced by the issue templates — **Feature request**
+for site content/features, **Chore / CI task** for tooling/CI/CD/docs):
+
+1. **Title** — conventional prefix (`feat:` / `fix:` / `docs:` / `ci:`).
+2. **What problem does this solve?*** — required.
+3. **Proposed solution** — required.
+4. **Alternatives considered**.
+5. **Scope** — how does this touch the site?
+   - Page/content change (one page, with es/zh if content)
+   - Global file (`extra.css` / `main.html` / `mkdocs.yml` / `javascripts`)
+   - Infra / tooling (workflows, terraform, scripts)
+6. **Label** — repo uses the GitHub defaults (`enhancement` for features, `bug`, `documentation`, …).
+7. **Milestone** — set by the maintainer via the sidebar (every issue has it; not a form field).
+
+The assignee is the maintainer doing the work (self-assigned); PRs reference the
+issue (`Closes #N`).
+
 ## Translations
 
 Content is maintained **English first** — open the English change, then add the
