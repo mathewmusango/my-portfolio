@@ -6,10 +6,10 @@ name: "Deploy: Prod Pages"
 # only, no contents: write (no branch force-push). Requires the repo Pages
 # setting: source = "GitHub Actions" (flip right before the next v* deploy; the
 # site briefly shows no deployment until the first Actions publish lands).
-# Never runs on main — staging deploys via deploy-staging.yml, the prod S3
-# mirror via deploy-prod-s3.yml. Always deploys when CI succeeds on a v* tag:
-# the artifact is built by CI with the per-environment site_url/metrics_endpoint,
-# so a successful CI run always has a fresh site.
+# Never runs on main — staging deploys via deploy-staging-s3.yml, the pre-prod
+# S3 mirror via deploy-pre-prod-s3.yml. Always deploys when CI succeeds on a v*
+# tag: the artifact is built by CI with the per-environment
+# site_url/metrics_endpoint, so a successful CI run always has a fresh site.
 on:
   workflow_run:
     workflows: ["Build"]

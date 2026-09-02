@@ -38,7 +38,7 @@ checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD
 
-Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-staging.yml`,
+Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-staging-s3.yml`,
 `checks-python.yml`, `invalidate-cloudfront.yml`); task-only names for single-purpose files
 (`ci.yml`, `release.yml`). Display `name:` fields use `{Category}: {Task}` (quoted — a colon+space
 is invalid unquoted YAML): `Build` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}` —
@@ -68,20 +68,20 @@ and `workflow_run` triggers match display names (the deploy workflows watch `Bui
   mirroring the GitHub workflows exactly (same commands + tool images). **Changed-files-only:**
   `scripts/check_changed.sh` (pre-commit friendly; install with `git config core.hooksPath .githooks`).
   The GitHub workflows remain the authoritative gate (stage 2).
-- **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
+- **Deploy staging s3** (`.github/workflows/deploy-staging-s3.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) with the S3-only
   deploy role, then invalidates CloudFront with the edge-invalidate role (least privilege —
-  `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`).
+  `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`). The `staging` environment.
+- **Deploy pre-prod s3** (`.github/workflows/deploy-pre-prod-s3.yml`) — on CI success for **`v*` tags only**:
+  syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
+  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`) — the **`pre-prod`**
+  environment (AWS mirror of the canonical site).
 - **Deploy prod pages** (`.github/workflows/deploy-prod-pages.yml`) — on CI success for **`v*` tags
   only**: publishes the artifact to **GitHub Pages** (the public site at
   <https://mathewmusango.github.io/my-portfolio/>) via the official Pages actions
   (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) — **least privilege**: only
   `pages: write` + `id-token: write`, no `contents: write`; the **`prod`** environment. Requires
   the repo Pages setting: source = **GitHub Actions** (flip right before the next `v*` deploy).
-- **Deploy prod s3** (`.github/workflows/deploy-prod-s3.yml`) — on CI success for **`v*` tags only**:
-  syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
-  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`) — the **`pre-prod`**
-  environment (AWS mirror of the canonical site).
 - **Environments:** the deploy workflows declare per-environment environments — `staging` (auto,
   ungated), `pre-prod` (AWS mirror), `prod` (GitHub Pages). Required reviewers are configured per
   environment in Settings (recommended: required reviewer only on `prod`, so the mirror lands
