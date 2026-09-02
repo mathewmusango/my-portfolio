@@ -1,21 +1,37 @@
 name: Checks Python
 
-# Ruff lint on every python file in the repo — runs on pull requests (or
-# dispatch) when any .py changes, anywhere. Extension-wide so NEW python files
-# in new locations are never missed.
+# Ruff lint on every python file in the repo. Runs on pull requests (or
+# dispatch); a job-level gate (dorny/paths-filter) makes the check SKIP —
+# reporting success — when the PR touches no python files, so requiring this
+# check never blocks unrelated PRs (GitHub treats skipped jobs as success).
+# Extension-wide so NEW python files in new locations are never missed.
 on:
   pull_request:
     branches: [main]
-    paths:
-      - "**/*.py"
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.filter.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: filter
+        if: github.event_name == 'pull_request'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            changed:
+              - '**/*.py'
+
   checks-python-ruff:
     name: checks-python-ruff
+    needs: detect
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.detect.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

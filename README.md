@@ -47,18 +47,20 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   check, CSS sanity check) with the per-environment `site_url` (tags → prod, main → staging); uploads the built `site/` as an
   artifact (7-day retention).
 - **Terraform checks** (`.github/workflows/checks-terraform.yml`) — static checks on the
-  terraform code (once per `main` push when `terraform/**` changes, or manual dispatch):
+  terraform code (on pull requests, or manual dispatch — the stage checks skip, green, when
+  `terraform/**` isn't touched):
   `terraform fmt -check`, `validate`
   (all three roots: `terraform/`, `terraform/ci/`, `modules/metrics`), TFLint, and a Checkov
   security scan (informational for now). No AWS credentials — this complements (does not
   replace) the `terraform.yml` plan/apply pipeline.
 - **Per-surface checks** (`.github/workflows/checks-{shell,python,js,terraform,yml}.yml`) —
-  one workflow per surface, each running once per `main` push (or manual dispatch) when the files
-  it checks change: `shellcheck` on `scripts/*.sh`, `ruff` on `terraform/lambda/**` + `scripts/*.py`,
-  `node --check` on `docs/**/*.js` (project + vendored), and `actionlint` on
-  `.github/**` YAML + `mkdocs.yml`/`compose.yaml`. Grouped by surface (Terraform stays its own
-  file) so a change to one surface only runs that surface's checks — a checks file's own
-  change does not re-trigger it (workflow files are linted by `checks-yml`).
+  one workflow per surface, running on pull requests (or manual dispatch) with a job-level
+  relevance gate (`dorny/paths-filter`): when the PR touches none of the surface's files the
+  check **skips and reports success** — GitHub treats skipped jobs as success — so requiring all
+  checks never blocks unrelated PRs. Covers: `shellcheck` on `scripts/*.sh` + `.githooks/**`,
+  `ruff` on `**/*.py`, `node --check` on `**/*.js` (project + vendored), actionlint + YAML parse
+  on `**/*.yml`/`**/*.yaml` (workflow-file edits self-validate), and the terraform stage checks
+  on `terraform/**`.
 - **Local checks** (`check-compose.yaml`) — the same checks run locally as stage 1, one compose
   service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js>`),
   mirroring the GitHub workflows exactly (same commands + tool images). **Changed-files-only:**
