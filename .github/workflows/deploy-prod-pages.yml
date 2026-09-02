@@ -1,15 +1,15 @@
 name: "Deploy: Prod Pages"
 
-# Tag-only (v*): publishes the CI-built site to GitHub Pages (the public prod
-# site at /my-portfolio/) via the official Pages actions — least privilege:
-# pages: write + id-token: write only, no contents: write (no branch
-# force-push). Requires the repo Pages setting: source = "GitHub Actions"
-# (flip right before the next v* deploy; the site briefly shows no deployment
-# until the first Actions publish lands). Never runs on main — staging deploys
-# via deploy-staging.yml, the prod S3 copy via deploy-prod-s3.yml. Always
-# deploys when CI succeeds on a v* tag: the artifact is built by CI with the
-# per-environment site_url/metrics_endpoint, so a successful CI run always
-# has a fresh site.
+# Tag-only (v*): publishes the CI-built site to GitHub Pages — the `prod`
+# environment (the public canonical site at /my-portfolio/). Runs via the
+# official Pages actions — least privilege: pages: write + id-token: write
+# only, no contents: write (no branch force-push). Requires the repo Pages
+# setting: source = "GitHub Actions" (flip right before the next v* deploy; the
+# site briefly shows no deployment until the first Actions publish lands).
+# Never runs on main — staging deploys via deploy-staging.yml, the prod S3
+# mirror via deploy-prod-s3.yml. Always deploys when CI succeeds on a v* tag:
+# the artifact is built by CI with the per-environment site_url/metrics_endpoint,
+# so a successful CI run always has a fresh site.
 on:
   workflow_run:
     workflows: ["Build"]
@@ -32,7 +32,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
     environment:
-      name: github-pages
+      name: prod
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Download site artifact

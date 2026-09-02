@@ -76,11 +76,17 @@ and `workflow_run` triggers match display names (the deploy workflows watch `Bui
   only**: publishes the artifact to **GitHub Pages** (the public site at
   <https://mathewmusango.github.io/my-portfolio/>) via the official Pages actions
   (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) — **least privilege**: only
-  `pages: write` + `id-token: write`, no `contents: write`. Requires the repo Pages setting:
-  source = **GitHub Actions** (flip right before the next `v*` deploy).
+  `pages: write` + `id-token: write`, no `contents: write`; the **`prod`** environment. Requires
+  the repo Pages setting: source = **GitHub Actions** (flip right before the next `v*` deploy).
 - **Deploy prod s3** (`.github/workflows/deploy-prod-s3.yml`) — on CI success for **`v*` tags only**:
   syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
-  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`).
+  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`) — the **`pre-prod`**
+  environment (AWS mirror of the canonical site).
+- **Environments:** the deploy workflows declare per-environment environments — `staging` (auto,
+  ungated), `pre-prod` (AWS mirror), `prod` (GitHub Pages). Required reviewers are configured per
+  environment in Settings (recommended: required reviewer only on `prod`, so the mirror lands
+  first for verification and the canonical site follows on approval). Secrets stay repo-level for
+  now (`STAGING_*` / `PROD_*` prefixes); env-scoped secrets are a future idea.
 - **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
   dispatch: **disable/enable STAGING CloudFront distributions** (component `site`|`metrics`,
   action disable|enable) by flipping `Enabled` in place via the AWS CLI —
