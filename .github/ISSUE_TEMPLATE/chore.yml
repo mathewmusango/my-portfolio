@@ -1,6 +1,5 @@
 name: Chore / CI task
 description: Tooling, CI/CD, refactors, docs — anything that doesn't change user-facing site content
-title: ""
 labels: []
 body:
   - type: textarea
