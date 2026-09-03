@@ -57,17 +57,18 @@ cd "$ROOT/terraform/ci"
 case "$ENV" in
   staging)
     REF_PATTERNS='["ref:refs/heads/main"]'
+    # Deploy jobs declare an environment, so GitHub's OIDC sub is
+    # repo:OWNER@*/REPO@*:environment:<name> (not ref-form). Allow the
+    # environment form for the env-bearing deploy jobs + keep the ref form for
+    # the no-environment manual dispatches (invalidate-cloudfront.yml,
+    # toggle-env.yml). Same trust serves deploy/invalidate/toggle roles.
+    DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:staging"]'
     ;;
   prod)
     REF_PATTERNS='["ref:refs/tags/v*"]'
+    DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:pre-prod"]'
     ;;
 esac
-
-# The DEPLOY role is assumed from deploy-{staging-s3,pre-prod-s3,prod-pages}.yml, which
-# fire via workflow_run — those runs are always on the default branch (main), even
-# when triggered by a tag's CI success. So the deploy role trusts main only;
-# the v*-tag-only intent for prod is enforced by the deploy workflows' own branch gates.
-DEPLOY_REF_PATTERNS='["ref:refs/heads/main"]'
 
 # State backend: the per-env S3 bucket THIS module creates. Each environment's
 # first run (greenfield — the bucket doesn't exist yet) applies with local
