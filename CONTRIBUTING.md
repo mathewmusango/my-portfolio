@@ -63,15 +63,34 @@ for site content/features, **Chore / CI task** for tooling/CI/CD/docs):
 2. **What problem does this solve?*** — required.
 3. **Proposed solution** — required.
 4. **Alternatives considered**.
-5. **Scope** — how does this touch the site?
+5. **Scope** — how does this touch the site or repo?
    - Page/content change (one page, with es/zh if content)
    - Global file (`extra.css` / `main.html` / `mkdocs.yml` / `javascripts`)
    - Infra / tooling (workflows, terraform, scripts)
-6. **Label** — repo uses the GitHub defaults (`enhancement` for features, `bug`, `documentation`, …).
+   - Repo-level — docs / governance / process (no site or infra touch)
+6. **Label** — the repo's label set: GitHub defaults (`enhancement` for features,
+   `bug`, `documentation`, `question`, …) plus the custom per-surface labels below.
 7. **Milestone** — set by the maintainer via the sidebar (every issue has it; not a form field).
 
 The assignee is the maintainer doing the work (self-assigned); PRs reference the
 issue (`Closes #N`).
+
+## Labels
+
+The repo keeps the GitHub defaults and adds five per-surface labels; issues and
+PRs carry **matching labels** (an issue opened as `governance` ships in a PR
+also labeled `governance`).
+
+| Label | Color | Covers |
+| --- | --- | --- |
+| `ci` | `#0e8a16` | CI/CD — workflows, checks, actions |
+| `infra` | `#d93f0b` | Infrastructure — Terraform / AWS / deploy targets |
+| `security` | `#b60205` | Security — hardening, audit, review |
+| `governance` | `#5319e7` | Repo process as code — rulesets, templates, contributing, labels |
+| `dependencies` | `#1d76db` | Dependency updates (Dependabot) |
+
+Surfaces that keep a GitHub default: content/features → `enhancement`, fixes →
+`bug`, docs → `documentation`.
 
 ## Translations
 
