@@ -19,7 +19,7 @@ output "lambda_writer_function_name" {
 }
 
 output "lambda_reader_function_name" {
-  description = "Metrics reader Lambda (GET /summary · /health, dynamodb:Scan only)."
+  description = "Metrics reader Lambda (GET /summary · /views · /health, dynamodb:Scan + Query on table + GSI)."
   value       = aws_lambda_function.metrics_reader.function_name
 }
 
