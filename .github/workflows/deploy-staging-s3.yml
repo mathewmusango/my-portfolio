@@ -1,13 +1,14 @@
-name: Deploy staging
+name: "Deploy: Staging S3"
 
-# Deploys the built site to the STAGING S3 bucket on main-push CI success.
-# gh-pages and prod S3 are tag-only (deploy-prod.yml) — never from main.
+# Deploys the built site to the STAGING S3 bucket on main-push Build success.
+# gh-pages and pre-prod S3 are tag-only (deploy-prod-pages.yml /
+# deploy-pre-prod-s3.yml) — never from main.
 # Always deploys when CI succeeds on main: the artifact is built by CI with the
 # per-environment site_url/metrics_endpoint, so a successful CI run always has
 # a fresh site to sync.
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["Build"]
     types: [completed]
 
 permissions:
@@ -16,9 +17,11 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  deploy-s3:
     if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
     runs-on: ubuntu-latest
+    environment:
+      name: staging
     steps:
       - name: Download site artifact
         uses: actions/download-artifact@v8

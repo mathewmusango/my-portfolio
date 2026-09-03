@@ -1,4 +1,4 @@
-name: Checks JS
+name: "Checks: JS"
 
 # node --check syntax validation of every JS file in the repo (project +
 # vendored). Runs on pull requests (or dispatch); a job-level gate

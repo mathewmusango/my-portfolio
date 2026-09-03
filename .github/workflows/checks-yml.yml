@@ -1,4 +1,4 @@
-name: Checks YAML
+name: "Checks: YAML"
 
 # actionlint on the GitHub Actions workflows + a YAML syntax parse of every
 # yml/yaml in the repo. Runs on pull requests (or dispatch); a job-level gate

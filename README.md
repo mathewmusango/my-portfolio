@@ -38,11 +38,13 @@ checked, and deployed automatically by GitHub Actions (below).
 
 ## CI / CD
 
-Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-staging.yml`,
+Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-staging-s3.yml`,
 `checks-python.yml`, `invalidate-cloudfront.yml`); task-only names for single-purpose files
-(`ci.yml`, `release.yml`).
+(`ci.yml`, `release.yml`). Display `name:` fields use `{Category}: {Task}` (quoted — a colon+space
+is invalid unquoted YAML): `Build` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}` —
+and `workflow_run` triggers match display names (the deploy workflows watch `Build`).
 
-- **CI** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
+- **Build** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
   build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
   check, CSS sanity check) with the per-environment `site_url` (tags → prod, main → staging); uploads the built `site/` as an
   artifact (7-day retention).
@@ -66,15 +68,25 @@ Workflow files follow `{task}-{env|language|resource}` naming (e.g. `deploy-stag
   mirroring the GitHub workflows exactly (same commands + tool images). **Changed-files-only:**
   `scripts/check_changed.sh` (pre-commit friendly; install with `git config core.hooksPath .githooks`).
   The GitHub workflows remain the authoritative gate (stage 2).
-- **Deploy staging** (`.github/workflows/deploy-staging.yml`) — on CI success for `main` pushes:
+- **Deploy staging s3** (`.github/workflows/deploy-staging-s3.yml`) — on CI success for `main` pushes:
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) with the S3-only
   deploy role, then invalidates CloudFront with the edge-invalidate role (least privilege —
-  `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`).
-- **Deploy prod** (`.github/workflows/deploy-prod.yml`) — on CI success for **`v*` tags only**: the
-  `deploy-pages` job force-pushes the artifact to `gh-pages` (GitHub Pages — the public site at
-  <https://mathewmusango.github.io/my-portfolio/>, committed as `mathewmusango`), and the
-  `deploy-s3` job syncs it to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
-  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`).
+  `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`). The `staging` environment.
+- **Deploy pre-prod s3** (`.github/workflows/deploy-pre-prod-s3.yml`) — on CI success for **`v*` tags only**:
+  syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
+  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`) — the **`pre-prod`**
+  environment (AWS mirror of the canonical site).
+- **Deploy prod pages** (`.github/workflows/deploy-prod-pages.yml`) — on CI success for **`v*` tags
+  only**: publishes the artifact to **GitHub Pages** (the public site at
+  <https://mathewmusango.github.io/my-portfolio/>) via the official Pages actions
+  (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) — **least privilege**: only
+  `pages: write` + `id-token: write`, no `contents: write`; the **`prod`** environment. Requires
+  the repo Pages setting: source = **GitHub Actions** (flip right before the next `v*` deploy).
+- **Environments:** the deploy workflows declare per-environment environments — `staging` (auto,
+  ungated), `pre-prod` (AWS mirror), `prod` (GitHub Pages). Required reviewers are configured per
+  environment in Settings (recommended: required reviewer only on `prod`, so the mirror lands
+  first for verification and the canonical site follows on approval). Secrets stay repo-level for
+  now (`STAGING_*` / `PROD_*` prefixes); env-scoped secrets are a future idea.
 - **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
   dispatch: **disable/enable STAGING CloudFront distributions** (component `site`|`metrics`,
   action disable|enable) by flipping `Enabled` in place via the AWS CLI —

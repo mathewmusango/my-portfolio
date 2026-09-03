@@ -1,4 +1,4 @@
-name: Terraform
+name: "Infra: Terraform"
 
 # Environment is controlled from GitHub by the trigger:
 #   push main (terraform/**)  -> staging — plan + AUTO-APPLY

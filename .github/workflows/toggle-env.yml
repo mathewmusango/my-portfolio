@@ -1,4 +1,4 @@
-name: Toggle env
+name: "Infra: Toggle Env"
 
 # DISABLE / ENABLE the STAGING CloudFront distributions WITHOUT removing
 # anything — the invalidation-style toggle (scripts/toggle_cloudfront.sh):
