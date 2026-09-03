@@ -21,12 +21,25 @@ body:
     attributes:
       label: Alternatives considered
       description: Any workarounds or alternatives you've thought of.
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      description: Which surface does this touch? Drives the label — the issue and its PR carry matching labels.
+      options:
+        - CI / tooling
+        - Infra — Terraform / AWS
+        - Security
+        - Governance — process / rules / templates
+        - Docs
+        - Dependencies
   - type: checkboxes
     id: scope
     attributes:
       label: Scope
-      description: How does this touch the site?
+      description: How does this touch the site or repo?
       options:
         - label: Page/content change (one page, with es/zh if content)
         - label: Global file (extra.css / main.html / mkdocs.yml / javascripts)
         - label: Infra / tooling (workflows, terraform, scripts)
+        - label: Repo-level — docs / governance / process (no site or infra touch)

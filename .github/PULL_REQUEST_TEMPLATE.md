@@ -8,11 +8,17 @@
 
 ## Type of change
 
-- [ ] Content (page / translation / asset)
-- [ ] Feature
-- [ ] Fix
-- [ ] Tooling / CI
-- [ ] Docs
+Pick the type and apply the matching label to this PR (same label as the issue):
+
+- [ ] Content (page / translation / asset) — `enhancement`
+- [ ] Feature — `enhancement`
+- [ ] Fix — `bug`
+- [ ] CI / tooling — `ci`
+- [ ] Infra (Terraform / AWS) — `infra`
+- [ ] Security — `security`
+- [ ] Governance (process / rules / templates) — `governance`
+- [ ] Docs — `documentation`
+- [ ] Dependencies — `dependencies`
 
 ## Checklist
 
