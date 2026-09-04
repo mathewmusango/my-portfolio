@@ -22,10 +22,9 @@ en tiempo de compilación — el último es siempre el sitio actual. Consulta la
 
 ## Qué hay aquí
 
-- **Arquitectura de la Plataforma** — los diagramas de entrega, métricas y del plano de control de Terraform.
-- **Cronología de Versiones** — cada versión etiquetada, con su release y SBOM.
-- **Estructura del Sitio** — un mapa interactivo de las páginas del sitio y de la pila de analítica que hay detrás.
-- **Etiquetas** — explora el sitio por tema.
+- [**Arquitectura de la Plataforma**](platform-architecture.md) — los diagramas de entrega, métricas y del plano de control de Terraform.
+- [**Estructura del Sitio**](structure.md) — un mapa interactivo de las páginas del sitio y de la pila de analítica que hay detrás.
+- [**Etiquetas**](tags.md) — explora el sitio por tema.
 
 ## El Repositorio {#the-repository}
 

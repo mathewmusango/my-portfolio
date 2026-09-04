@@ -22,10 +22,9 @@ at build time — the latest is always the current site. See the
 
 ## What's here
 
-- **Platform Architecture** — the delivery, metrics, and Terraform control-plane diagrams.
-- **Release Timeline** — every tagged version, with its release and SBOM.
-- **Site Structure** — an interactive map of the site's pages and the analytics stack behind them.
-- **Tags** — browse the site by topic.
+- [**Platform Architecture**](platform-architecture.md) — the delivery, metrics, and Terraform control-plane diagrams.
+- [**Site Structure**](structure.md) — an interactive map of the site's pages and the analytics stack behind them.
+- [**Tags**](tags.md) — browse the site by topic.
 
 ## The Repository {#the-repository}
 
