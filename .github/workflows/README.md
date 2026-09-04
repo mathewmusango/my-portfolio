@@ -43,6 +43,10 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
   identical commands + tool images); `scripts/check_changed.sh` runs changed-files-only
   (pre-commit friendly: `git config core.hooksPath .githooks`). The GitHub workflows remain the
   authoritative gate.
+- **`checks-rulesets.yml` (`Checks: Rulesets`)** — ruleset **drift check**: `scripts/check_ruleset_drift.py`
+  compares each `rulesets/*.json` (config-as-code) against the live ruleset via the API
+  (normalized: runtime fields dropped, list order insignificant). Runs on main merges touching
+  `rulesets/**`, on a daily schedule (catches UI-side edits), and manually. No auto-apply.
 
 ## Deploy — `workflow_run` on Build success
 

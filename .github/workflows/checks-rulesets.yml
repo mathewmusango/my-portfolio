@@ -1,0 +1,40 @@
+name: "Checks: Rulesets"
+
+# Drift check: rulesets/*.json (config-as-code) must match the live rulesets.
+# Runs on main merges touching rulesets/, on a schedule (catches UI-side edits),
+# and manually. No auto-apply — applying stays an explicit `gh api` PUT.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["rulesets/**"]
+  schedule:
+    - cron: "0 6 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Compare as-code rulesets with live
+        run: |
+          set -euo pipefail
+          for file in rulesets/*.json; do
+            name="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["name"])' "$file")"
+            id="$(gh api "repos/${GITHUB_REPOSITORY}/rulesets" --jq ".[] | select(.name == \"$name\") | .id")"
+            if [ -z "$id" ]; then
+              echo "::error::ruleset '$name' ($file) is not live — apply it (gh api PUT)"
+              exit 1
+            fi
+            gh api "repos/${GITHUB_REPOSITORY}/rulesets/$id" > /tmp/live.json
+            if ! python3 scripts/check_ruleset_drift.py "$file" /tmp/live.json; then
+              echo "::error::drift: $file does not match live ruleset '$name' (id $id)"
+              exit 1
+            fi
+            echo "ok: $file matches live '$name'"
+          done
