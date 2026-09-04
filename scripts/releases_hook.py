@@ -21,10 +21,10 @@ CHANGELOG already carries the versioned section (renamed at release time), no
 duplicate is added.
 """
 
+import datetime
 import os
 import re
 import subprocess
-import datetime
 from pathlib import Path
 
 RELEASE_RE = re.compile(r"^## \[([^\]]+)\] - (\d{4}-\d{2}-\d{2})$", re.MULTILINE)
@@ -49,7 +49,7 @@ def _git_commit_date(repo_root):
             return out
     except (subprocess.SubprocessError, FileNotFoundError, OSError):
         pass
-    return datetime.date.today().isoformat()
+    return datetime.datetime.now(tz=datetime.timezone.utc).date().isoformat()
 
 
 def _current_tag():
