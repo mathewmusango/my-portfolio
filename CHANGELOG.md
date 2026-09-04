@@ -19,7 +19,26 @@ starts immediately after.
 ## [Unreleased]
 
 ### Added
-- **New "The Platform Behind This Site" project page** — `portfolio-platform` as the first entry under Projects; documents the platform (architecture, delivery model, CI/CD, governance, security, incidents) with GitHub references. English first (es/zh follow).
+- **"The Platform Behind This Site" project page** — first entry under Projects (en/es/zh): prose-first case study of the platform (architecture, delivery model, CI/CD, governance, security, real incidents) with GitHub references (#49).
+- **Site Atlas — Platform Architecture page** — the four explored diagrams on-site (site delivery, visitor metrics, Terraform control plane, how a change ships), separate from the zoomable Site Structure map (#50, folded into #53).
+- **Structure-map rectification** — Site Metrics submenu shows its real shape (default → Visitor Analytics → CloudFront → API → writer/reader → DynamoDB); the AWS metrics backend renders inside its own theme-aware subgraph; Projects gains the new page's node (#49/#50/#53).
+- **Release timeline generated from CHANGELOG** — `scripts/releases_hook.py` builds the rows at compile time (no drift); on `v*` tag builds the hook promotes the `[Unreleased]` content into the tag's version so prod shows the just-released release; the Site Atlas landing lists the latest 10, the full archive stays reachable (#49/#50/#53).
+- **Branch + tag rulesets as code** — `main` (PR-only, strict, no bypass) and `v*` tag rulesets defined in exportable JSON and applied via `gh api`; enforcement verified and recorded beside the configs (#25/#35, #36/#38, #37/#39, #40/#41).
+- **Curated labels + template taxonomy** — five per-surface labels (`ci` · `infra` · `security` · `governance` · `dependencies`), PR template ↔ label mapping, 7-part issue structure documented (#11, #15, #18, #26/#27).
+
+### Changed
+- **Docs split into system + implementation views** — root README slimmed to the system view; `.github/workflows/README.md` is the CI/CD implementation reference; `terraform/README.md` audited for accuracy (#23/#28, #24/#34).
+- **Check names are the gate names** — CI reports job names (`ci-build`, `checks-<surface>-<tool>`) so rulesets require exactly what runs; per-surface checks self-gate on changed paths (skip-model), skipping and reporting success when untouched (#12, #17).
+- **Prod deploy split** — `v*` deploys to pre-prod (AWS mirror) then gated prod (GitHub Pages via the official Pages actions); OIDC trust extended for environment-bearing deploy jobs (#20, #22).
+- **Staging content-hash skip** — byte-identical artifacts skip sync + invalidation via marker objects (existence-checked — no extra IAM needed) (#29/#30, #31/#32).
+- **Local check driver** — `scripts/check_local.sh`: default runs every surface whose files changed (diff-gated, mirroring CI), `--full` for a whole-repo pass, per-language selection; `check-compose.yaml` services fixed so every local check is runnable and truthful (#52).
+
+### Fixed
+- **Local checks were silently checking nothing** — docker-compose interpolated `$f` at parse time (empty filenames) and the trailing `echo ok` masked failures; escaped with `$$f` and made per-file failures fail the service (#52).
+- **Broken CJK heading anchor** — zh project page's in-page link pointed at a slug the theme never generated; pinned an explicit `{#delivery-model}` anchor across locales (#49/#50/#53).
+
+### Dependencies
+- Bumps: ruff-action v3, mkdocs-git-revision-date-localized-plugin 1.5.4 (#9, #10).
 
 ## [3.2.0] - 2026-09-01
 
