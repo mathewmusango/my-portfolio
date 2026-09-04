@@ -18,6 +18,7 @@ nav:
       - Technical Expertise: skills.md
       - Projects:
           - Projects: projects/index.md
+          - The Platform Behind This Site: projects/portfolio-platform.md
           - Cloud & Migrations: projects/cloud-migrations.md
           - Observability & Monitoring: projects/observability.md
           - Security & Resilience: projects/security-resilience.md
@@ -31,6 +32,7 @@ nav:
       - Visitor Analytics: metrics/analytics.md
   - Site Atlas:
       - Site Atlas: atlas/index.md
+      - Platform Architecture: atlas/platform-architecture.md
       - Release Timeline: atlas/releases.md
       - Tags: atlas/tags.md
       - Site Structure: atlas/structure.md
@@ -184,6 +186,8 @@ plugins:
             Security & Resilience: Seguridad y Resiliencia
             Platform Engineering: Ingeniería de Plataformas
             Knowledge & Collaboration: Conocimiento y Colaboración
+            The Platform Behind This Site: La Plataforma Detrás de Este Sitio
+            Platform Architecture: Arquitectura de la Plataforma
         - locale: zh
           name: 中文
           nav_translations:
@@ -206,6 +210,8 @@ plugins:
             Security & Resilience: 安全与弹性
             Platform Engineering: 平台工程
             Knowledge & Collaboration: 知识与协作
+            The Platform Behind This Site: 本站背后的平台
+            Platform Architecture: 平台架构
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
       lang:
