@@ -1,12 +1,19 @@
 # Local (stage-1) checks — one service per check, mirroring the checks-*.yml
-# GitHub workflows EXACTLY (same commands, purpose-built tool images). Run one:
+# GitHub workflows EXACTLY (same commands, purpose-built tool images).
+#
+# Preferred entry point — scripts/check_local.sh (drives these services,
+# diff-gated by default, --full for a whole-repo pass, per-surface selection):
+#   scripts/check_local.sh          # all surfaces, changed files only
+#   scripts/check_local.sh --full   # all surfaces, whole repo
+#
+# Raw compose loop (same thing, no driver):
 #   podman-compose -f check-compose.yaml run --rm <service>
 # or all, one after another:
 #   for svc in shell python yaml yaml-syntax js terraform-fmt terraform-validate \
 #              terraform-lint terraform-security; do
 #     podman-compose -f check-compose.yaml run --rm "$svc" || exit 1
 #   done
-# Changed-files-only: scripts/check_changed.sh (pre-commit friendly).
+# Pre-commit per-file fast path: scripts/check_changed.sh.
 # The GitHub workflows remain the authoritative gate (stage 2 — attested,
 # per-commit results). All scans are extension-wide across the whole repo
 # (site/ + .git excluded) so NEW files in new locations are never missed.
