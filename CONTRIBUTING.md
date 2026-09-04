@@ -36,6 +36,8 @@ requests.
 ## Checks
 
 Each surface is linted by its own workflow; checks run on PRs and via manual dispatch.
+CI/CD implementation details (triggers, naming, roles, secrets) are documented in
+[`.github/workflows/README.md`](.github/workflows/README.md).
 A surface check whose files aren't touched **skips and reports success** (GitHub treats
 skipped required checks as success), so requiring all checks never blocks unrelated PRs.
 **Branch protection requires checks by job name** (not workflow name) — the
@@ -44,7 +46,7 @@ names below are what you'll see on PRs:
 | Required check | Covers |
 | --- | --- |
 | `ci-build` | strict `mkdocs build`, pip-audit, internal link + translation checks |
-| `checks-python-ruff` | `ruff` on `terraform/lambda/**` + `scripts/*.py` |
+| `checks-python-ruff` | `ruff` on `**/*.py` (repo-wide) |
 | `checks-shell-shellcheck` | `shellcheck` on `scripts/*.sh` |
 | `checks-js-node-check` | JS syntax check on `docs/**/*.js` |
 | `checks-terraform-fmt` | `terraform fmt -check` |
@@ -52,7 +54,7 @@ names below are what you'll see on PRs:
 | `checks-terraform-lint` | TFLint |
 | `checks-terraform-security` | Checkov security scan |
 | `checks-yaml-syntax` | YAML parse of every yml/yaml |
-| `checks-yaml-actionlint` | actionlint on workflows + compose/mkdocs YAML |
+| `checks-yaml-actionlint` | actionlint on `.github/workflows/**` |
 
 ## Issues
 
