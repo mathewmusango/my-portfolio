@@ -4,11 +4,14 @@ name: "Deploy: Staging S3"
 # gh-pages and pre-prod S3 are tag-only (deploy-prod-pages.yml /
 # deploy-pre-prod-s3.yml) — never from main.
 # Skips sync + invalidation when the artifact is byte-identical to the last
-# staging deploy (content-hash marker .deploy-hash in the bucket). Content,
-# not commits, is compared — so a docs-only merge or multi-commit batch that
-# produces the same site skips cleanly and staging can never go stale.
-# Missing marker = first deploy. Revision-date embeds can make the hash differ
-# across day boundaries — then it deploys as usual (never stale, best-effort).
+# staging deploy. Marker: a zero-byte object keyed by the content hash under
+# .deploy-hash/<sha256> — written with PutObject, checked by existence with
+# ListBucket (the deploy role has no s3:GetObject, so the marker is never read).
+# Content, not commits, is compared — so a docs-only merge or multi-commit
+# batch that produces the same site skips cleanly and staging can never go
+# stale. Missing marker = first deploy. Revision-date embeds can make the hash
+# differ across day boundaries — then it deploys as usual (never stale,
+# best-effort).
 on:
   workflow_run:
     workflows: ["Build"]
@@ -43,8 +46,9 @@ jobs:
         id: check
         run: |
           HASH="$(find site -type f | sort | xargs sha256sum | sha256sum | awk '{print $1}')"
-          OLD="$(aws s3 cp "s3://${{ secrets.PROJECT }}-staging-site/.deploy-hash" - 2>/dev/null || true)"
-          if [ -n "$OLD" ] && [ "$OLD" = "$HASH" ]; then
+          # Existence check only (ListBucket) — the deploy role has no s3:GetObject,
+          # so the marker is a zero-byte object keyed by the content hash.
+          if aws s3 ls "s3://${{ secrets.PROJECT }}-staging-site/.deploy-hash/$HASH" 2>/dev/null | grep -q .; then
             echo "Site content unchanged since the last staging deploy — skipping sync + invalidation."
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
@@ -56,8 +60,8 @@ jobs:
       - name: Sync site to staging S3 (bucket root — site serves at /)
         if: steps.check.outputs.changed == 'true'
         run: |
-          aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress --exclude ".deploy-hash"
-          printf '%s' "${{ steps.check.outputs.hash }}" | aws s3 cp - "s3://${{ secrets.PROJECT }}-staging-site/.deploy-hash"
+          aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress --exclude ".deploy-hash/*"
+          aws s3api put-object --bucket "${{ secrets.PROJECT }}-staging-site" --key ".deploy-hash/${{ steps.check.outputs.hash }}"
 
       - name: Assume edge-invalidate role (least privilege)
         uses: aws-actions/configure-aws-credentials@v6
