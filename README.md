@@ -5,8 +5,6 @@
 [![My Portfolio](https://img.shields.io/github/v/release/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/releases)
 [![License](https://img.shields.io/github/license/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/blob/main/LICENSE)
 [![CI](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/ci.yml?branch=main)](https://github.com/mathewmusango/my-portfolio/actions)
-[![SBOM](https://img.shields.io/badge/SBOM-CycloneDX-blue.svg)](https://github.com/mathewmusango/my-portfolio/releases)
-[![AWS auth](https://img.shields.io/badge/AWS%20auth-OIDC%2C%20no%20keys-green.svg)](https://github.com/mathewmusango/my-portfolio/actions)
 
 ![Site preview](docs/assets/site-preview.png)
 *The live site — [mathewmusango.github.io/my-portfolio](https://mathewmusango.github.io/my-portfolio/)*
@@ -57,14 +55,10 @@ flowchart LR
     D3 --> PRD[prod — GitHub Pages]
 ```
 
-**Prod is gated**: the Pages deploy runs in the `prod` GitHub environment behind a required
-reviewer — `pre-prod` (the AWS mirror) lands first so it can be verified, then Pages ships on
-approval. Each deploy assumes its own OIDC deployment role (`-deploy`). Creating a `v*` tag is
-also ruleset-protected — restricted to the maintainer — so releases can't be minted by accident.
-
-Two delivery planes, each with its own prod gate: **application/content** — `main` → staging ·
-`v*` → pre-prod → gated prod (GitHub Pages); **infrastructure** — `main` → staging applies
-automatically, `v*` → prod is plan-only (apply stays manual).
+**Prod is gated**: the Pages deploy runs behind a required reviewer in the `prod` GitHub
+environment — `pre-prod` (the AWS mirror) lands first, then Pages ships on approval. Two
+delivery planes, each with its own gate: **content** — `main` → staging · `v*` → pre-prod →
+gated Pages; **infrastructure** — `main` → staging auto-applies · `v*` → prod plan-only.
 
 ### Metrics — visitor analytics
 
@@ -94,16 +88,8 @@ flowchart TB
 ```
 
 `terraform/ci` creates the per-environment state backends and the OIDC roles GitHub Actions
-assumes to build and run the stacks. **Bootstrap is the one out-of-band step**: it runs once
-outside GitHub Actions, from an AWS user whose own IAM permissions create the state backends and
-the roles — no workflow is ever involved. From then on GitHub Actions assumes the OIDC roles
-directly, so no long-lived credentials are used by any workflow. **Operational extras
-(pluggable):** `toggle-env` flips staging CloudFront edges on/off; CloudFront invalidation
-purges the edge (inline in deploys, or manual via `invalidate-cloudfront.yml`).
-
-Cross-cutting security — OIDC only (no long-lived keys) · buckets never public (OAC) ·
-origin-gated metrics API · `pip-audit` on every build + CycloneDX SBOM per release
-([Security](#security)).
+assumes to build and run the stacks. **Bootstrap is the one out-of-band step** — an AWS user,
+outside GitHub Actions, creates them with its own IAM permissions; no workflow ever uses keys.
 
 ## Getting Started
 
@@ -143,9 +129,9 @@ the deployed one. Setup and first run are in [Getting Started](#getting-started)
 - **Live-reload dev server** — `compose.yaml` (podman, container `my-portfolio`) runs
   `scripts/serve.py`, an HTTPS-capable MkDocs dev server that also exposes `/health` (the
   container healthcheck curls it).
-- **HTTPS** — served over TLS with the local [mkcert](https://github.com/FiloSottile/mkcert) CA
-  (certs in `certs/`, gitignored); compose passes the cert paths to `serve.py`, which falls back
-  to plain HTTP with a warning if they're missing.
+- **HTTPS** — TLS via the local [mkcert](https://github.com/FiloSottile/mkcert) CA (certs in
+  `certs/`, gitignored); `serve.py` falls back to plain HTTP with a warning if the certs are
+  missing. Setup commands are in [Getting Started](#getting-started).
 - Commits to `main` are built, checked, and deployed automatically by GitHub Actions — see
   [CI / CD](#ci--cd).
 
@@ -167,113 +153,55 @@ flowchart LR
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]
 ```
 
-- **Build** (`.github/workflows/ci.yml`) — on every push/PR to `main` **and `v*` tags**: shared
-  build action (pip cache, `mkdocs build --strict`, `pip-audit` dependency audit, internal link
-  check, CSS sanity check) with the per-environment `site_url` (tags → prod, main → staging); uploads the built `site/` as an
-  artifact (7-day retention).
-- **Terraform checks** (`.github/workflows/checks-terraform.yml`) — static checks on the
-  terraform code (on pull requests, or manual dispatch — the stage checks skip, green, when
-  `terraform/**` isn't touched):
-  `terraform fmt -check`, `validate`
-  (all three roots: `terraform/`, `terraform/ci/`, `modules/metrics`), TFLint, and a Checkov
-  security scan (informational for now). No AWS credentials — this complements (does not
-  replace) the `terraform.yml` plan/apply pipeline.
-- **Per-surface checks** (`.github/workflows/checks-{shell,python,js,terraform,yml}.yml`) —
-  one workflow per surface, running on pull requests (or manual dispatch) with a job-level
-  relevance gate (`dorny/paths-filter`): when the PR touches none of the surface's files the
-  check **skips and reports success** — GitHub treats skipped jobs as success — so requiring all
-  checks never blocks unrelated PRs. Covers: `shellcheck` on `scripts/*.sh` + `.githooks/**`,
-  `ruff` on `**/*.py`, `node --check` on `**/*.js` (project + vendored), actionlint + YAML parse
-  on `**/*.yml`/`**/*.yaml` (workflow-file edits self-validate), and the terraform stage checks
-  on `terraform/**`.
-- **Local checks** (`check-compose.yaml`) — the same checks run locally as stage 1, one compose
-  service per check (`podman-compose -f check-compose.yaml run --rm <shell|python|yaml|yaml-syntax|js>`),
-  mirroring the GitHub workflows exactly (same commands + tool images). **Changed-files-only:**
-  `scripts/check_changed.sh` (pre-commit friendly; install with `git config core.hooksPath .githooks`).
-  The GitHub workflows remain the authoritative gate (stage 2).
-- **Deploy staging s3** (`.github/workflows/deploy-staging-s3.yml`) — on CI success for `main` pushes:
-  syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) with the S3-only
-  deploy role, then invalidates CloudFront with the edge-invalidate role (least privilege —
-  `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`). The `staging` environment.
-  **Content-hash skip:** sync + invalidation are skipped when the artifact is byte-identical to
-  the last staging deploy (zero-byte marker objects keyed by content hash under `.deploy-hash/`,
-  existence-checked — content, not commits, is compared), so docs-only merges skip cleanly and
-  multi-commit batches can't leave staging stale.
-- **Deploy pre-prod s3** (`.github/workflows/deploy-pre-prod-s3.yml`) — on CI success for **`v*` tags only**:
-  syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
-  invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`) — the **`pre-prod`**
-  environment (AWS mirror of the canonical site).
-- **Deploy prod pages** (`.github/workflows/deploy-prod-pages.yml`) — on CI success for **`v*` tags
-  only**: publishes the artifact to **GitHub Pages** (the public site at
-  <https://mathewmusango.github.io/my-portfolio/>) via the official Pages actions
-  (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) — **least privilege**: only
-  `pages: write` + `id-token: write`, no `contents: write`; the **`prod`** environment. Requires
-  the repo Pages setting: source = **GitHub Actions** (flip right before the next `v*` deploy).
-- **Environments:** the deploy workflows declare per-environment environments — `staging` (auto,
-  ungated), `pre-prod` (AWS mirror), `prod` (GitHub Pages). Required reviewers are configured per
-  environment in Settings (recommended: required reviewer only on `prod`, so the mirror lands
-  first for verification and the canonical site follows on approval). Secrets stay repo-level for
-  now (`STAGING_*` / `PROD_*` prefixes); env-scoped secrets are a future idea.
-- **Toggle env** (`.github/workflows/toggle-env.yml` + `scripts/toggle_cloudfront.sh`) — manual
-  dispatch: **disable/enable STAGING CloudFront distributions** (component `site`|`metrics`,
-  action disable|enable) by flipping `Enabled` in place via the AWS CLI —
-  the invalidation-style toggle: no terraform apply runs, nothing can be deleted. **Staging only by
-  design** — prod has no toggle role (an accidental disable on the prod metrics edge would stop
-  collection). Uses the staging edge-toggle role (`STAGING_TOGGLE_ROLE_ARN`). Caveat: the flag
-  lives outside terraform state, so the next apply restores it to enabled.
-- **CloudFront invalidation** — the deploy jobs run their own **inline** `/*` invalidation
-  right after the sync (atomic with the deploy: lookup by the `<project>-<env>-site` comment
-  convention, skip when the distro is absent). Manual purges (out-of-band content changes) go
-  through `invalidate-cloudfront.yml` (`workflow_dispatch`) or locally via
-  `scripts/invalidate_cloudfront.sh <staging|prod> [paths]` — the reference implementation if
-  the inline steps are ever centralized:
+Each of the four phases below is documented in [`.github/workflows/README.md`](.github/workflows/README.md)
+(the implementation reference — triggers, roles, secrets) and
+[`CONTRIBUTING.md`](CONTRIBUTING.md) (the required-checks table):
 
-  ```sh
-  # Reference — the script used by the manual paths (also the centralized pattern)
-  scripts/invalidate_cloudfront.sh staging            # full invalidation (/*)
-  scripts/invalidate_cloudfront.sh prod "/about/ /metrics/"   # specific paths
-  ```
-- **Release** (`.github/workflows/release.yml`) — on `v*` tags (or manual dispatch): builds,
-  packages `site.zip`, generates a CycloneDX SBOM (`sbom.cdx.json`) from `requirements.txt`,
-  and creates/refreshes a GitHub Release with notes from `CHANGELOG.md`.
-
-Build and release workflows use only the auto-scoped `GITHUB_TOKEN`. Deploys and Terraform
-assume AWS roles via **OIDC** (no long-lived keys) using repo secrets: `STAGING/PROD_TERRAFORM_ROLE_ARN`,
-`STAGING/PROD_DEPLOY_ROLE_ARN`, `STAGING/PROD_INVALIDATE_ROLE_ARN`, `STAGING_TOGGLE_ROLE_ARN`,
-`PROJECT`, `AWS_REGION`, `STAGING/PROD_ALLOWED_ORIGIN`,
-`STAGING/PROD_METRICS_ENDPOINT`, `STAGING/PROD_SITE_URL`. No deployment value is hardcoded — terraform variables
-(`project`, `environment`, `aws_region`, `allowed_origin`, `tags`) are injected at runtime from
-secrets (CI) or `local.tfvars` (local dev).
+- **Build** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
+  to `main` and `v*` tags; uploads the built `site/` as an artifact.
+- **Checks** — one workflow per surface (`checks-{shell,python,js,terraform,yml}.yml`), gated on
+  PRs by relevance: untouched surfaces **skip and report success**, so the required checks never
+  block unrelated PRs. The same checks run locally (`check-compose.yaml` +
+  `scripts/check_changed.sh`).
+- **Deploy** — `workflow_run` on Build success: `main` → **staging** (S3 + CloudFront), `v*` tags
+  → **pre-prod** (AWS mirror) → gated **prod** (GitHub Pages). Staging **skips** when the
+  artifact is byte-identical to the last deploy (content-hash marker); prod runs in the `prod`
+  environment behind a required reviewer.
+- **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
+  plans on `terraform/**` changes (apply stays manual); `toggle-env` and `invalidate-cloudfront`
+  are manual operational extras.
 
 ## Infrastructure as Code (Terraform)
 
-Real AWS infrastructure, defined with **Terraform** — a site + metrics stack:
+Real AWS infrastructure, defined with **Terraform** — [`terraform/README.md`](terraform/README.md)
+owes the full implementation (resources, event schema, security, local dev):
 
-- **Site (live)** — private S3 bucket + CloudFront (OAC, HTTP/2+3, localized error pages,
-  serving at `/`). The staging and prod sites deploy here via the workflows above; buckets are
-  **never public** (origin access control only).
-- **Metrics (live — both environments)** — API Gateway → Lambda → DynamoDB behind a
-  geo-enabled CloudFront edge (visitor country/city from CloudFront headers — no IPs are
-  stored, raw events expire after 90 days via DynamoDB TTL). **Free-Tier by default**: least-
-  privilege IAM, an edge origin-gate (403 for non-site origins, HTTPS only) and multi-origin
-  CORS (auto-includes the site's own CloudFront domain). WAF + a private VPC are opt-in behind
-  `enable_waf`/`enable_vpc`.
-- **Per-environment roles split by job (least privilege)**: `-terraform` (stack plan/apply,
-  tag-locked for prod) · `-deploy` (S3 content sync only) · `-invalidate` (edge purge) ·
-  `-toggle` (edge `Enabled` flip, staging only) — each workflow assumes only the role its step needs.
-- Applied via GitHub Actions using OIDC — the environment comes from the trigger (main →
-  staging, `v*` tags → prod). **Staging applies automatically on `main`; prod plans only — its
-  apply stays manual.** No state or secrets are ever committed; state lives in per-env private
-  S3 backends with DynamoDB locking.
-
-Deeper, stack-level documentation (resources, event schema, local Ministack workflow) lives in
-[`terraform/README.md`](terraform/README.md).
+- **Site** — private S3 + CloudFront (OAC only — buckets are never public, localized error
+  pages, serving at `/`), per environment; the deploys above sync the artifact into it.
+- **Metrics** — privacy-first visitor analytics: geo comes from CloudFront headers (no IPs
+  stored, 90-day TTL) via API Gateway → writer/reader lambdas → DynamoDB, origin-gated;
+  WAF / private VPC are opt-in.
+- **Control plane** — `terraform/ci` bootstraps the per-environment state backends (S3 +
+  DynamoDB lock) and the per-job OIDC roles (see [Architecture](#architecture)). Staging
+  applies automatically on `main`; prod applies stay manual. State/secrets are never committed.
 
 ## Security
 
 - See [SECURITY.md](SECURITY.md) for the vulnerability reporting policy.
 - **Dependabot** keeps `requirements.txt` (weekly) and GitHub Actions (monthly) up to date.
-- Every release ships an SBOM, and `pip-audit` runs on every CI build.
+- Every release ships a CycloneDX SBOM, and `pip-audit` runs on every CI build.
+- No long-lived keys anywhere — deploys and Terraform assume AWS roles via OIDC; buckets are
+  never public (OAC only) and the metrics API is origin-gated (details in
+  [`terraform/README.md`](terraform/README.md)).
+
+## Documentation map
+
+- [`README.md`](README.md) — this file: the system view (what the repo is, architecture, running it locally).
+- [`terraform/README.md`](terraform/README.md) — infrastructure implementation (site + metrics stacks, event model, security, local AWS emulation).
+- [`.github/workflows/README.md`](.github/workflows/README.md) — CI/CD implementation (every workflow, naming, roles, secrets, ops extras).
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — process: branching, required-checks table, issues/labels, releases.
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting.
+- [`CHANGELOG.md`](CHANGELOG.md) — release history.
 
 ## License
 

@@ -8,11 +8,27 @@ staging and prod run the full stack.
 It does **not** build the MkDocs application: GitHub Actions builds the site artifact; Terraform
 provisions and manages the infrastructure that serves it and collects telemetry.
 
+```mermaid
+flowchart TB
+    subgraph OOB[Out-of-band — once per environment, as an AWS user]
+        U[AWS user] -->|scripts/bootstrap_aws.sh| CI[terraform/ci<br/>OIDC provider · state backends · roles]
+    end
+    CI --> STATE[(state backends — S3 + DynamoDB lock<br/>staging · prod · local Ministack)]
+    CI --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
+    subgraph GHA[GitHub Actions]
+        WF[terraform.yml] -->|assumes| ROLES
+    end
+    ROLES -->|plan · apply| SITE[site — S3 + CloudFront OAC<br/>staging · prod]
+    ROLES -->|plan · apply| MET[metrics — CF geo → API GW<br/>→ Lambda writer + reader → DynamoDB<br/>staging own stack · pre-prod + prod shared]
+```
+
+The AWS-side picture at a glance — the details follow. (`pre-prod` deploys content onto the
+**prod** stack; it is not a separate Terraform environment.)
+
 ## Design principles
 
-1. **No long-lived CI credentials** — GitHub Actions assumes OIDC roles, one per job. The one-time
-   `terraform/ci` bootstrap runs **outside GitHub Actions, as an AWS user** (its own IAM
-   permissions create the roles); no workflow ever uses keys.
+1. **No long-lived CI credentials** — GitHub Actions assumes OIDC roles, one per job; only the
+   one-time `terraform/ci` bootstrap runs as an AWS user (see the map above).
 2. **Least-privilege IAM** — roles split by responsibility, scoped to their own resources.
 3. **Private object storage** — site buckets are never public; served only through CloudFront OAC.
 4. **Privacy-first telemetry** — geo from CloudFront headers only, no IPs stored, bounded retention (DynamoDB TTL).
@@ -20,12 +36,9 @@ provisions and manages the infrastructure that serves it and collects telemetry.
 
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
-> manual)**. `toggle-env.yml` + `scripts/toggle_cloudfront.sh` (manual dispatch) flip `Enabled`
-> on STAGING CloudFront distributions in place — component `site`|`metrics` × `disable|enable` —
-> the invalidation-style toggle: no terraform apply, nothing deleted. Staging only by design —
-> prod has no toggle role. Caveat: the flag lives outside terraform state — the next apply
-> restores it to enabled. Local dev applies against Ministack; real-AWS applies happen via the
-> workflow (OIDC) or the CLI.
+> manual)**. Local dev applies against Ministack; real-AWS applies happen via the workflow
+> (OIDC) or the CLI. Ops extras (`toggle-env`, `invalidate-cloudfront`) are documented in
+> [`.github/workflows/README.md`](../.github/workflows/README.md).
 
 > **On `pre-prod`:** the root README's deploy pipeline has a third stage, `pre-prod` — an
 > AWS-hosted mirror of the canonical site, used to verify a release before it ships to GitHub
@@ -46,13 +59,8 @@ That keeps the whole geo pipeline AWS-native: no GeoIP database, no license keys
 **no IP address ever stored** (the function only ever sees the headers CloudFront
 provides — the visitor's raw IP never reaches DynamoDB).
 
-```mermaid
-flowchart LR
-    S[Site browser] -->|POST /event| CF[CloudFront<br/>geo headers added]
-    CF -->|GET /summary · GET /health| GW[API Gateway HTTP API]
-    GW --> FN[Lambda collector]
-    FN -->|put_item / scan| DB[(DynamoDB<br/>PAY_PER_REQUEST + TTL)]
-```
+Pipeline map: the root README's [Metrics section](../README.md#metrics--visitor-analytics) shows
+the two-lambda flow (writer/reader) end to end.
 
 ## Resources
 
@@ -98,9 +106,9 @@ The beacon sends a tiny JSON body; the collector whitelists fields and enriches:
 
 ## Read path (`GET /summary`)
 
-The collector scans recent events and aggregates in memory: `total`,
-`by_country`, `by_page`, `by_lang`. This is fine at portfolio traffic levels
-(scan cap 5000). **Follow-up**: a counters table fed by DynamoDB Streams, so
+The collector scans recent events and aggregates in memory — `total`, `by_country`,
+`by_page`, `by_lang`, `by_ref`, `by_hour`/`by_day`, `by_device`, `by_type`, and
+`clicks`. Fine at portfolio traffic levels (scan cap 5000). **Follow-up**: a counters table fed by DynamoDB Streams, so
 `/summary` becomes O(1) point reads — no scan.
 
 ## Deploy
@@ -126,32 +134,15 @@ the same values from CI secrets at plan time; nothing is hardcoded in `*.tf`.
 credentials at all** — CloudFront is a public HTTPS edge; the browser beacon
 just `POST`s to it, allowed by CORS from the site origin.
 
-### Real AWS (production)
+### Applying to real AWS
 
-```sh
-cd terraform
-terraform init          # downloads aws + archive providers
-# Authenticate via your normal chain — see "Credentials & endpoints" above.
-#
-# Deployment values are injected, never hardcoded in *.tf. Only `environment`
-# and `allowed_origin` vary per env (CI: STAGING/PROD_ALLOWED_ORIGIN);
-# `project`, `aws_region` and `tags` are shared across environments
-# (CI: the PROJECT + AWS_REGION secrets). Export them once per environment as
-# TF_VAR_* — here, prod (main → staging would set environment=staging):
-export TF_VAR_project=my-portfolio
-export TF_VAR_aws_region=us-east-1
-export TF_VAR_environment=prod
-export TF_VAR_allowed_origin=https://mathewmusango.github.io
-export TF_VAR_tags='{"project":"my-portfolio","managed_by":"terraform","repo":"mathewmusango/my-portfolio"}'
-terraform plan -out=tf.plan     # values come from the environment — no -var flags
-terraform apply tf.plan
-terraform output api_url         # → https://<cloudfront>.cloudfront.net  ← beacon endpoint
-```
+Real-AWS applies run through GitHub Actions (`terraform.yml`): staging auto-applies on `main`;
+prod applies are manual dispatches — both via OIDC, no keys in workflows (see the auth model in
+[`.github/workflows/README.md`](../.github/workflows/README.md)). Manual CLI applies exist only
+for rare out-of-band work (e.g., a catch-up) and are documented in the project's **private
+runbook** — intentionally not in this public repo.
 
-- CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the
-  geo headers. **Cost:** PAY_PER_REQUEST table (no idle cost at low traffic) +
-  Lambda + CloudFront — low, usage-driven operating cost at portfolio scale;
-  CloudFront data transfer is the main line.
+CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the geo headers.
 
 ### Local dev (Ministack / LocalStack)
 
@@ -178,8 +169,9 @@ it has **no real edge locally** — `https://<dist>.cloudfront.net` only resolve
 on real AWS. So the local site beacon uses `api_gateway_url`
 (`http://<api-id>.execute-api.localhost:4566`) and geo fields read `"unknown"`.
 
-Then verify the pipeline (LocalStack's own `/health` shadows the API's `/health`
-route locally — test with `/event` and `/summary` instead):
+Then verify the pipeline (Ministack's own `/health` on 4566 shadows the API's
+`GET /health` locally — test with `/event` and `/summary` instead; `/health` is
+reachable on real AWS):
 
 ```sh
 # The origin gate is HTTPS-only — cleartext origins are always rejected. The
@@ -190,9 +182,6 @@ curl -X POST http://<api-id>.execute-api.localhost:4566/event \
   -d '{"type":"pageview","page":"/","lang":"en"}'
 curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://portfolio.mathewmusango.test:8000'
 ```
-
-> The API Gateway route `GET /health` is deployed but locally shadowed by
-> Ministack's own health check on port 4566 — reachable on real AWS.
 
 ### Backend (state)
 
@@ -215,8 +204,8 @@ terraform init \
 ```
 
 CI does the same automatically: bucket and lock names are derived from the
-`PROJECT` secret + the trigger-resolved environment (main → staging, `v*` tags →
-prod), region from the `AWS_REGION` secret — all secrets, nothing in the repo.
+shared project secret + the trigger-resolved environment (main → staging, `v*` tags →
+prod), region from the AWS-region secret — all secrets, nothing in the repo.
 Local dev points at the bucket via `AWS_ENDPOINT_URL` (Ministack) or real S3.
 
 ## Site integration
@@ -230,7 +219,7 @@ The backend is wired to the site:
   Empty endpoint = beacon no-ops (prod, until the real stack deploys). The dev
   container passes the host's `METRICS_ENDPOINT` through (`compose.yaml`).
   **Endpoint by environment:** local dev → `terraform output api_gateway_url`
-  (Ministack has no real edge); real AWS prod → `terraform output api_url`
+  (Ministack has no real edge); real AWS staging and prod → `terraform output api_url`
   (`https://<cloudfront>.cloudfront.net`) — the public edge the browser hits.
 - **Per-page counter** — `GET /views?page=<path>` exists (a Query on the
   `page-date-index` GSI — no full scan per page load) for per-page counts;
@@ -239,13 +228,8 @@ The backend is wired to the site:
   `GET /summary` and renders live totals + top pages; labels stay in the page
   markup so they translate per language. The "Visitor analytics" card is Live.
 
-```js
-// Beacon payload (what actually lands in DynamoDB)
-{ "type": "pageview", "page": "/my-portfolio/metrics/", "lang": "en" }
-```
-
-Uptime = external probes hitting `/health`; Performance = future
-`type: "webvitals"` events.
+Uptime = external probes hitting `/health`. `type: "webvitals"` events are already captured by
+the writer (`metric`/`value`, timings); surfacing them on the metrics page is future work.
 
 ## Security (Free-Tier defaults, opt-in hardening)
 
@@ -290,7 +274,6 @@ still applies.
   chain.
 - **Test vs prod**: local dev applies with `environment = "test"` (see
   `local.tfvars`) — resource names and the table are prefixed, so both can
-  coexist. **Terraform runs via GitHub Actions** — `.github/workflows/terraform.yml`
-  plans on any change to `terraform/**`; staging auto-applies on `main` pushes,
-  prod plans on `v*` tags and applies only via manual dispatch (OIDC —
-  `STAGING/PROD_TERRAFORM_ROLE_ARN` + `AWS_REGION` secrets).
+  coexist. **Terraform runs via GitHub Actions** — `terraform.yml` plans on
+  `terraform/**` changes; staging auto-applies on `main`, prod applies manually
+  (see the map above + `.github/workflows/README.md` for roles/secrets).
