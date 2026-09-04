@@ -3,9 +3,12 @@ name: "Deploy: Staging S3"
 # Deploys the built site to the STAGING S3 bucket on main-push Build success.
 # gh-pages and pre-prod S3 are tag-only (deploy-prod-pages.yml /
 # deploy-pre-prod-s3.yml) — never from main.
-# Always deploys when CI succeeds on main: the artifact is built by CI with the
-# per-environment site_url/metrics_endpoint, so a successful CI run always has
-# a fresh site to sync.
+# Skips sync + invalidation when the artifact is byte-identical to the last
+# staging deploy (content-hash marker .deploy-hash in the bucket). Content,
+# not commits, is compared — so a docs-only merge or multi-commit batch that
+# produces the same site skips cleanly and staging can never go stale.
+# Missing marker = first deploy. Revision-date embeds can make the hash differ
+# across day boundaries — then it deploys as usual (never stale, best-effort).
 on:
   workflow_run:
     workflows: ["Build"]
@@ -36,8 +39,25 @@ jobs:
           role-to-assume: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      - name: Compare artifact hash with last deployed content (.deploy-hash marker)
+        id: check
+        run: |
+          HASH="$(find site -type f | sort | xargs sha256sum | sha256sum | awk '{print $1}')"
+          OLD="$(aws s3 cp "s3://${{ secrets.PROJECT }}-staging-site/.deploy-hash" - 2>/dev/null || true)"
+          if [ -n "$OLD" ] && [ "$OLD" = "$HASH" ]; then
+            echo "Site content unchanged since the last staging deploy — skipping sync + invalidation."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Site content changed (or first deploy) — deploying."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Sync site to staging S3 (bucket root — site serves at /)
-        run: aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress --exclude ".deploy-hash"
+          printf '%s' "${{ steps.check.outputs.hash }}" | aws s3 cp - "s3://${{ secrets.PROJECT }}-staging-site/.deploy-hash"
 
       - name: Assume edge-invalidate role (least privilege)
         uses: aws-actions/configure-aws-credentials@v6
@@ -46,6 +66,7 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Invalidate staging CloudFront (lookup by comment convention)
+        if: steps.check.outputs.changed == 'true'
         run: |
           ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ secrets.PROJECT }}-staging-site'].Id" --output text)"
           if [ -n "$ID" ]; then
