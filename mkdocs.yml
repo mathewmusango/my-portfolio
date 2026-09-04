@@ -71,6 +71,10 @@ theme:
       linux: fontawesome/brands/linux
       google: fontawesome/brands/google
       automation: material/lightning-bolt
+      terraform: simple/terraform
+      github-actions: simple/githubactions
+      mkdocs: material/book-open-page-variant
+      iac: material/code-tags
   font:
     text: Inter
     code: Roboto Mono
@@ -289,6 +293,10 @@ extra:
     Linux: linux
     Google: google
     Automation: automation
+    Terraform: terraform
+    GitHub Actions: github-actions
+    MkDocs: mkdocs
+    IaC: iac
   social:
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/mathew-musango/
