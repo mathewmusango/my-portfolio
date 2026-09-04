@@ -1,21 +1,36 @@
-# Terraform — Site + Metrics stack (S3/CloudFront site · gated API Gateway/Lambda/DynamoDB)
+# Terraform — Portfolio Platform Infrastructure
 
-**Site + metrics (live):** the stack is the static site (private S3 bucket + CloudFront via
-OAC, serving at `/`) **plus** the metrics backend (API Gateway → Lambda → DynamoDB, geo
-CloudFront edge) — `terraform/modules/metrics/`. Both staging and prod run the full stack.
+Terraform defines the AWS infrastructure behind the portfolio product: **static-site delivery**
+(private S3 bucket + CloudFront via OAC, serving at `/`) and **privacy-first visitor analytics**
+(geo CloudFront edge → API Gateway → Lambda → DynamoDB) — `terraform/modules/metrics/`. Both
+staging and prod run the full stack.
 
-Privacy-first visitor analytics for `my-portfolio`, built as real infrastructure:
-**CloudFront → API Gateway (HTTP API) → Lambda → DynamoDB**, all defined in Terraform.
+It does **not** build the MkDocs application: GitHub Actions builds the site artifact; Terraform
+provisions and manages the infrastructure that serves it and collects telemetry.
 
-> Single repo (`mathewmusango/my-portfolio`). The `terraform.yml` workflow plans on
-> any change to `terraform/**`: **main → staging (auto-apply), `v*` tags → prod
-> (plan only — apply stays manual)**. `toggle-env.yml` + `scripts/toggle_cloudfront.sh` (manual
-> dispatch) flip `Enabled` on STAGING CloudFront distributions in place — component `site`|`metrics`
-> × `disable|enable` — the invalidation-style toggle: no terraform apply, nothing deleted. Staging
-> only by design — prod has no toggle role. Caveat: the flag lives outside terraform state — the next
-> apply restores it to
-> enabled. Local dev applies against Ministack; real-AWS
-> applies happen via the workflow (OIDC) or the CLI.
+## Design principles
+
+1. **No long-lived CI credentials** — GitHub Actions assumes OIDC roles, one per job. The one-time
+   `terraform/ci` bootstrap runs **outside GitHub Actions, as an AWS user** (its own IAM
+   permissions create the roles); no workflow ever uses keys.
+2. **Least-privilege IAM** — roles split by responsibility, scoped to their own resources.
+3. **Private object storage** — site buckets are never public; served only through CloudFront OAC.
+4. **Privacy-first telemetry** — geo from CloudFront headers only, no IPs stored, bounded retention (DynamoDB TTL).
+5. **Low operating overhead** — free-tier-leaning defaults; hardening (WAF / VPC) is opt-in.
+
+> Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
+> `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
+> manual)**. `toggle-env.yml` + `scripts/toggle_cloudfront.sh` (manual dispatch) flip `Enabled`
+> on STAGING CloudFront distributions in place — component `site`|`metrics` × `disable|enable` —
+> the invalidation-style toggle: no terraform apply, nothing deleted. Staging only by design —
+> prod has no toggle role. Caveat: the flag lives outside terraform state — the next apply
+> restores it to enabled. Local dev applies against Ministack; real-AWS applies happen via the
+> workflow (OIDC) or the CLI.
+
+> **On `pre-prod`:** the root README's deploy pipeline has a third stage, `pre-prod` — an
+> AWS-hosted mirror of the canonical site, used to verify a release before it ships to GitHub
+> Pages. It is not a separate Terraform environment: `pre-prod` runs on the same `prod` AWS
+> stack documented here (site + metrics), so nothing below changes for it.
 
 ## Why CloudFront?
 
@@ -52,7 +67,7 @@ flowchart LR
 | `aws_cloudfront_origin_request_policy.geo` | Whitelists geo + CORS + Content-Type headers |
 | `aws_wafv2_web_acl.metrics` (real AWS, opt-in) | Default-block; allows only the site Origin/Referer + IP rate limit — **off by default (Free Tier)**; the Lambda origin gate is the free equivalent |
 | VPC (real AWS, opt-in) | 2 private subnets, lambda SG (logs prefix-list egress), DynamoDB Gateway + Logs Interface endpoints — **off by default (Free Tier)**; the Logs interface endpoint is ~$7/mo |
-| IAM | **Least privilege**: writer role = `AWSLambdaBasicExecutionRole` + `dynamodb:PutItem` on the table only; reader role = `AWSLambdaBasicExecutionRole` + `dynamodb:Scan` on the table only; each function is invoked only by its own API route; + `AWSLambdaVPCAccessExecutionRole` when `enable_vpc` |
+| IAM | **Least privilege**: writer role = `AWSLambdaBasicExecutionRole` + `dynamodb:PutItem` on the table only; reader role = `AWSLambdaBasicExecutionRole` + `dynamodb:Scan` + `dynamodb:Query` (table + GSI); each function is invoked only by its own API route; + `AWSLambdaVPCAccessExecutionRole` when `enable_vpc` |
 
 ## Event schema (what's stored)
 
@@ -116,20 +131,27 @@ just `POST`s to it, allowed by CORS from the site origin.
 ```sh
 cd terraform
 terraform init          # downloads aws + archive providers
-export AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... AWS_DEFAULT_REGION=us-east-1
-# All deployment values are injected — no variable has a default (see variables.tf):
-terraform plan -out=tf.plan \
-  -var "project=my-portfolio" -var "environment=prod" \
-  -var "aws_region=us-east-1" -var "allowed_origin=https://mathewmusango.github.io" \
-  -var 'tags={"project":"my-portfolio","managed_by":"terraform","repo":"mathewmusango/my-portfolio"}'
+# Authenticate via your normal chain — see "Credentials & endpoints" above.
+#
+# Deployment values are injected, never hardcoded in *.tf. Only `environment`
+# and `allowed_origin` vary per env (CI: STAGING/PROD_ALLOWED_ORIGIN);
+# `project`, `aws_region` and `tags` are shared across environments
+# (CI: the PROJECT + AWS_REGION secrets). Export them once per environment as
+# TF_VAR_* — here, prod (main → staging would set environment=staging):
+export TF_VAR_project=my-portfolio
+export TF_VAR_aws_region=us-east-1
+export TF_VAR_environment=prod
+export TF_VAR_allowed_origin=https://mathewmusango.github.io
+export TF_VAR_tags='{"project":"my-portfolio","managed_by":"terraform","repo":"mathewmusango/my-portfolio"}'
+terraform plan -out=tf.plan     # values come from the environment — no -var flags
 terraform apply tf.plan
-terraform output api_url   # → https://<cloudfront>.cloudfront.net  ← beacon endpoint
+terraform output api_url         # → https://<cloudfront>.cloudfront.net  ← beacon endpoint
 ```
 
 - CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the
   geo headers. **Cost:** PAY_PER_REQUEST table (no idle cost at low traffic) +
-  Lambda + CloudFront — effectively pennies at portfolio scale; CloudFront data
-  transfer is the main line.
+  Lambda + CloudFront — low, usage-driven operating cost at portfolio scale;
+  CloudFront data transfer is the main line.
 
 ### Local dev (Ministack / LocalStack)
 
@@ -181,11 +203,14 @@ buckets (`<project>-<env>-tfstate` + `<project>-<env>-tfstate-lock`) are created
 by the `terraform/ci` module (`scripts/bootstrap_aws.sh`). Example init:
 
 ```sh
+# Bucket/lock names derive from <project>-<env> — set the shared values once:
+export PROJECT=my-portfolio
+export ENVIRONMENT=prod        # main → staging · v* tags → prod
 terraform init \
-  -backend-config="bucket=my-portfolio-prod-tfstate" \
+  -backend-config="bucket=${PROJECT}-${ENVIRONMENT}-tfstate" \
   -backend-config="key=metrics/terraform.tfstate" \
   -backend-config="region=us-east-1" \
-  -backend-config="dynamodb_table=my-portfolio-prod-tfstate-lock" \
+  -backend-config="dynamodb_table=${PROJECT}-${ENVIRONMENT}-tfstate-lock" \
   -backend-config="encrypt=true"
 ```
 
@@ -194,7 +219,7 @@ CI does the same automatically: bucket and lock names are derived from the
 prod), region from the `AWS_REGION` secret — all secrets, nothing in the repo.
 Local dev points at the bucket via `AWS_ENDPOINT_URL` (Ministack) or real S3.
 
-## Site integration (done on this branch)
+## Site integration
 
 The backend is wired to the site:
 
@@ -222,31 +247,34 @@ The backend is wired to the site:
 Uptime = external probes hitting `/health`; Performance = future
 `type: "webvitals"` events.
 
-## Security (Free-Tier default, opt-in hardening)
+## Security (Free-Tier defaults, opt-in hardening)
 
-**Only the site may reach the API** — enforced at the application layer, free:
+**The API is public by design, restricted to requests presenting the configured site origin** —
+an application-layer origin gate, enforced for free. It is **not authentication** — any client
+can set an `Origin`/`Referer` header; optional WAF / rate limiting adds edge protection.
 
 1. **Lambda origin gate** (all environments, incl. local): the writer and reader
    reject any request whose `Origin`/`Referer` host doesn't equal
    `allowed_origin` — including requests with **no** header at all (403).
    `/health` is exempt (uptime probes carry no Origin/Referer and return no data).
 2. **Least-privilege IAM**: writer = `dynamodb:PutItem` on the table only;
-   reader = `dynamodb:Scan` only; each function is invoked only by its own
-   API route.
+   reader = `dynamodb:Scan` + `dynamodb:Query` (table + GSI — per-page `/views`);
+   each function is invoked only by its own API route.
 
 **Opt-in hardening (outside the Free Tier — ~$14/mo total):**
 
-- **WAF on the CloudFront edge** (`enable_waf`): default *block*; only requests
-  whose `Origin`/`Referer` contains the site's host (derived from
-  `allowed_origin` — the WAF search string is the module's first allowed host)
-  are allowed, plus an IP rate-limit rule (300 req / 5 min). ~$7/mo.
+- **WAF on the CloudFront edge** (`enable_waf`): request filtering on the configured site origin
+  (derived from `allowed_origin` — the WAF search string is the module's first allowed host) plus
+  an IP rate-limit rule (300 req / 5 min), default *block*. Origin/Referer filtering here is an
+  **abuse-control measure, not authentication**. ~$7/mo.
 - **Private VPC** (`enable_vpc`): lambdas with **no internet path** — egress only
   to the DynamoDB **Gateway** (free) and CloudWatch Logs **Interface** endpoints.
   The Logs endpoint is ~$7/mo; cold starts gain ~0.5–1 s from the ENI attach.
 
-**Cost note (real AWS):** the Free-Tier default (both off) costs ~$0 fixed —
-CloudFront, API Gateway, Lambda, and DynamoDB (always-free tier) cover the
-usage. WAF + the Logs endpoint are the only always-billable items.
+**Cost note (real AWS):** designed for very low operating cost at portfolio-scale traffic — the
+defaults (both opt-ins off) minimize fixed-cost services: CloudFront, API Gateway, Lambda, and
+DynamoDB free-tier usage cover typical traffic. WAF and the Logs interface endpoint are the only
+always-billable components.
 
 **Local (Ministack):** `local.tfvars` sets `enable_vpc = false` and
 `enable_waf = false` — matching the Free-Tier default; the lambda origin gate
