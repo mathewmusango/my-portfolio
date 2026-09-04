@@ -195,6 +195,9 @@ flowchart LR
   syncs the artifact to the **staging S3 bucket** (`<project>-staging-site`) with the S3-only
   deploy role, then invalidates CloudFront with the edge-invalidate role (least privilege —
   `STAGING_DEPLOY_ROLE_ARN` + `STAGING_INVALIDATE_ROLE_ARN`). The `staging` environment.
+  **Content-hash skip:** sync + invalidation are skipped when the artifact is byte-identical to
+  the last staging deploy (marker `.deploy-hash` in the bucket) — content, not commits, is
+  compared, so docs-only merges skip cleanly and multi-commit batches can't leave staging stale.
 - **Deploy pre-prod s3** (`.github/workflows/deploy-pre-prod-s3.yml`) — on CI success for **`v*` tags only**:
   syncs the artifact to the **prod S3 bucket** (`<project>-prod-site`) + CloudFront
   invalidation (OIDC `PROD_DEPLOY_ROLE_ARN` + `PROD_INVALIDATE_ROLE_ARN`) — the **`pre-prod`**
