@@ -202,7 +202,7 @@ owes the full implementation (resources, event schema, security, local dev):
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — process: branching, required-checks table, issues/labels, releases.
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting.
 - [`CHANGELOG.md`](CHANGELOG.md) — release history.
-- [`rulesets/`](rulesets/) — branch/tag rulesets as code + their verification records (`main.md` · `tags.md`).
+- [`rulesets/`](rulesets/) — branch/tag rulesets: [`README`](rulesets/README.md) (what they do) · `main.json`/`tags.json` (as-code configs) · `main.md`/`tags.md` (verification records).
 
 ## License
 
