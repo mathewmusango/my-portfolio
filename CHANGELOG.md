@@ -11,10 +11,11 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes.
 
-**Unreleased section:** the changelog always carries an `## [Unreleased]`
-section at the top once meaningful changes are introduced via issues/PRs; it is
-folded into the version entry at release time and a fresh `## [Unreleased]`
-starts immediately after.
+**Unreleased section:** meaningful changes land under `## [Unreleased]` as they
+are introduced via issues/PRs (a new section is opened by the first change of a
+cycle). A release **renames** that section to its version (`## [X.Y.Z] - date`)
+and adds no empty successor — the next cycle's `## [Unreleased]` is opened by
+its first landed change.
 
 ## [Unreleased]
 
