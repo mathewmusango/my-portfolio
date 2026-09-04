@@ -161,8 +161,8 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
   to `main` and `v*` tags; uploads the built `site/` as an artifact.
 - **Checks** — one workflow per surface (`checks-{shell,python,js,terraform,yml}.yml`), gated on
   PRs by relevance: untouched surfaces **skip and report success**, so the required checks never
-  block unrelated PRs. The same checks run locally (`check-compose.yaml` +
-  `scripts/check_changed.sh`).
+  block unrelated PRs. The same checks run locally (`scripts/check_local.sh` — changed-files by
+  default, `--full` for whole-repo, mirroring the workflows exactly).
 - **Deploy** — `workflow_run` on Build success: `main` → **staging** (S3 + CloudFront), `v*` tags
   → **pre-prod** (AWS mirror) → gated **prod** (GitHub Pages). Staging **skips** when the
   artifact is byte-identical to the last deploy (content-hash marker); prod runs in the `prod`

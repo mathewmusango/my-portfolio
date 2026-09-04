@@ -40,8 +40,10 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 - **Required checks are the job names** — see the table in `CONTRIBUTING.md` (the `main`
   ruleset enforces them).
 - **Local parity:** `check-compose.yaml` mirrors the workflows exactly (one service per check,
-  identical commands + tool images); `scripts/check_changed.sh` runs changed-files-only
-  (pre-commit friendly: `git config core.hooksPath .githooks`). The GitHub workflows remain the
+  identical commands + tool images). `scripts/check_local.sh` is the one-entry driver — default
+  runs every surface whose files changed (diff-gated, mirroring the CI skip-model); `--full` runs
+  all surfaces on the whole repo. `scripts/check_changed.sh` is the pre-commit fast path
+  (changed-files only: `git config core.hooksPath .githooks`). The GitHub workflows remain the
   authoritative gate.
 
 ## Deploy — `workflow_run` on Build success
