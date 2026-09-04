@@ -17,7 +17,7 @@ cycle). A release **renames** that section to its version (`## [X.Y.Z] - date`)
 and adds no empty successor — the next cycle's `## [Unreleased]` is opened by
 its first landed change.
 
-## [Unreleased]
+## [3.3.0] - 2026-09-04
 
 ### Added
 - **"The Platform Behind This Site" project page** — first entry under Projects (en/es/zh): prose-first case study of the platform (architecture, delivery model, CI/CD, governance, security, real incidents) with GitHub references (#49).
