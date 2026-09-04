@@ -6,17 +6,11 @@ icon: material/timeline-clock
 
 [查看所有发布 :material-rocket-launch:](https://github.com/mathewmusango/my-portfolio/releases){ .md-button .md-button--primary }
 
-| 版本 | 日期 | 亮点 | 链接 |
-|---|---|---|---|
-| [2.5.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.5.0) | 2026-08-25 | 词汇表悬停提示、可排序版本时间线、首页 CTA 按钮、错误页面按钮 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.5.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.5.0/sbom.cdx.json) |
-| [2.4.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.4.0) | 2026-08-25 | 站点结构页面（mermaid 站点图）、站点图谱子菜单、面包屑、字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.4.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.4.0/sbom.cdx.json) |
-| [2.2.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.2.0) | 2026-08-21 | i18n 文件夹结构、本地化错误页面、真实证书徽标、JS/CSS 压缩、自托管字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.2.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.2.0/sbom.cdx.json) |
-| [2.1.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.1.0) | 2026-08-13 | 中文（简体）本地化、中文简历 PDF | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.1.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.1.0/sbom.cdx.json) |
-| [2.0.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.0.0) | 2026-08-13 | 完整西班牙语本地化、多语言简历、内容更新、新字体 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v2.0.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v2.0.0/sbom.cdx.json) |
-| [1.4.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.4.0) | 2026-08-13 | "远离键盘"板块、联系页面改版、字体更新 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.4.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v1.4.0/sbom.cdx.json) |
-| [1.3.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.3.0) | 2026-08-10 | 搜索改进、HTML 压缩、页脚、仓库整理 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.3.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v1.3.0/sbom.cdx.json) |
-| [1.2.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.2.0) | 2026-08-10 | 每次发布附带 CycloneDX SBOM | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.2.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v1.2.0/sbom.cdx.json) |
-| [1.1.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.1.0) | 2026-08-10 | 页头仓库按钮、页面日期、贡献者信息、固定依赖 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.1.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v1.1.0/sbom.cdx.json) |
-| [1.0.0](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.0.0) | 2026-08-09 | 初始发布：完整云端简历网站、CI/CD、发布 | [发布](https://github.com/mathewmusango/my-portfolio/releases/tag/v1.0.0) · [SBOM](https://github.com/mathewmusango/my-portfolio/releases/download/v1.0.0/sbom.cdx.json) |
+| 版本 | 日期 | 链接 |
+|---|---|---|
+{{releases_rows}}
 
-> 版本遵循[语义化版本控制](https://semver.org/)。最新发布始终是当前网站——不会向访问者提供存档页面；历史记录保存在此处和 git 仓库中。
+> 版本遵循[语义化版本](https://semver.org/)。表格行在构建时根据
+> [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md)
+> 自动生成 — 最新发布始终排在首位。最新发布始终是当前站点 — 访客不会看到归档
+> 页面；历史记录保存在此处和 git 仓库中。

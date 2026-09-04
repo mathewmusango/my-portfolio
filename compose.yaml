@@ -11,6 +11,7 @@ services:
       - ./docs:/app/docs
       - ./overrides:/app/overrides
       - ./scripts:/app/scripts
+      - ./CHANGELOG.md:/app/CHANGELOG.md:ro
       - ./certs:/app/certs:ro
       - ./.git:/app/.git:ro
     # Metrics beacon endpoint (host env → container; empty = beacon disabled)

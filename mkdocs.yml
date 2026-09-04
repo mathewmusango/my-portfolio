@@ -123,6 +123,7 @@ exclude_docs: |
 # (scripts/site_metrics_hook.py replaces {{pages_*}}/{{pct_*}} tokens).
 hooks:
   - scripts/site_metrics_hook.py
+  - scripts/releases_hook.py
 
 # Custom error pages are built but intentionally not in the nav
 not_in_nav: |
