@@ -6,12 +6,26 @@ hide:
 
 # Site Atlas
 
-This site iterates in small, release-driven steps. Every version is tagged and
-released with its source archive and software bill of materials (SBOM), and the
-full per-version notes live in the [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md).
+The operating manual for this site — the repository behind it, how the platform
+works, and how the site is structured and shipped.
 
-!!! note
-    Every release ships a source archive and a CycloneDX SBOM generated from the pinned dependencies.
+## Latest releases
+
+The most recent releases, generated from the
+[CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md)
+at build time — the latest is always the current site. See the
+[full timeline](releases.md) for the complete history.
+
+| Version | Date | Links |
+|---|---|---|
+{{recent_releases}}
+
+## What's here
+
+- **Platform Architecture** — the delivery, metrics, and Terraform control-plane diagrams.
+- **Release Timeline** — every tagged version, with its release and SBOM.
+- **Site Structure** — an interactive map of the site's pages and the analytics stack behind them.
+- **Tags** — browse the site by topic.
 
 ## The Repository {#the-repository}
 

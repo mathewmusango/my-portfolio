@@ -1,24 +1,25 @@
-"""MkDocs build hook — Release Timeline rows always current.
+"""MkDocs build hook — release rows always current, in two places.
 
-The Release Timeline page (atlas/releases.md, all locales) shows every tagged
-release. Instead of hand-maintaining rows per locale (they drifted — 3.x was
-never added), this hook parses CHANGELOG.md — the authoritative, tag-riding
-source — and replaces a {{releases_rows}} token with the table body, newest
-first:
+Release data is generated from CHANGELOG.md — the authoritative, tag-riding
+source — instead of hand-maintained tables (they drifted; 3.x was never added).
+Two tokens, both newest-first:
 
-    | [v3.2.0](…/releases/tag/v3.2.0) | 2026-09-01 | [Release](…) · [SBOM](…) |
-    …
+    {{releases_rows}}     full history  → atlas/releases.md (Release Timeline)
+    {{recent_releases}}   last 10 rows  → atlas/index.md   (Site Atlas landing)
 
-The column *headers* stay authored in each locale's page (Version/Fecha/版本 …);
-the row data (versions, dates, links) is language-neutral, so every locale gets
-the identical, always-current body. Runs per locale build via mkdocs-static-i18n
-(the CHANGELOG lives at the repo root, above docs_dir).
+Row data (versions, dates, links) is language-neutral, so every locale gets the
+identical, always-current body; column *headers* stay authored per locale. Runs
+per locale build via mkdocs-static-i18n (the CHANGELOG lives next to
+mkdocs.yml, at the repo root).
 """
 
 import re
 from pathlib import Path
 
 RELEASE_RE = re.compile(r"^## \[([^\]]+)\] - (\d{4}-\d{2}-\d{2})$", re.MULTILINE)
+
+RECENT_LIMIT = 10
+CHANGELOG_NAME = "CHANGELOG.md"
 
 
 def _releases_from_changelog(changelog_path):
@@ -41,17 +42,28 @@ def _row(version, date):
     )
 
 
+def _body(releases, limit=None):
+    rows = releases if limit is None else releases[:limit]
+    return "\n".join(_row(version, date) for version, date in rows)
+
+
 def on_page_markdown(markdown, page, config, files):
     src = page.file.src_path.replace("\\", "/")
-    if not src.endswith("/atlas/releases.md") or "{{releases_rows}}" not in markdown:
+    if not src.endswith("/atlas/index.md") and not src.endswith("/atlas/releases.md"):
         return markdown
 
-    # CHANGELOG.md always sits next to mkdocs.yml (repo root in CI, /app in the
-    # dev container) — more reliable than deriving from docs_dir.
-    changelog = Path(config["config_file_path"]).parent / "CHANGELOG.md"
+    has_full = "{{releases_rows}}" in markdown
+    has_recent = "{{recent_releases}}" in markdown
+    if not has_full and not has_recent:
+        return markdown
+
+    changelog = Path(config["config_file_path"]).parent / CHANGELOG_NAME
     releases = _releases_from_changelog(changelog)
     if not releases:
         return markdown
 
-    body = "\n".join(_row(version, date) for version, date in releases)
-    return markdown.replace("{{releases_rows}}", body)
+    if has_full:
+        markdown = markdown.replace("{{releases_rows}}", _body(releases))
+    if has_recent:
+        markdown = markdown.replace("{{recent_releases}}", _body(releases, RECENT_LIMIT))
+    return markdown
