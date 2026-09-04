@@ -11,6 +11,14 @@
 # per-commit results). All scans are extension-wide across the whole repo
 # (site/ + .git excluded) so NEW files in new locations are never missed.
 # First run pulls the tool images (network).
+#
+# Compose gotchas handled here:
+#   - "$f" must be written "$$f" — compose interpolates $VAR from the host env
+#     at parse time, which emptied loop variables and silently skipped every
+#     file. Image ENTRYPOINTs differ per tool: some run the tool directly
+#     (ruff, actionlint, terraform, tflint), some wrap it (checkov's
+#     /entrypoint.sh already execs checkov). Commands below match each image's
+#     entrypoint so the tool is invoked exactly once.
 name: repo_check
 services:
   shell:
@@ -21,69 +29,81 @@ services:
     command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.sh' -o -path './.githooks/*' \\) -print0 2>/dev/null | xargs -0 -r shellcheck -S warning"]
 
   python:
-    # ruff-action@v1 runs `ruff check .` — same command here (the action only
+    # ruff-action@v3 runs `ruff check .` — same command here (the action only
     # adds --output-format github for annotations, meaningless locally).
+    # --no-cache: the repo is mounted read-only and ruff would otherwise try to
+    # write .ruff_cache/ into it.
     image: ghcr.io/astral-sh/ruff:latest
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["check", "."]
+    command: ["check", ".", "--no-cache"]
 
   yaml:
-    # raven-actions/actionlint@v2 runs `actionlint -verbose` (+ matcher /
-    # embedded shellcheck) — -no-color matches the workflow's non-TTY output.
-    image: ghcr.io/rhysd/actionlint:latest
+    # raven-actions/actionlint@v2 runs `actionlint` — docker.io mirror (the
+    # ghcr.io registry returned HTTP 403 on this box). -no-color matches the
+    # workflow's non-TTY output.
+    image: docker.io/rhysd/actionlint:latest
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["-verbose", "-no-color"]
+    command: ["-no-color"]
 
   yaml-syntax:
     image: docker.io/library/ruby:alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.yml' -o -name '*.yaml' \\) -print 2>/dev/null | while IFS= read -r f; do ruby -ryaml -e \"YAML.load_file(ARGV[0])\" \"$f\"; echo \"ok: $f\"; done"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f \\( -name '*.yml' -o -name '*.yaml' \\) -print 2>/dev/null | while IFS= read -r f; do ruby -ryaml -e \"YAML.load_file(ARGV[0])\" \"$$f\" || { echo \"FAILED: $$f\"; exit 1; }; done || exit 1; echo 'yaml-syntax: all files parsed'"]
 
   js:
     image: docker.io/library/node:alpine
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do node --check \"$f\"; echo \"ok: $f\"; done"]
+    command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do node --check \"$$f\" || { echo \"FAILED: $$f\"; exit 1; }; done || exit 1; echo 'js: all files syntax-checked'"]
 
   terraform-fmt:
     # checks-terraform fmt job: terraform fmt -check -recursive -diff terraform/
-    image: hashicorp/terraform:1.15.9
+    # The image ENTRYPOINT is /bin/terraform — args only, no leading tool name.
+    image: docker.io/hashicorp/terraform:1.15.9
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["terraform", "fmt", "-check", "-recursive", "-diff", "terraform/"]
+    command: ["fmt", "-check", "-recursive", "-diff", "terraform/"]
 
   terraform-validate:
     # checks-terraform validate job (all three roots). TF_DATA_DIR keeps init's
     # .terraform out of the read-only mount; -lockfile=readonly uses the
-    # committed lockfiles (all three roots now have one).
-    image: hashicorp/terraform:1.15.9
+    # committed lockfiles (all three roots now have one). The image ENTRYPOINT
+    # is /bin/terraform, so the sh -c wrapper runs terraform from PATH.
+    image: docker.io/hashicorp/terraform:1.15.9
+    entrypoint: ["/bin/sh", "-c"]
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics validate -no-color"]
+    command: ["TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics validate -no-color"]
 
   terraform-lint:
-    # checks-terraform lint job: tflint --init, then recursive on terraform/ + a
-    # plain run on terraform/ci, both with the root .tflint.hcl config.
+    # checks-terraform lint job: tflint --init (at the repo root, where
+    # .tflint.hcl auto-loads), then recursive on terraform/ + a plain run on
+    # terraform/ci, both with the root .tflint.hcl config. The image ENTRYPOINT
+    # is tflint, so sh -c runs it from PATH; init writes its plugin cache under
+    # $HOME (container FS), never into the read-only repo mount.
     image: ghcr.io/terraform-linters/tflint:latest
+    entrypoint: ["/bin/sh", "-c"]
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["sh", "-c", "cd terraform && tflint --init && tflint --recursive --format compact --config /repo/.tflint.hcl && cd ci && tflint --format compact --config /repo/.tflint.hcl"]
+    command: ["tflint --init && cd terraform && tflint --recursive --format compact --config /repo/.tflint.hcl && cd ci && tflint --format compact --config /repo/.tflint.hcl"]
 
   terraform-security:
     # checks-terraform security job: checkov-action@v12 (image 3.3.15) with
-    # quiet + soft_fail (informational until the audit backlog lands).
+    # quiet + soft_fail (informational until the audit backlog lands). The
+    # image ENTRYPOINT /entrypoint.sh already execs `checkov "$@"` — args only,
+    # no leading tool name.
     image: ghcr.io/bridgecrewio/checkov:3.3.15
     working_dir: /repo
     volumes:
       - .:/repo:ro
-    command: ["checkov", "-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]
+    command: ["-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]
