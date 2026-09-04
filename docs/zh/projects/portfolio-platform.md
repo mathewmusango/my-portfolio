@@ -67,7 +67,7 @@ OIDC 角色。**Bootstrap 是唯一带外步骤** — 一个 GitHub Actions 之�
 用自己的 IAM 权限创建它们；任何工作流都不会使用密钥。实现细节见
 [`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }。
 
-## 交付模型
+## 交付模型 {#delivery-model}
 
 两条交付平面，各有自己的闸门：
 
@@ -105,7 +105,7 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
    （[skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }）：
    未触及的表面**跳过并报告成功**，因此十个必需检查永远不会阻塞无关 PR。
 3. **部署** — Build 成功后 `workflow_run`：`main` → staging，`v*` → pre-prod +
-   带闸门的 prod（见[交付模型](#交付模型)）。
+   带闸门的 prod（见[交付模型](#delivery-model)）。
 4. **发布与基础设施** — `v*` 标签创建带 CycloneDX SBOM 的 GitHub Release；每次
    基础设施变更 Terraform 都会 plan（apply 保持手动）；`toggle-env` /
    `invalidate-cloudfront` 是手动运维附加项。

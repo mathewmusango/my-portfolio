@@ -80,7 +80,7 @@ crea con sus propios permisos IAM; ningún workflow usa jamás claves. Detalle d
 implementación:
 [`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }.
 
-## Modelo de entrega
+## Modelo de entrega {#delivery-model}
 
 Dos planos de entrega, cada uno con su propia puerta:
 
@@ -122,7 +122,7 @@ Un cambio se publica en cuatro fases — cada una documentada en
    las superficies no tocadas **se omiten y reportan éxito**, así las diez
    verificaciones obligatorias nunca bloquean un PR no relacionado.
 3. **Deploy** — `workflow_run` al éxito del Build: `main` → staging, `v*` →
-   pre-prod + prod con puerta (ver [Modelo de entrega](#modelo-de-entrega)).
+   pre-prod + prod con puerta (ver [Modelo de entrega](#delivery-model)).
 4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
    CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo
    manual); `toggle-env` / `invalidate-cloudfront` son extras operativos manuales.

@@ -75,7 +75,7 @@ out-of-band step** — an AWS user, outside GitHub Actions, creates them with it
 own IAM permissions; no workflow ever uses keys. Implementation detail:
 [`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }.
 
-## Delivery model
+## Delivery model {#delivery-model}
 
 Two delivery planes, each with its own gate:
 
