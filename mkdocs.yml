@@ -18,6 +18,7 @@ nav:
       - Technical Expertise: skills.md
       - Projects:
           - Projects: projects/index.md
+          - The Platform Behind This Site: projects/portfolio-platform.md
           - Cloud & Migrations: projects/cloud-migrations.md
           - Observability & Monitoring: projects/observability.md
           - Security & Resilience: projects/security-resilience.md
@@ -31,9 +32,9 @@ nav:
       - Visitor Analytics: metrics/analytics.md
   - Site Atlas:
       - Site Atlas: atlas/index.md
-      - Release Timeline: atlas/releases.md
-      - Tags: atlas/tags.md
+      - Platform Architecture: atlas/platform-architecture.md
       - Site Structure: atlas/structure.md
+      - Tags: atlas/tags.md
 
 theme:
   name: material
@@ -71,6 +72,10 @@ theme:
       linux: fontawesome/brands/linux
       google: fontawesome/brands/google
       automation: material/lightning-bolt
+      terraform: simple/terraform
+      github-actions: simple/githubactions
+      mkdocs: material/book-open-page-variant
+      iac: material/code-tags
   font:
     text: Inter
     code: Roboto Mono
@@ -117,10 +122,13 @@ exclude_docs: |
 # (scripts/site_metrics_hook.py replaces {{pages_*}}/{{pct_*}} tokens).
 hooks:
   - scripts/site_metrics_hook.py
+  - scripts/releases_hook.py
 
-# Custom error pages are built but intentionally not in the nav
+# Custom error pages + the full release archive are built but intentionally
+# not in the nav (the archive is reached from the Site Atlas landing page).
 not_in_nav: |
   500.md
+  atlas/releases.md
 
 markdown_extensions:
   - abbr
@@ -180,6 +188,8 @@ plugins:
             Security & Resilience: Seguridad y Resiliencia
             Platform Engineering: Ingeniería de Plataformas
             Knowledge & Collaboration: Conocimiento y Colaboración
+            The Platform Behind This Site: La Plataforma Detrás de Este Sitio
+            Platform Architecture: Arquitectura de la Plataforma
         - locale: zh
           name: 中文
           nav_translations:
@@ -202,6 +212,8 @@ plugins:
             Security & Resilience: 安全与弹性
             Platform Engineering: 平台工程
             Knowledge & Collaboration: 知识与协作
+            The Platform Behind This Site: 本站背后的平台
+            Platform Architecture: 平台架构
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
       lang:
@@ -289,6 +301,10 @@ extra:
     Linux: linux
     Google: google
     Automation: automation
+    Terraform: terraform
+    GitHub Actions: github-actions
+    MkDocs: mkdocs
+    IaC: iac
   social:
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/mathew-musango/

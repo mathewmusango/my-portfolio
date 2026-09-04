@@ -11,6 +11,16 @@ snapshots (tagged source + site.zip + SBOM); the live site updates on every
 push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
 for fixes only, major for breaking changes.
 
+**Unreleased section:** the changelog always carries an `## [Unreleased]`
+section at the top once meaningful changes are introduced via issues/PRs; it is
+folded into the version entry at release time and a fresh `## [Unreleased]`
+starts immediately after.
+
+## [Unreleased]
+
+### Added
+- **New "The Platform Behind This Site" project page** — `portfolio-platform` as the first entry under Projects; documents the platform (architecture, delivery model, CI/CD, governance, security, incidents) with GitHub references. English first (es/zh follow).
+
 ## [3.2.0] - 2026-09-01
 
 ### Added

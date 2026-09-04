@@ -25,15 +25,22 @@
     P3: { en: "Security & Resilience", es: "Seguridad y Resiliencia", zh: "安全与弹性" },
     P4: { en: "Platform Engineering", es: "Ingeniería de Plataformas", zh: "平台工程" },
     P5: { en: "Knowledge & Collaboration", es: "Conocimiento y Colaboración", zh: "知识与协作" },
+    P6: { en: "The Platform Behind This Site", es: "La plataforma detrás de este sitio", zh: "本站背后的平台" },
     CERTS: { en: "Certifications", es: "Certificaciones", zh: "认证" },
     RESUME: { en: "Resume", es: "Currículum", zh: "简历" },
     CONTACT: { en: "Contact", es: "Contacto", zh: "联系我" },
     METRICS: { en: "Site Metrics", es: "Métricas del sitio", zh: "站点指标" },
+    VISITOR: { en: "Visitor Analytics", es: "Análisis de visitas", zh: "访客分析" },
     CF: { en: "Amazon CloudFront", es: "Amazon CloudFront", zh: "Amazon CloudFront" },
     API: { en: "API Gateway", es: "API Gateway", zh: "API 网关" },
     W: { en: "Lambda · writer", es: "Lambda · escritor", zh: "Lambda · 写入" },
     R: { en: "Lambda · reader", es: "Lambda · lector", zh: "Lambda · 读取" },
     DDB: { en: "Amazon DynamoDB", es: "Amazon DynamoDB", zh: "Amazon DynamoDB" },
+    AWS_STACK: {
+      en: "AWS — metrics stack",
+      es: "AWS — pila de métricas",
+      zh: "AWS — 指标栈",
+    },
     ATLAS: { en: "Site Atlas", es: "Atlas del sitio", zh: "站点图谱" },
     A2: { en: "Release Timeline", es: "Cronología de Versiones", zh: "版本时间线" },
     A3: { en: "Tags", es: "Etiquetas", zh: "标签" },
@@ -51,6 +58,7 @@
     ["PROJ", "P3"],
     ["PROJ", "P4"],
     ["PROJ", "P5"],
+    ["PROJ", "P6"],
     ["HOME", "CERTS"],
     ["HOME", "RESUME"],
     ["HOME", "CONTACT"],
@@ -59,8 +67,10 @@
     ["ATLAS", "A2"],
     ["ATLAS", "A3"],
     ["ATLAS", "A4"],
-    // The analytics stack behind Site Metrics — connected into the same diagram.
-    ["METRICS", "CF"],
+    // Site Metrics submenu — default page + Visitor Analytics page — and the
+    // analytics stack behind them, connected into the same diagram.
+    ["METRICS", "VISITOR"],
+    ["VISITOR", "CF"],
     ["CF", "API"],
     ["API", "W"],
     ["API", "R"],
@@ -80,10 +90,12 @@
     P3: "/my-portfolio/projects/security-resilience/",
     P4: "/my-portfolio/projects/platform-engineering/",
     P5: "/my-portfolio/projects/knowledge-collaboration/",
+    P6: "/my-portfolio/projects/portfolio-platform/",
     CERTS: "/my-portfolio/certifications/",
     RESUME: "/my-portfolio/resume/",
     CONTACT: "/my-portfolio/contact/",
     METRICS: "/my-portfolio/metrics/",
+    VISITOR: "/my-portfolio/metrics/analytics/",
     CF: "/my-portfolio/metrics/analytics/",
     API: "/my-portfolio/metrics/",
     W: "/my-portfolio/metrics/",
@@ -113,10 +125,24 @@
     return LABELS[id][lang] || LABELS[id].en;
   }
 
-  // Localized mermaid source — root first, then each edge with its target label.
-  var SOURCE = ["graph LR", '    ROOT["' + label("ROOT") + '"]'];
+  // Localized mermaid source. Nodes are declared explicitly so the AWS metrics
+  // backend (CloudFront → API Gateway → lambdas → DynamoDB) can sit inside its
+  // own subgraph — it runs on AWS while every page above it lives on GitHub
+  // Pages. Edges are emitted bare (labels already declared) so subgraph
+  // membership is unambiguous.
+  var AWS_INFRA = ["CF", "API", "W", "R", "DDB"];
+  var SOURCE = ["graph LR"];
+  Object.keys(URLS).forEach(function (id) {
+    if (AWS_INFRA.indexOf(id) !== -1) return;
+    SOURCE.push('    ' + id + '["' + label(id) + '"]');
+  });
+  SOURCE.push('    subgraph AWS["' + label("AWS_STACK") + '"]');
+  AWS_INFRA.forEach(function (id) {
+    SOURCE.push('    ' + id + '["' + label(id) + '"]');
+  });
+  SOURCE.push("    end");
   EDGES.forEach(function (edge) {
-    SOURCE.push("    " + edge[0] + " --> " + edge[1] + '["' + label(edge[1]) + '"]');
+    SOURCE.push("    " + edge[0] + " --> " + edge[1]);
   });
   SOURCE.push("");
   SOURCE = SOURCE.join("\n");
@@ -247,6 +273,21 @@
           lineColor: "#4db6ac",
           labelColor: "#004d40",
         };
+    // The AWS metrics-stack subgraph gets its own fill — a distinct infra
+    // plane from the GitHub-hosted pages above it. Subtle contrast, theme-aware.
+    var cluster = dark
+      ? { fill: "#123c46", border: "#00695c" }
+      : { fill: "#c8e6e0", border: "#00897b" };
+    // Subgraph styling is appended to the source (mermaid style directive).
+    SOURCE =
+      SOURCE.replace(/\n$/, "") +
+      "\n    style AWS fill:" +
+      cluster.fill +
+      ",stroke:" +
+      cluster.border +
+      ",color:" +
+      palette.primaryTextColor +
+      "\n";
 
     function showError(err) {
       console.error("site-map render failed", err);

@@ -11,6 +11,7 @@ Selected projects across cloud, observability, security, and platform engineerin
 
 <div class="proj-index" markdown>
 
+- [The Platform Behind This Site](portfolio-platform.md) — the engineering platform behind this very site: built, checked, and deployed to production standards.
 - [Cloud & Migrations](cloud-migrations.md) — enterprise migration to AWS with a real DR story.
 - [Observability & Monitoring](observability.md) — unified metrics, logs, and traces across 200+ servers.
 - [Security & Resilience](security-resilience.md) — PCI-DSS compliance, hardening, and tested disaster recovery.
