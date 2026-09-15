@@ -111,7 +111,7 @@ A change ships through four phases — each documented in
    imbalance fail the build), `pip-audit`, and a built-site artifact on every
    push/PR to `main` and every `v*` tag.
 2. **Checks** — one aggregator workflow (`checks.yml`) calls the shared
-   workflow library `mathewmusango/myprojects` (pinned by tag). Each reusable
+   workflow library `mathewmusango/my-workflows` (pinned to a commit SHA). Each reusable
    gates itself by changed paths
    ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    untouched surfaces **skip and report success**, so the required checks
