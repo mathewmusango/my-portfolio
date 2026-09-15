@@ -101,7 +101,7 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
 1. **ci** — 严格的 `mkdocs build`（坏链接、过期翻译和 CSS 不平衡都会使构建失败）、
    `pip-audit`，并在每次 push/PR 到 `main` 及每个 `v*` 标签时产出站点构建产物。
 2. **检查** — 一个聚合工作流（`checks.yml`）调用共享工作流库
-   `mathewmusango/myprojects`（按标签固定）。每个可复用工作流按变更路径自门控
+   `mathewmusango/my-workflows`（固定到提交 SHA）。每个可复用工作流按变更路径自门控
    （[skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }）：
    未触及的表面**跳过并报告成功**，因此必需检查永远不会阻塞无关 PR。
 3. **部署** — ci 成功后 `workflow_run`：`main` → staging，`v*` → pre-prod +
