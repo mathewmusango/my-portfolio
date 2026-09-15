@@ -116,10 +116,11 @@ Un cambio se publica en cuatro fases — cada una documentada en
 1. **Build** — `mkdocs build` estricto (enlaces rotos, traducciones desactualizadas
    y desequilibrio de CSS rompen el build), `pip-audit` y un artefacto del sitio
    construido en cada push/PR a `main` y en cada etiqueta `v*`.
-2. **Verificaciones** — un workflow por superficie
-   (`checks-{shell,python,js,terraform,yml}`). Cada uno se activa según las rutas
+2. **Verificaciones** — un workflow agregador (`checks.yml`) llama a la
+   biblioteca compartida de workflows `mathewmusango/myprojects` (fijada por
+   etiqueta). Cada reutilizable se autogatea según las rutas
    modificadas ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
-   las superficies no tocadas **se omiten y reportan éxito**, así las diez
+   las superficies no tocadas **se omiten y reportan éxito**, así las
    verificaciones obligatorias nunca bloquean un PR no relacionado.
 3. **Deploy** — `workflow_run` al éxito del Build: `main` → staging, `v*` →
    pre-prod + prod con puerta (ver [Modelo de entrega](#delivery-model)).
@@ -127,9 +128,10 @@ Un cambio se publica en cuatro fases — cada una documentada en
    CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo
    manual); `toggle-env` / `invalidate-cloudfront` son extras operativos manuales.
 
-Los nombres de las verificaciones son los nombres de las puertas — CI reporta
-nombres de jobs (`ci-build`, `checks-python-ruff`, …) para que la protección de
-rama y los rulesets exijan exactamente lo que se ejecuta
+Los nombres de las verificaciones son los nombres de las puertas — las
+verificaciones compartidas se reportan como `<caller> / <leaf>` (p. ej.
+`python / ruff`, `terraform / fmt`) junto con el `ci-build` sin cambios, para
+que la protección de rama y los rulesets exijan exactamente lo que se ejecuta
 ([#12](https://github.com/mathewmusango/my-portfolio/pull/12){ target="_blank" rel="noopener" }).
 
 ## Gobernanza

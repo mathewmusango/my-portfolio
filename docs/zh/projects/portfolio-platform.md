@@ -100,19 +100,19 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
 
 1. **Build** — 严格的 `mkdocs build`（坏链接、过期翻译和 CSS 不平衡都会使构建失败）、
    `pip-audit`，并在每次 push/PR 到 `main` 及每个 `v*` 标签时产出站点构建产物。
-2. **检查** — 每个表面一个工作流（`checks-{shell,python,js,terraform,yml}`），
-   各自按变更路径自门控
+2. **检查** — 一个聚合工作流（`checks.yml`）调用共享工作流库
+   `mathewmusango/myprojects`（按标签固定）。每个可复用工作流按变更路径自门控
    （[skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }）：
-   未触及的表面**跳过并报告成功**，因此十个必需检查永远不会阻塞无关 PR。
+   未触及的表面**跳过并报告成功**，因此必需检查永远不会阻塞无关 PR。
 3. **部署** — Build 成功后 `workflow_run`：`main` → staging，`v*` → pre-prod +
    带闸门的 prod（见[交付模型](#delivery-model)）。
 4. **发布与基础设施** — `v*` 标签创建带 CycloneDX SBOM 的 GitHub Release；每次
    基础设施变更 Terraform 都会 plan（apply 保持手动）；`toggle-env` /
    `invalidate-cloudfront` 是手动运维附加项。
 
-检查名就是闸门名 — CI 报告 job 名（`ci-build`、`checks-python-ruff`、…），使分支
-保护和 ruleset 要求的与真正运行的完全一致
-（[#12](https://github.com/mathewmusango/my-portfolio/pull/12){ target="_blank" rel="noopener" }）。
+检查名就是闸门名 — 共享检查以 `<caller> / <leaf>` 形式报告（例如 `python / ruff`、
+`terraform / fmt`），与未变的 `ci-build` 并列，使分支保护和 ruleset 要求的与真正
+运行的完全一致（[#12](https://github.com/mathewmusango/my-portfolio/pull/12){ target="_blank" rel="noopener" }）。
 
 ## 治理
 

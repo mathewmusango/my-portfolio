@@ -110,10 +110,11 @@ A change ships through four phases — each documented in
 1. **Build** — strict `mkdocs build` (broken links, stale translations and CSS
    imbalance fail the build), `pip-audit`, and a built-site artifact on every
    push/PR to `main` and every `v*` tag.
-2. **Checks** — one workflow per surface
-   (`checks-{shell,python,js,terraform,yml}`). Each gates itself by changed
-   paths ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
-   untouched surfaces **skip and report success**, so the ten required checks
+2. **Checks** — one aggregator workflow (`checks.yml`) calls the shared
+   workflow library `mathewmusango/myprojects` (pinned by tag). Each reusable
+   gates itself by changed paths
+   ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
+   untouched surfaces **skip and report success**, so the required checks
    never block an unrelated PR.
 3. **Deploy** — `workflow_run` on Build success: `main` → staging, `v*` →
    pre-prod + gated prod (see [Delivery model](#delivery-model)).
@@ -121,8 +122,9 @@ A change ships through four phases — each documented in
    SBOM; Terraform plans on every infra change (apply stays manual);
    `toggle-env` / `invalidate-cloudfront` are manual operational extras.
 
-Check names are the gate names — CI reports job names (`ci-build`,
-`checks-python-ruff`, …) so branch protection and rulesets require exactly what
+Check names are the gate names — the shared checks report as `<caller> / <leaf>`
+(e.g. `python / ruff`, `terraform / fmt`) alongside the unchanged `ci-build`, so
+branch protection and rulesets require exactly what
 runs ([#12](https://github.com/mathewmusango/my-portfolio/pull/12){ target="_blank" rel="noopener" }).
 
 ## Governance
