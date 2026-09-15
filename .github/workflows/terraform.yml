@@ -79,9 +79,8 @@ jobs:
             -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
-      - name: Validate
-        run: terraform validate
-
+      # No separate validate step: the plan below validates the configuration, and
+      # the shared `checks-terraform` check runs fmt/validate/lint/security on PRs.
       - name: Plan (${{ steps.env.outputs.environment }})
         run: |
           # Free-Tier default: WAF + private VPC are OFF (the Logs VPC endpoint
