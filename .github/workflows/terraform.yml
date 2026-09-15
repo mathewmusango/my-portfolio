@@ -51,9 +51,9 @@ jobs:
       run:
         working-directory: terraform
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - uses: hashicorp/setup-terraform@v4
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
         with:
           terraform_version: "1.15.9"
 
@@ -65,7 +65,7 @@ jobs:
           echo "Resolved environment: $ENV"
 
       - name: Assume AWS role (OIDC)
-        uses: aws-actions/configure-aws-credentials@v6
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           role-to-assume: ${{ steps.env.outputs.environment == 'prod' && secrets.PROD_TERRAFORM_ROLE_ARN || secrets.STAGING_TERRAFORM_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
