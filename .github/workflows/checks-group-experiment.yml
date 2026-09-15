@@ -1,0 +1,21 @@
+name: checks-group-experiment
+
+# TEMPORARY PROBE — delete before merging.
+#
+# Tests the alternative aggregator shape: instead of listing each surface, call
+# the library's group aggregator `checks.yml`, which fans out to its leaves.
+# Purpose: observe the reported check names for this nested form and compare
+# them with the per-surface form in `checks.yml`.
+#
+# Informational only — the live ruleset requires just `ci-build`.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  group:
+    uses: mathewmusango/myprojects/.github/workflows/checks.yml@v2

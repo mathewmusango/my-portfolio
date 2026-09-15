@@ -8,7 +8,7 @@ name: "Deploy: Pre-Prod S3"
 # so a successful CI run always has a fresh site.
 on:
   workflow_run:
-    workflows: ["Build"]
+    workflows: ["build"]
     types: [completed]
 
 permissions:
