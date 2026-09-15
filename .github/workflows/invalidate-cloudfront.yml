@@ -28,8 +28,8 @@ jobs:
   invalidate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: aws-actions/configure-aws-credentials@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
         with:
           role-to-assume: ${{ github.event.inputs.environment == 'prod' && secrets.PROD_INVALIDATE_ROLE_ARN || secrets.STAGING_INVALIDATE_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
