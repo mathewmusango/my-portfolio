@@ -1,0 +1,29 @@
+name: checks
+
+# Checks come from the shared workflow library (mathewmusango/myprojects),
+# pinned to the v2 tag. The library owns the definitions; this repo owns the
+# trigger.
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  js:
+    uses: mathewmusango/myprojects/.github/workflows/checks-js.yml@v2
+  python:
+    uses: mathewmusango/myprojects/.github/workflows/checks-python.yml@v2
+  shell:
+    uses: mathewmusango/myprojects/.github/workflows/checks-shell.yml@v2
+  terraform:
+    uses: mathewmusango/myprojects/.github/workflows/checks-terraform.yml@v2
+  yaml:
+    uses: mathewmusango/myprojects/.github/workflows/checks-yaml.yml@v2
+  secrets:
+    uses: mathewmusango/myprojects/.github/workflows/security-secrets.yml@v2
+  deps:
+    if: ${{ github.event_name == 'pull_request' }}
+    uses: mathewmusango/myprojects/.github/workflows/security-deps.yml@v2

@@ -9,8 +9,8 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 ## Naming conventions
 
 - **File names** — `{task}-{env|language|resource}` (`deploy-staging-s3.yml`,
-  `checks-python.yml`, `invalidate-cloudfront.yml`); task-only names for single-purpose files
-  (`ci.yml`, `release.yml`).
+  `invalidate-cloudfront.yml`); task-only names for single-purpose files
+  (`ci.yml`, `checks.yml`, `release.yml`).
 - **Display names** — quoted `{Category}: {Task}` (a colon+space is invalid unquoted YAML):
   `Build` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
 - **`workflow_run` matches display names** — the deploy workflows watch `Build`; renaming a
@@ -25,20 +25,39 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
   and `METRICS_ENDPOINT`.
 - Uploads the built `site/` as an artifact (7-day retention).
 
-## Checks — `checks-{shell,python,js,terraform,yml}.yml`
+## Checks — `checks.yml`
 
-- **Triggers:** pull requests + manual dispatch, with a job-level **relevance gate**
-  (`dorny/paths-filter`): when a PR touches none of the surface's files the check **skips and
-  reports success** — GitHub treats skipped jobs as success, so requiring all checks never
-  blocks unrelated PRs.
+- **One workflow, a shared library.** `checks.yml` is the **only** check workflow in this repo
+  (it replaced the five per-surface `checks-*.yml` files). It holds no check logic itself —
+  each job calls a reusable workflow hosted in the shared library
+  `mathewmusango/myprojects` pinned to **tag
+  `v2`**; the reusable paths below are relative to
+  `mathewmusango/myprojects/.github/workflows/`.
+- **Triggers:** pull requests to `main` + manual dispatch.
+- **Self-gating reusables:** each reusable runs its own `detect` job and gates on changed
+  files — a surface whose files are untouched **skips and reports success**, so requiring every
+  check never blocks an unrelated PR.
+
+| Caller job | Reusable workflow (`@v2`) | Reported check name |
+| --- | --- | --- |
+| `js` | `checks-js.yml` | `js / syntax` |
+| `python` | `checks-python.yml` | `python / ruff` |
+| `shell` | `checks-shell.yml` | `shell / shellcheck` |
+| `terraform` | `checks-terraform.yml` | `terraform / fmt` · `terraform / validate` · `terraform / lint` · `terraform / security` |
+| `yaml` | `checks-yaml.yml` | `yaml / syntax` · `yaml / actionlint` |
+| `secrets` | `security-secrets.yml` | `secrets / gitleaks` |
+| `deps` | `security-deps.yml` | `deps / dependency-review` — PRs only |
+
 - **Surfaces:** `shellcheck` on every `*.sh` (repo-wide, excluding `site/`) + `.githooks/**` ·
-  `ruff` on `**/*.py` ·
-  `node --check` on `**/*.js` (project + vendored) · actionlint + YAML parse on `**/*.yml`/`**/*.yaml`
-  workflow-file edits self-validate) · terraform stages on `terraform/**` + `.tflint.hcl`
-  (`fmt -check`,
-  `validate` on all three roots, TFLint, Checkov — informational, no AWS credentials).
-- **Required checks are the job names** — see the table in `CONTRIBUTING.md` (the `main`
-  ruleset enforces them).
+  `ruff` on `**/*.py` · `node --check` on `**/*.js` (project + vendored) · actionlint + YAML
+  parse on `**/*.yml`/`**/*.yaml` (workflow-file edits self-validate) · terraform stages on
+  `terraform/**` + `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint, Checkov —
+  informational, no AWS credentials) · `gitleaks` secret scan · `dependency-review` on
+  dependency changes.
+- **Required checks are the reported check names** — GitHub composes them as
+  `<caller job key> / <leaf job name>` across the reusable boundary, so these (not the old
+  `checks-*` names) are what branch protection and the `main` ruleset require — see the table
+  in `CONTRIBUTING.md`.
 - **Local parity:** `check-compose.yaml` mirrors the workflows exactly (one service per check,
   identical commands + tool images). `scripts/check_local.sh` is the one-entry driver — default
   runs every surface whose files changed (diff-gated, mirroring the CI skip-model); `--full` runs

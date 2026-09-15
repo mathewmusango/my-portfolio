@@ -35,7 +35,9 @@ requests.
 
 ## Checks
 
-Each surface is linted by its own workflow; checks run on PRs and via manual dispatch.
+Checks come from the shared workflow library
+([`mathewmusango/myprojects`](https://github.com/mathewmusango/myprojects)), pinned
+by tag; this repo owns only the trigger. They run on PRs and via manual dispatch.
 CI/CD implementation details (triggers, naming, roles, secrets) are documented in
 [`.github/workflows/README.md`](.github/workflows/README.md).
 A surface check whose files aren't touched **skips and reports success** (GitHub treats
@@ -46,15 +48,17 @@ names below are what you'll see on PRs:
 | Required check | Covers |
 | --- | --- |
 | `ci-build` | strict `mkdocs build`, pip-audit, internal link + translation checks |
-| `checks-python-ruff` | `ruff` on `**/*.py` (repo-wide) |
-| `checks-shell-shellcheck` | `shellcheck` on `scripts/*.sh` |
-| `checks-js-node-check` | JS syntax check on `docs/**/*.js` |
-| `checks-terraform-fmt` | `terraform fmt -check` |
-| `checks-terraform-validate` | `terraform validate` (all three roots) |
-| `checks-terraform-lint` | TFLint |
-| `checks-terraform-security` | Checkov security scan |
-| `checks-yaml-syntax` | YAML parse of every yml/yaml |
-| `checks-yaml-actionlint` | actionlint on `.github/workflows/**` |
+| `js / syntax` | JS syntax check (`node --check`) |
+| `python / ruff` | `ruff` on `**/*.py` (repo-wide) |
+| `shell / shellcheck` | `shellcheck` on `*.sh` + `.githooks/` |
+| `terraform / fmt` | `terraform fmt -check` |
+| `terraform / validate` | `terraform validate` (per module) |
+| `terraform / lint` | TFLint |
+| `terraform / security` | Checkov security scan |
+| `yaml / syntax` | YAML parse of every yml/yaml |
+| `yaml / actionlint` | actionlint on `.github/workflows/**` |
+| `secrets / gitleaks` | Secret scanning (new — not required yet) |
+| `deps / dependency-review` | Dependency review on PRs (new — not required yet) |
 
 ## Issues
 

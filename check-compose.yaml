@@ -1,5 +1,7 @@
-# Local (stage-1) checks — one service per check, mirroring the checks-*.yml
-# GitHub workflows EXACTLY (same commands, purpose-built tool images).
+# Local (stage-1) checks — one service per check, mirroring the CI checks
+# driven by checks.yml EXACTLY (same commands, purpose-built tool images).
+# checks.yml calls reusable workflows hosted in the shared
+# mathewmusango/myprojects library, pinned to tag v2.
 #
 # Preferred entry point — scripts/check_local.sh (drives these services,
 # diff-gated by default, --full for a whole-repo pass, per-surface selection):
@@ -71,7 +73,8 @@ services:
     command: ["sh", "-c", "find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do node --check \"$$f\" || { echo \"FAILED: $$f\"; exit 1; }; done || exit 1; echo 'js: all files syntax-checked'"]
 
   terraform-fmt:
-    # checks-terraform fmt job: terraform fmt -check -recursive -diff terraform/
+    # CI check "terraform / fmt" (reusable checks-terraform.yml@v2):
+    # terraform fmt -check -recursive -diff terraform/
     # The image ENTRYPOINT is /bin/terraform — args only, no leading tool name.
     image: docker.io/hashicorp/terraform:1.15.9
     working_dir: /repo
@@ -80,7 +83,7 @@ services:
     command: ["fmt", "-check", "-recursive", "-diff", "terraform/"]
 
   terraform-validate:
-    # checks-terraform validate job (all three roots). TF_DATA_DIR keeps init's
+    # CI check "terraform / validate" (all three roots). TF_DATA_DIR keeps init's
     # .terraform out of the read-only mount; -lockfile=readonly uses the
     # committed lockfiles (all three roots now have one). The image ENTRYPOINT
     # is /bin/terraform, so the sh -c wrapper runs terraform from PATH.
@@ -92,7 +95,7 @@ services:
     command: ["TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics validate -no-color"]
 
   terraform-lint:
-    # checks-terraform lint job: tflint --init (at the repo root, where
+    # CI check "terraform / lint": tflint --init (at the repo root, where
     # .tflint.hcl auto-loads), then recursive on terraform/ + a plain run on
     # terraform/ci, both with the root .tflint.hcl config. The image ENTRYPOINT
     # is tflint, so sh -c runs it from PATH; init writes its plugin cache under
@@ -105,7 +108,7 @@ services:
     command: ["tflint --init && cd terraform && tflint --recursive --format compact --config /repo/.tflint.hcl && cd ci && tflint --format compact --config /repo/.tflint.hcl"]
 
   terraform-security:
-    # checks-terraform security job: checkov-action@v12 (image 3.3.15) with
+    # CI check "terraform / security": checkov-action@v12 (image 3.3.15) with
     # quiet + soft_fail (informational until the audit backlog lands). The
     # image ENTRYPOINT /entrypoint.sh already execs `checkov "$@"` — args only,
     # no leading tool name.

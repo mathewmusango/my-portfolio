@@ -44,39 +44,39 @@
             "integration_id": 15368
           },
           {
-            "context": "checks-js-node-check",
+            "context": "js / syntax",
             "integration_id": 15368
           },
           {
-            "context": "checks-python-ruff",
+            "context": "python / ruff",
             "integration_id": 15368
           },
           {
-            "context": "checks-shell-shellcheck",
+            "context": "shell / shellcheck",
             "integration_id": 15368
           },
           {
-            "context": "checks-terraform-fmt",
+            "context": "terraform / fmt",
             "integration_id": 15368
           },
           {
-            "context": "checks-terraform-lint",
+            "context": "terraform / lint",
             "integration_id": 15368
           },
           {
-            "context": "checks-terraform-security",
+            "context": "terraform / security",
             "integration_id": 15368
           },
           {
-            "context": "checks-terraform-validate",
+            "context": "terraform / validate",
             "integration_id": 15368
           },
           {
-            "context": "checks-yaml-actionlint",
+            "context": "yaml / actionlint",
             "integration_id": 15368
           },
           {
-            "context": "checks-yaml-syntax",
+            "context": "yaml / syntax",
             "integration_id": 15368
           }
         ]
