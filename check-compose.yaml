@@ -1,7 +1,7 @@
 # Local (stage-1) checks — one service per check, mirroring the CI checks
 # driven by checks.yml EXACTLY (same commands, purpose-built tool images).
 # checks.yml calls reusable workflows hosted in the shared
-# mathewmusango/myprojects library, pinned to tag v2.
+# mathewmusango/my-workflows library, pinned to a commit SHA.
 #
 # Preferred entry point — scripts/check_local.sh (drives these services,
 # diff-gated by default, --full for a whole-repo pass, per-surface selection):

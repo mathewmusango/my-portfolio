@@ -36,8 +36,8 @@ requests.
 ## Checks
 
 Checks come from the shared workflow library
-([`mathewmusango/myprojects`](https://github.com/mathewmusango/myprojects)), pinned
-by tag; this repo owns only the trigger. They run on PRs and via manual dispatch.
+([`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows)), pinned
+by commit SHA; this repo owns only the trigger. They run on PRs and via manual dispatch.
 CI/CD implementation details (triggers, naming, roles, secrets) are documented in
 [`.github/workflows/README.md`](.github/workflows/README.md).
 A surface check whose files aren't touched **skips and reports success** (GitHub treats

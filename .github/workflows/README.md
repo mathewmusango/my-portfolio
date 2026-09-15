@@ -30,9 +30,9 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 - **One workflow, a shared library.** `checks.yml` is the **only** check workflow in this repo
   (it replaced the five per-surface `checks-*.yml` files). It holds no check logic itself —
   each job calls a reusable workflow hosted in the shared library
-  `mathewmusango/myprojects` pinned to **tag
-  `v2`**; the reusable paths below are relative to
-  `mathewmusango/myprojects/.github/workflows/`.
+  `mathewmusango/my-workflows` pinned to a **commit SHA**; the reusable paths below are
+  relative to
+  `mathewmusango/my-workflows/.github/workflows/`.
 - **Triggers:** pull requests to `main` + manual dispatch.
 - **Self-gating reusables:** each reusable runs its own `detect` job and gates on changed
   files — a surface whose files are untouched **skips and reports success**, so requiring every

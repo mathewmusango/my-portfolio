@@ -1,6 +1,6 @@
 name: checks
 
-# Checks come from the shared workflow library (mathewmusango/myprojects),
+# Checks come from the shared workflow library (mathewmusango/my-workflows),
 # pinned to a commit SHA. The library owns the definitions; this repo owns the
 # trigger.
 on:
@@ -13,16 +13,16 @@ permissions:
 
 jobs:
   js:
-    uses: mathewmusango/myprojects/.github/workflows/checks-js.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/checks-js.yml@b5d076b992526405c469346ae33dced92e162504
   python:
-    uses: mathewmusango/myprojects/.github/workflows/checks-python.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/checks-python.yml@b5d076b992526405c469346ae33dced92e162504
   shell:
-    uses: mathewmusango/myprojects/.github/workflows/checks-shell.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@b5d076b992526405c469346ae33dced92e162504
   terraform:
-    uses: mathewmusango/myprojects/.github/workflows/checks-terraform.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@b5d076b992526405c469346ae33dced92e162504
   yaml:
-    uses: mathewmusango/myprojects/.github/workflows/checks-yaml.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@b5d076b992526405c469346ae33dced92e162504
   secrets:
-    uses: mathewmusango/myprojects/.github/workflows/security-secrets.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/security-secrets.yml@b5d076b992526405c469346ae33dced92e162504
   deps:
-    uses: mathewmusango/myprojects/.github/workflows/security-deps.yml@1d646f3dec2358941feb54a2b71a6c7eb66d7519
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@b5d076b992526405c469346ae33dced92e162504

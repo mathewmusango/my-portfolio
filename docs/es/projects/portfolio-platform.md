@@ -117,8 +117,8 @@ Un cambio se publica en cuatro fases — cada una documentada en
    y desequilibrio de CSS rompen el build), `pip-audit` y un artefacto del sitio
    construido en cada push/PR a `main` y en cada etiqueta `v*`.
 2. **Verificaciones** — un workflow agregador (`checks.yml`) llama a la
-   biblioteca compartida de workflows `mathewmusango/myprojects` (fijada por
-   etiqueta). Cada reutilizable se autogatea según las rutas
+   biblioteca compartida de workflows `mathewmusango/my-workflows` (fijada a un
+   SHA de commit). Cada reutilizable se autogatea según las rutas
    modificadas ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    las superficies no tocadas **se omiten y reportan éxito**, así las
    verificaciones obligatorias nunca bloquean un PR no relacionado.
