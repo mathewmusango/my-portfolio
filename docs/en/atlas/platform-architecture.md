@@ -77,7 +77,7 @@ workflow ever uses keys.
 flowchart LR
     M[push / PR to main] --> C{required checks<br/>per-surface · skip-model}
     V[v* tag<br/>ruleset-gated] --> C
-    C -->|pass| B[Build — ci.yml]
+    C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging env]

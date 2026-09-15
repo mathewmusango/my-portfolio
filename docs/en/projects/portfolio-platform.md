@@ -107,7 +107,7 @@ Getting-started steps: [the repo README](https://github.com/mathewmusango/my-por
 A change ships through four phases — each documented in
 [`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }:
 
-1. **Build** — strict `mkdocs build` (broken links, stale translations and CSS
+1. **ci** — strict `mkdocs build` (broken links, stale translations and CSS
    imbalance fail the build), `pip-audit`, and a built-site artifact on every
    push/PR to `main` and every `v*` tag.
 2. **Checks** — one aggregator workflow (`checks.yml`) calls the shared
@@ -116,14 +116,14 @@ A change ships through four phases — each documented in
    ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    untouched surfaces **skip and report success**, so the required checks
    never block an unrelated PR.
-3. **Deploy** — `workflow_run` on Build success: `main` → staging, `v*` →
+3. **Deploy** — `workflow_run` on ci success: `main` → staging, `v*` →
    pre-prod + gated prod (see [Delivery model](#delivery-model)).
 4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
    SBOM; Terraform plans on every infra change (apply stays manual);
    `toggle-env` / `invalidate-cloudfront` are manual operational extras.
 
 Check names are the gate names — the shared checks report as `<caller> / <leaf>`
-(e.g. `python / ruff`, `terraform / fmt`) alongside the unchanged `ci-build`, so
+(e.g. `python / ruff`, `terraform / fmt`) alongside `build`, so
 branch protection and rulesets require exactly what
 runs ([#12](https://github.com/mathewmusango/my-portfolio/pull/12){ target="_blank" rel="noopener" }).
 
@@ -135,7 +135,7 @@ Rulesets-as-code protect the two refs that matter
 | Ref | Protection |
 |---|---|
 | `main` | PR-only: 1 approval, squash/rebase, stale reviews dismissed, all 10 required checks, no force-push, **no bypass — owner included** |
-| `v*` tags | Minted only by the maintainer; green `ci-build` required; immutable once created |
+| `v*` tags | Minted only by the maintainer; green `build` required; immutable once created |
 
 Enforcement is push-time and verified — rejection records sit beside the
 configs in `rulesets/main.md` and `rulesets/tags.md`. PRs carry labels mapped to

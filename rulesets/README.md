@@ -20,11 +20,11 @@ test records sit beside the configs (`main.md`, `tags.md`).
 | Rule | Effect |
 | --- | --- |
 | `creation` | Tags minted only by bypass actors (the maintainer) |
-| `required_status_checks` | Tag only commits with green `ci-build` |
+| `required_status_checks` | Tag only commits with green `build` |
 | `deletion` · `non_fast_forward` | Release history is immutable |
 
 **Bypass: repo admin** — required so the maintainer can cut releases; by design this also
-bypasses the `ci-build` check for the admin, so the human **tag-guard** (tag `main` tip after
+bypasses the `build` check for the admin, so the human **tag-guard** (tag `main` tip after
 green CI, CHANGELOG updated) is the admin-side gate.
 
 ## Enforcement model

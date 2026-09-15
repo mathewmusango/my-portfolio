@@ -73,7 +73,7 @@ OIDC 角色。**Bootstrap 是唯一带外步骤** — 一个 GitHub Actions 之�
 flowchart LR
     M[push / PR to main] --> C{required checks<br/>per-surface · skip-model}
     V[v* tag<br/>ruleset-gated] --> C
-    C -->|pass| B[Build — ci.yml]
+    C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging env]
