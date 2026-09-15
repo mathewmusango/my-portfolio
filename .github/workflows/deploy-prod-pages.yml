@@ -12,7 +12,7 @@ name: "Deploy: Prod Pages"
 # site_url/metrics_endpoint, so a successful CI run always has a fresh site.
 on:
   workflow_run:
-    workflows: ["build"]
+    workflows: ["ci"]
     types: [completed]
 
 permissions:

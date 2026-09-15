@@ -12,11 +12,11 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
   `invalidate-cloudfront.yml`); task-only names for single-purpose files
   (`ci.yml`, `checks.yml`, `release.yml`).
 - **Display names** — quoted `{Category}: {Task}` (a colon+space is invalid unquoted YAML):
-  `Build` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
-- **`workflow_run` matches display names** — the deploy workflows watch `Build`; renaming a
+  `ci` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
+- **`workflow_run` matches display names** — the deploy workflows watch `ci`; renaming a
   display name requires updating every `workflow_run` reference.
 
-## Build — `ci.yml` (`Build`)
+## ci — `ci.yml` (`ci`)
 
 - **Triggers:** push to `main` and `v*` tags; pull requests to `main`.
 - Runs the shared [`.github/actions/build-site`](../.github/actions/build-site) action: pip cache,
@@ -65,19 +65,19 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
   (changed-files only: `git config core.hooksPath .githooks`). The GitHub workflows remain the
   authoritative gate.
 
-## Deploy — `workflow_run` on Build success
+## Deploy — `workflow_run` on ci success
 
 The two S3 deploys share the same shape: download the artifact (`run-id` of the triggering
-Build), assume the per-environment **deploy role** (OIDC), `aws s3 sync` to the bucket root,
+ci), assume the per-environment **deploy role** (OIDC), `aws s3 sync` to the bucket root,
 then assume the **invalidate role** for an inline `/*` invalidation (lookup by the
 `<project>-<env>-site` comment convention; skip when the distro is absent). The Pages deploy
 never touches AWS (see below).
 
 | Workflow | Runs on | Environment | Target | Gate |
 | --- | --- | --- | --- | --- |
-| `deploy-staging-s3.yml` | Build success on `main` | `staging` (auto, ungated) | `<project>-staging-site` (S3 + CloudFront) | content-hash skip (below) |
-| `deploy-pre-prod-s3.yml` | Build success on `v*` tags | `pre-prod` | `<project>-prod-site` (S3 + CloudFront) — AWS mirror | tag only |
-| `deploy-prod-pages.yml` | Build success on `v*` tags | `prod` (required reviewer) | GitHub Pages (canonical) | tag only + approval |
+| `deploy-staging-s3.yml` | ci success on `main` | `staging` (auto, ungated) | `<project>-staging-site` (S3 + CloudFront) | content-hash skip (below) |
+| `deploy-pre-prod-s3.yml` | ci success on `v*` tags | `pre-prod` | `<project>-prod-site` (S3 + CloudFront) — AWS mirror | tag only |
+| `deploy-prod-pages.yml` | ci success on `v*` tags | `prod` (required reviewer) | GitHub Pages (canonical) | tag only + approval |
 
 - **Least privilege:** the Pages job uses the official Pages actions
   (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) with `pages: write` +
@@ -133,14 +133,14 @@ excludes `.deploy-hash/*` so the marker survives `--delete`.
 ```mermaid
 flowchart LR
     subgraph GHA[GitHub Actions]
-        BR[Build · checks · release] -->|auto-scoped GITHUB_TOKEN<br/>release elevates to contents: write| API[GitHub API]
+        BR[ci · checks · release] -->|auto-scoped GITHUB_TOKEN<br/>release elevates to contents: write| API[GitHub API]
         DT[Deploy · terraform.yml] -->|OIDC — no long-lived keys| AWS[AWS]
     end
     AWS --> JR[per-environment, per-job roles<br/>terraform · deploy · invalidate · toggle]
     JR --> RES[site + metrics stacks]
 ```
 
-Build/checks/release talk to the GitHub API with the auto-scoped `GITHUB_TOKEN` (Release
+ci/checks/release talk to the GitHub API with the auto-scoped `GITHUB_TOKEN` (Release
 elevates it to `contents: write` to create the Release). Deploys and Terraform assume **AWS
 roles via OIDC** — one least-privilege role per job per environment; the only key-based step is
 the out-of-band `terraform/ci` bootstrap, run as an AWS user.

@@ -113,7 +113,7 @@ Pasos de inicio: [el README del repositorio](https://github.com/mathewmusango/my
 Un cambio se publica en cuatro fases — cada una documentada en
 [`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }:
 
-1. **Build** — `mkdocs build` estricto (enlaces rotos, traducciones desactualizadas
+1. **ci** — `mkdocs build` estricto (enlaces rotos, traducciones desactualizadas
    y desequilibrio de CSS rompen el build), `pip-audit` y un artefacto del sitio
    construido en cada push/PR a `main` y en cada etiqueta `v*`.
 2. **Verificaciones** — un workflow agregador (`checks.yml`) llama a la
@@ -122,7 +122,7 @@ Un cambio se publica en cuatro fases — cada una documentada en
    modificadas ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    las superficies no tocadas **se omiten y reportan éxito**, así las
    verificaciones obligatorias nunca bloquean un PR no relacionado.
-3. **Deploy** — `workflow_run` al éxito del Build: `main` → staging, `v*` →
+3. **Deploy** — `workflow_run` al éxito de ci: `main` → staging, `v*` →
    pre-prod + prod con puerta (ver [Modelo de entrega](#delivery-model)).
 4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
    CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo
@@ -130,7 +130,7 @@ Un cambio se publica en cuatro fases — cada una documentada en
 
 Los nombres de las verificaciones son los nombres de las puertas — las
 verificaciones compartidas se reportan como `<caller> / <leaf>` (p. ej.
-`python / ruff`, `terraform / fmt`) junto con el `ci-build` sin cambios, para
+`python / ruff`, `terraform / fmt`) junto con `build`, para
 que la protección de rama y los rulesets exijan exactamente lo que se ejecuta
 ([#12](https://github.com/mathewmusango/my-portfolio/pull/12){ target="_blank" rel="noopener" }).
 
@@ -142,7 +142,7 @@ Rulesets-como-código protegen las dos refs que importan
 | Ref | Protección |
 |---|---|
 | `main` | Solo PR: 1 aprobación, squash/rebase, revisiones obsoletas descartadas, las 10 verificaciones obligatorias, sin force-push, **sin bypass — el propietario incluido** |
-| etiquetas `v*` | Creadas solo por el mantenedor; `ci-build` en verde requerido; inmutables una vez creadas |
+| etiquetas `v*` | Creadas solo por el mantenedor; `build` en verde requerido; inmutables una vez creadas |
 
 La aplicación es en el momento del push y está verificada — los registros de
 rechazo viven junto a las configuraciones en `rulesets/main.md` y

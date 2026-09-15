@@ -14,7 +14,7 @@ requests.
 
 - **`main` is protected** — no direct pushes, no force pushes, no deletions.
   Every change lands via a pull request.
-- All PRs must pass the required checks (Build + the per-surface checks) before
+- All PRs must pass the required checks (build + the per-surface checks) before
   merging.
 - Follow the existing conventions: page-scoped changes, per-locale translation
   rules (English first, then `es`/`zh`), teal `#00897b` theme.
@@ -47,7 +47,7 @@ names below are what you'll see on PRs:
 
 | Required check | Covers |
 | --- | --- |
-| `ci-build` | strict `mkdocs build`, pip-audit, internal link + translation checks |
+| `build` | strict `mkdocs build`, pip-audit, internal link + translation checks |
 | `js / syntax` | JS syntax check (`node --check`) |
 | `python / ruff` | `ruff` on `**/*.py` (repo-wide) |
 | `shell / shellcheck` | `shellcheck` on `*.sh` + `.githooks/` |

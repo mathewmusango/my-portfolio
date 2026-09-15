@@ -143,7 +143,7 @@ How a change ships (the [Architecture](#architecture) site diagram shows the tar
 flowchart LR
     M[push / PR to main] --> C{required checks<br/>per-surface · skip-model}
     V[v* tag<br/>ruleset-gated] --> C
-    C -->|pass| B[Build — ci.yml]
+    C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging env]
@@ -157,13 +157,13 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
 (the implementation reference — triggers, roles, secrets) and
 [`CONTRIBUTING.md`](CONTRIBUTING.md) (the required-checks table):
 
-- **Build** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
+- **ci** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
   to `main` and `v*` tags; uploads the built `site/` as an artifact.
 - **Checks** — one workflow per surface (`checks-{shell,python,js,terraform,yml}.yml`), gated on
   PRs by relevance: untouched surfaces **skip and report success**, so the required checks never
   block unrelated PRs. The same checks run locally (`scripts/check_local.sh` — changed-files by
   default, `--full` for whole-repo, mirroring the workflows exactly).
-- **Deploy** — `workflow_run` on Build success: `main` → **staging** (S3 + CloudFront), `v*` tags
+- **Deploy** — `workflow_run` on ci success: `main` → **staging** (S3 + CloudFront), `v*` tags
   → **pre-prod** (AWS mirror) → gated **prod** (GitHub Pages). Staging **skips** when the
   artifact is byte-identical to the last deploy (content-hash marker); prod runs in the `prod`
   environment behind a required reviewer.
