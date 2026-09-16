@@ -9,7 +9,7 @@ test records sit beside the configs (`main.md`, `tags.md`).
 | Rule | Effect |
 | --- | --- |
 | `pull_request` | No direct pushes — every change via PR: 1 approval, squash/rebase only, stale reviews dismissed, threads resolved |
-| `required_status_checks` | All 10 job-name checks, strict (branch up to date before merge) |
+| `required_status_checks` | All 12 job-name checks — `build` plus the 11 shared-check leaves — strict (branch up to date before merge) |
 | `creation` | Only bypass actors may (re)create the branch |
 | `deletion` · `non_fast_forward` | Can't delete `main` or force-push it |
 

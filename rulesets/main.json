@@ -1,6 +1,9 @@
 {
+  "id": 22026993,
   "name": "main",
   "target": "branch",
+  "source_type": "Repository",
+  "source": "mathewmusango/my-portfolio",
   "enforcement": "active",
   "conditions": {
     "ref_name": {
@@ -41,6 +44,50 @@
         "required_status_checks": [
           {
             "context": "build",
+            "integration_id": 15368
+          },
+          {
+            "context": "python / ruff",
+            "integration_id": 15368
+          },
+          {
+            "context": "js / syntax",
+            "integration_id": 15368
+          },
+          {
+            "context": "shell / shellcheck",
+            "integration_id": 15368
+          },
+          {
+            "context": "terraform / fmt",
+            "integration_id": 15368
+          },
+          {
+            "context": "terraform / lint",
+            "integration_id": 15368
+          },
+          {
+            "context": "terraform / security",
+            "integration_id": 15368
+          },
+          {
+            "context": "terraform / validate",
+            "integration_id": 15368
+          },
+          {
+            "context": "yaml / actionlint",
+            "integration_id": 15368
+          },
+          {
+            "context": "yaml / syntax",
+            "integration_id": 15368
+          },
+          {
+            "context": "secrets / gitleaks",
+            "integration_id": 15368
+          },
+          {
+            "context": "deps / dependency-review",
             "integration_id": 15368
           }
         ]
