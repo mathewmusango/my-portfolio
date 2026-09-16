@@ -1,8 +1,5 @@
 name: checks
 
-# Checks come from the shared workflow library (mathewmusango/my-workflows),
-# pinned to a commit SHA. The library owns the definitions; this repo owns the
-# trigger.
 on:
   pull_request:
     branches: [main]
