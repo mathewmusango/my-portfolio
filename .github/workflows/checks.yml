@@ -1,8 +1,5 @@
 name: checks
 
-# Checks come from the shared workflow library (mathewmusango/my-workflows),
-# pinned to a commit SHA. The library owns the definitions; this repo owns the
-# trigger.
 on:
   pull_request:
     branches: [main]
@@ -13,16 +10,16 @@ permissions:
 
 jobs:
   js:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-js.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/checks-js.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   python:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-python.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/checks-python.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   shell:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   terraform:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   yaml:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   secrets:
-    uses: mathewmusango/my-workflows/.github/workflows/security-secrets.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/security-secrets.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   deps:
-    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@b5d076b992526405c469346ae33dced92e162504
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
