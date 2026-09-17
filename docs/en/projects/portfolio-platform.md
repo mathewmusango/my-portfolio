@@ -56,8 +56,8 @@ carries the delivery, metrics, and control-plane diagrams.)
 
 Three deploy targets, one artifact. `main` deploys to **staging** (an S3 +
 CloudFront pair in AWS, bucket private, served through OAC). `v*` tags deploy to
-**prod** on two planes: first the AWS mirror (S3 + CloudFront), then **prod**
-GitHub Pages — the canonical site — behind a required reviewer in the `prod`
+**prod** on two planes: the AWS mirror (S3 + CloudFront) and **prod** GitHub
+Pages — the canonical site — **both** behind a required reviewer in the `prod`
 environment.
 
 ### Metrics — visitor analytics
@@ -82,7 +82,7 @@ Two delivery planes, each with its own gate:
 
 | Plane | Path | Gate |
 |---|---|---|
-| **Content** | `main` → staging · `v*` → prod AWS mirror → gated Pages | required reviewer on `prod` |
+| **Content** | `main` → staging · `v*` → prod (AWS mirror + Pages), both reviewed | required reviewer on `prod` |
 | **Infrastructure** | `main` → staging auto-applies · `v*` → prod plan-only | manual `terraform apply` |
 
 Deploys run on every successful CI build of the right ref
@@ -118,7 +118,7 @@ A change ships through four phases — each documented in
    untouched surfaces **skip and report success**, so the required checks
    never block an unrelated PR.
 3. **Deploy** — `workflow_run` on ci success (`deploy.yml`): `main` → staging, `v*` →
-   prod AWS mirror + gated Pages (see [Delivery model](#delivery-model)).
+   prod on both planes (reviewed) (see [Delivery model](#delivery-model)).
 4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
    SBOM; Terraform plans on every infra change (apply stays manual);
    `toggle-env` / `invalidate-cloudfront` are manual operational extras.

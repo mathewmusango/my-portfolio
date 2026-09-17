@@ -24,19 +24,20 @@ flowchart LR
     end
     subgraph GHA[GitHub Actions]
         B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
-        B -->|v* tag| DP[deploy.yml · prod]
+        B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
     DS --> STG[staging — S3 + CloudFront · OAC]
     DP --> PAWS[prod — S3 + CloudFront · OAC]
-    DP --> PPAGES[prod — GitHub Pages · required reviewer]
+    DP --> PPAGES[prod — GitHub Pages]
 ```
 
 **Prod está protegido por una puerta**: `v*` entrega un solo artefacto a ambos
-planos de prod — el espejo AWS (S3 + CloudFront) llega primero y Pages se publica
-tras la aprobación del revisor obligatorio en el entorno `prod` de GitHub. Dos
-planos de entrega, cada uno con su propia puerta: **contenido** — `main` →
-staging · `v*` → prod (espejo AWS, luego Pages con puerta); **infraestructura** —
-`main` → staging se aplica solo · `v*` → solo plan en prod.
+planos de prod — el espejo AWS (S3 + CloudFront) y GitHub Pages (el sitio
+canónico) — y ambos esperan al revisor obligatorio en el entorno `prod` de
+GitHub, así que nada llega a prod sin revisión. Dos planos de entrega, cada uno
+con su propia puerta: **contenido** — `main` → staging · `v*` → prod
+(revisado); **infraestructura** — `main` → staging se aplica solo · `v*` →
+solo plan en prod.
 
 ## Métricas — analítica de visitas
 
@@ -83,7 +84,7 @@ flowchart LR
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
-    A -->|workflow_run · v*| P[deploy → prod AWS mirror + gated Pages]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]

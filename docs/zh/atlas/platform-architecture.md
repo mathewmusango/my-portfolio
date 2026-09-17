@@ -22,18 +22,18 @@ flowchart LR
     end
     subgraph GHA[GitHub Actions]
         B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
-        B -->|v* tag| DP[deploy.yml · prod]
+        B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
     DS --> STG[staging — S3 + CloudFront · OAC]
     DP --> PAWS[prod — S3 + CloudFront · OAC]
-    DP --> PPAGES[prod — GitHub Pages · required reviewer]
+    DP --> PPAGES[prod — GitHub Pages]
 ```
 
 **Prod 有闸门保护**：`v*` 将一个构建产物交付到两条 prod 平面 — AWS 镜像
-（S3 + CloudFront）先上线，Pages 经 `prod` GitHub 环境必需审阅者批准后发布。
-两条交付平面各有自己的闸门：**内容** — `main` → staging · `v*` → prod
-（AWS 镜像，然后带闸门 Pages）；**基础设施** — `main` → staging 自动 apply ·
-`v*` → prod 仅 plan。
+（S3 + CloudFront）和 GitHub Pages（规范站点）— 两者都要等待 `prod` GitHub
+环境中的必需审阅者，因此没有任何东西未经审阅就到达 prod。两条交付平面各有
+自己的闸门：**内容** — `main` → staging · `v*` → prod（经审阅）；
+**基础设施** — `main` → staging 自动 apply · `v*` → prod 仅 plan。
 
 ## 指标 — 访客分析
 
@@ -77,7 +77,7 @@ flowchart LR
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
-    A -->|workflow_run · v*| P[deploy → prod AWS mirror + gated Pages]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]

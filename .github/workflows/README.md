@@ -77,15 +77,16 @@ the distro is absent). The Pages job never touches AWS.
 | Job | Runs on | Environment | Target | Gate |
 | --- | --- | --- | --- | --- |
 | `deploy-staging` | ci success on `main` | `staging` (auto, ungated) | `<project>-staging-site` (S3 + CloudFront) | content-hash skip (below) |
-| `deploy-prod-s3` | ci success on `v*` tags | **none** — see the OIDC note | `<project>-prod-site` (S3 + CloudFront) — the prod AWS plane | tag only |
+| `deploy-prod-s3` | ci success on `v*` tags | `prod` (required reviewer) | `<project>-prod-site` (S3 + CloudFront) — the prod AWS plane | tag only + approval |
 | `deploy-pages` | ci success on `v*` tags | `prod` (required reviewer) | GitHub Pages (canonical) | tag only + approval |
 
-- **No `environment:` on the AWS jobs, deliberately.** The deploy roles' OIDC trust allows
-  `ref:refs/heads/main` (plus `environment:staging` / `environment:pre-prod`) and a
-  `workflow_run` job without an environment presents the ref form. Declaring one switches the
-  sub to `environment:<name>` and breaks `sts:AssumeRoleWithWebIdentity` — which is why the AWS
-  plane's env label was dropped rather than renamed. The Pages job is exempt: its `id-token`
-  is for GitHub Pages, not STS. See `scripts/bootstrap_aws.sh`.
+- **`environment:` is load-bearing, not decoration.** A job that declares one presents the OIDC
+  sub `repo:OWNER/REPO:environment:<name>` instead of the ref form, and AWS STS accepts only the
+  shapes listed in the deploy roles' trust (`scripts/bootstrap_aws.sh` — prod lists
+  `ref:refs/heads/main`, `environment:pre-prod`, `environment:prod`). So `environment:prod` had to
+  be added to that trust **before** the AWS prod job was gated; renaming the environment without
+  updating the trust breaks every AWS assume. The env-form sub also carries no ref, so a tag-only
+  job is enforced by its own `if:` gate, never by the trust — the reviewer is what restrains it.
 - **Permissions are per job, not workflow-level** — least privilege: only `deploy-pages`
   carries `pages: write`.
 

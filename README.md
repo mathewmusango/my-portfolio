@@ -47,18 +47,18 @@ flowchart LR
     end
     subgraph GHA[GitHub Actions]
         B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
-        B -->|v* tag| DP[deploy.yml · prod]
+        B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
     DS --> STG[staging — S3 + CloudFront · OAC]
     DP --> PAWS[prod — S3 + CloudFront · OAC]
-    DP --> PPAGES[prod — GitHub Pages · required reviewer]
+    DP --> PPAGES[prod — GitHub Pages]
 ```
 
 **Prod is gated**: `v*` ships one artifact to both prod planes — the AWS mirror (S3 +
-CloudFront) lands first, then Pages publishes on approval from the required reviewer on the
-`prod` GitHub environment. Two delivery planes, each with its own gate: **content** — `main`
-→ staging · `v*` → prod (AWS mirror, then gated Pages); **infrastructure** — `main` → staging
-auto-applies · `v*` → prod plan-only.
+CloudFront) and GitHub Pages (the canonical site) — and **both** wait on the required reviewer in
+the `prod` GitHub environment, so nothing reaches prod unreviewed. Two delivery planes, each with
+its own gate: **content** — `main` → staging · `v*` → prod (reviewed); **infrastructure** — `main`
+→ staging auto-applies · `v*` → prod plan-only.
 
 ### Metrics — visitor analytics
 
@@ -147,7 +147,7 @@ flowchart LR
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
-    A -->|workflow_run · v*| P[deploy → prod AWS mirror + gated Pages]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]
@@ -164,10 +164,9 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
   block unrelated PRs. The same checks run locally (`scripts/check_local.sh` — changed-files by
   default, `--full` for whole-repo, mirroring the workflows exactly).
 - **Deploy** — `workflow_run` on ci success, one file: `deploy.yml` — `main` → **staging**
-  (S3 + CloudFront); `v*` tags → **prod** on both planes (AWS mirror first, then the gated
-  GitHub Pages publish). Staging **skips** when the artifact is byte-identical to the last
-  deploy (content-hash marker); the Pages job runs in the `prod` environment behind a required
-  reviewer.
+  (S3 + CloudFront); `v*` tags → **prod** on both planes (the AWS mirror and the GitHub Pages
+  publish), each waiting on the `prod` environment's required reviewer. Staging **skips** when the
+  artifact is byte-identical to the last deploy (content-hash marker).
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
   plans on `terraform/**` changes (apply stays manual); `toggle-env` and `invalidate-cloudfront`
   are manual operational extras.

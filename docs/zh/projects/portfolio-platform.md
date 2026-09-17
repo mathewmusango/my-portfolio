@@ -50,8 +50,8 @@ tags:
 ### 站点 — 内容交付
 
 三个部署目标，一个构建产物。`main` 部署到 **staging**（AWS 中的 S3 + CloudFront
-组合，bucket 私有，通过 OAC 服务）。`v*` 标签在两条平面上部署到 **prod**：首先
-是 AWS 镜像（S3 + CloudFront），然后是 **prod** GitHub Pages — 规范站点 — 位于
+组合，bucket 私有，通过 OAC 服务）。`v*` 标签在两条平面上部署到 **prod**：AWS
+镜像（S3 + CloudFront）和 **prod** GitHub Pages — 规范站点 — **两者**都在
 `prod` 环境的必需审阅者之后。
 
 ### 指标 — 访客分析
@@ -74,7 +74,7 @@ OIDC 角色。**Bootstrap 是唯一带外步骤** — 一个 GitHub Actions 之�
 
 | 平面 | 路径 | 闸门 |
 |---|---|---|
-| **内容** | `main` → staging · `v*` → prod AWS 镜像 → 带闸门 Pages | `prod` 上必需审阅者 |
+| **内容** | `main` → staging · `v*` → prod（AWS 镜像 + Pages），两者均经审阅 | `prod` 上必需审阅者 |
 | **基础设施** | `main` → staging 自动 apply · `v*` → prod 仅 plan | 手动 `terraform apply` |
 
 部署在正确 ref 的每次成功 CI 构建后运行
@@ -105,8 +105,8 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
    `mathewmusango/my-workflows`（固定到提交 SHA）。每个可复用工作流按变更路径自门控
    （[skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }）：
    未触及的表面**跳过并报告成功**，因此必需检查永远不会阻塞无关 PR。
-3. **部署** — ci 成功后 `workflow_run`：`main` → staging，`v*` → prod AWS 镜像 +
-   带闸门 Pages（见[交付模型](#delivery-model)）。
+3. **部署** — ci 成功后 `workflow_run`：`main` → staging，`v*` → prod 两条平面
+   均经审阅（见[交付模型](#delivery-model)）。
 4. **发布与基础设施** — `v*` 标签创建带 CycloneDX SBOM 的 GitHub Release；每次
    基础设施变更 Terraform 都会 plan（apply 保持手动）；`toggle-env` /
    `invalidate-cloudfront` 是手动运维附加项。

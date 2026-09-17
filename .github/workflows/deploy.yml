@@ -1,24 +1,27 @@
 name: Deploy
 
-# ONE deploy workflow, three targets, all driven by the `ci` workflow finishing:
+# ONE deploy workflow, three jobs, all driven by the `ci` workflow finishing:
 #   main push -> staging (S3 + CloudFront), auto and ungated
-#   v* tag    -> prod AWS mirror (S3 + CloudFront) — ungated, lands first
-#             -> prod GitHub Pages (the canonical site) — gated by the required
-#                reviewer on the `prod` environment
+#   v* tag    -> prod AWS mirror (S3 + CloudFront)   — gated
+#             -> prod GitHub Pages (the canonical site) — gated
+# BOTH prod planes wait on the same `prod` environment's required reviewer,
+# so nothing reaches prod unreviewed; staging is ungated by design.
 # Each job carries its own `if:` gate rather than a workflow-level one: a
 # caller-level gate is what changed the reported check name for the shared
 # checks, and the job-level form keeps the run legible. The workflow fires on
 # every ci completion and each job decides — on main the two prod jobs skip, on
 # a v* tag staging skips.
 #
-# NO `environment:` on the AWS jobs by design — the deploy roles' OIDC trust
-# accepts `ref:refs/heads/main` (the sub a workflow_run job presents, since the
-# run lives on the default branch). Declaring an environment switches the sub to
-# `environment:<name>`, which the same trust only allows for the names it lists
-# (`environment:staging` / `environment:pre-prod` in scripts/bootstrap_aws.sh) —
-# so adding one here would break the STS assume. The Pages job is different: its
-# `id-token` is for GitHub Pages, not AWS, so it needs no AWS trust and can carry
-# the `prod` environment that supplies the reviewer gate.
+# `environment:` is load-bearing here, not decoration. A job that declares one
+# presents the OIDC sub `repo:OWNER/REPO:environment:<name>` instead of the ref
+# form, and AWS STS accepts only the shapes listed in the deploy roles' trust
+# (`scripts/bootstrap_aws.sh`) — which is why the prod trust carries
+# `environment:prod` (added 2026-09-17, BEFORE this job was gated: the trust has
+# to accept the shape before the job starts presenting it). Renaming the
+# environment without updating that trust breaks every AWS assume. The env-form
+# sub also carries no ref, so a tag-only job is enforced by its own `if:` below,
+# not by the trust. The Pages job needs no AWS trust — its `id-token` is for
+# GitHub Pages.
 #
 # Staging skips sync + invalidation when the artifact is byte-identical to the
 # last staging deploy. Marker: a zero-byte object keyed by the content hash
@@ -99,9 +102,10 @@ jobs:
   deploy-prod-s3:
     if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
     runs-on: ubuntu-latest
-    # No `environment:` — see the header note. The AWS plane IS prod (the prod
-    # bucket + prod roles); `pre-prod` was a misnomer and is retired, and the
-    # ref-form sub is what keeps the AWS assume working.
+    # Gated like the Pages plane — one reviewer approves a prod release. The AWS
+    # plane IS prod (prod bucket, PROD_* roles); `pre-prod` was a misnomer.
+    environment:
+      name: prod
     permissions:
       id-token: write
       actions: read

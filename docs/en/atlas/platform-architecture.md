@@ -32,10 +32,11 @@ flowchart LR
 ```
 
 **Prod is gated**: `v*` ships one artifact to both prod planes — the AWS mirror
-(S3 + CloudFront) lands first, then Pages publishes on approval from the required
-reviewer on the `prod` GitHub environment. Two delivery planes, each with its own
-gate: **content** — `main` → staging · `v*` → prod (AWS mirror, then gated Pages);
-**infrastructure** — `main` → staging auto-applies · `v*` → prod plan-only.
+(S3 + CloudFront) and GitHub Pages (the canonical site) — and both wait on the
+required reviewer in the `prod` GitHub environment, so nothing reaches prod
+unreviewed. Two delivery planes, each with its own gate: **content** — `main` →
+staging · `v*` → prod (reviewed); **infrastructure** — `main` → staging
+auto-applies · `v*` → prod plan-only.
 
 ## Metrics — visitor analytics
 
@@ -80,7 +81,7 @@ flowchart LR
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
-    A -->|workflow_run · v*| P[deploy → prod AWS mirror + gated Pages]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]

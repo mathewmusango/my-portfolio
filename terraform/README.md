@@ -41,9 +41,9 @@ The AWS-side picture at a glance — the details follow. (A `v*` release ships t
 > [`.github/workflows/README.md`](../.github/workflows/README.md).
 
 > **On `prod`:** a `v*` release ships one artifact to two prod planes — the AWS **prod**
-> stack documented here (site + CloudFront, plus the prod metrics stack), which lands first,
-> and GitHub Pages (the canonical site, behind a required reviewer). There is no separate
-> `pre-prod` environment: the AWS plane has always *been* prod — same bucket, same roles.
+> stack documented here (site + CloudFront, plus the prod metrics stack), and GitHub Pages (the
+> canonical site). Both are gated by the required reviewer on the `prod` environment. There is no
+> separate `pre-prod` environment: the AWS plane has always *been* prod — same bucket, same roles.
 
 ## Why CloudFront?
 
