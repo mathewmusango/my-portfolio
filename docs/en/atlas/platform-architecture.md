@@ -23,20 +23,19 @@ flowchart LR
         DEV[podman-compose · serve.py<br/>HTTPS via mkcert]
     end
     subgraph GHA[GitHub Actions]
-        B[ci.yml — build + checks] -->|main| D1[deploy-staging-s3]
-        B -->|v* tag| D2[deploy-pre-prod-s3]
-        B -->|v* tag| D3[deploy-prod-pages]
+        B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
+        B -->|v* tag| DP[deploy.yml · prod]
     end
-    D1 --> STG[staging — S3 + CloudFront · OAC]
-    D2 --> PRE[pre-prod — S3 + CloudFront · OAC]
-    D3 --> PRD[prod — GitHub Pages]
+    DS --> STG[staging — S3 + CloudFront · OAC]
+    DP --> PAWS[prod — S3 + CloudFront · OAC]
+    DP --> PPAGES[prod — GitHub Pages · required reviewer]
 ```
 
-**Prod is gated**: the Pages deploy runs behind a required reviewer in the `prod`
-GitHub environment — the AWS mirror (`pre-prod`) lands first, then Pages ships on
-approval. Two delivery planes, each with its own gate: **content** — `main` →
-staging · `v*` → pre-prod → gated Pages; **infrastructure** — `main` → staging
-auto-applies · `v*` → prod plan-only.
+**Prod is gated**: `v*` ships one artifact to both prod planes — the AWS mirror
+(S3 + CloudFront) lands first, then Pages publishes on approval from the required
+reviewer on the `prod` GitHub environment. Two delivery planes, each with its own
+gate: **content** — `main` → staging · `v*` → prod (AWS mirror, then gated Pages);
+**infrastructure** — `main` → staging auto-applies · `v*` → prod plan-only.
 
 ## Metrics — visitor analytics
 
@@ -53,8 +52,8 @@ flowchart LR
 CloudFront supplies the geo headers, so **no IP address ever reaches the Lambda**
 ([why?](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md#why-cloudfront){ target="_blank" rel="noopener" }).
 Writer and reader lambdas each have their own least-privilege role; the API is
-public but origin-gated. **staging** runs its own stack; **pre-prod + prod**
-share one; **dev** runs Ministack (no edge). Raw events expire after 90 days.
+public but origin-gated. **staging** runs its own stack; **prod**
+runs one; **dev** runs Ministack (no edge). Raw events expire after 90 days.
 
 ## Terraform — the control plane
 
@@ -80,8 +79,8 @@ flowchart LR
     C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
-    A -->|workflow_run · main| S[deploy → staging env]
-    A -->|workflow_run · v*| P[deploy → pre-prod → gated prod]
+    A -->|workflow_run · main| S[deploy → staging]
+    A -->|workflow_run · v*| P[deploy → prod AWS mirror + gated Pages]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]

@@ -66,6 +66,9 @@ case "$ENV" in
     ;;
   prod)
     REF_PATTERNS='["ref:refs/tags/v*"]'
+    # environment:pre-prod is unused now — the prod AWS deploy job declares no
+    # environment by design (it presents the ref form, ref:refs/heads/main), so
+    # this entry is kept only until the next prod bootstrap prunes it.
     DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:pre-prod"]'
     ;;
 esac

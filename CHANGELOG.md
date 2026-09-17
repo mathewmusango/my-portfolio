@@ -17,6 +17,11 @@ cycle). A release **renames** that section to its version (`## [X.Y.Z] - date`)
 and adds no empty successor — the next cycle's `## [Unreleased]` is opened by
 its first landed change.
 
+## [Unreleased]
+
+### Changed
+- **One deploy workflow, two environments** — `deploy-staging-s3.yml` + `deploy-pre-prod-s3.yml` + `deploy-prod-pages.yml` collapse into a single `deploy.yml` with three gated jobs (`deploy-staging`, `deploy-prod-s3`, `deploy-pages`), now the only place a deploy is defined. The retired `pre-prod` name is gone for good: the AWS plane (S3 + CloudFront, `<project>-prod-site`) has always *been* prod, so it is named prod; GitHub Pages stays the canonical plane and the only one gated. The two AWS jobs declare **no** `environment:` on purpose — the deploy roles' OIDC trust accepts `ref:refs/heads/main`, which is the sub a `workflow_run` job presents, while `environment:<name>` would break the STS assume (#57).
+
 ## [3.3.0] - 2026-09-04
 
 ### Added

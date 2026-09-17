@@ -8,9 +8,8 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 
 ## Naming conventions
 
-- **File names** — `{task}-{env|language|resource}` (`deploy-staging-s3.yml`,
-  `invalidate-cloudfront.yml`); task-only names for single-purpose files
-  (`ci.yml`, `checks.yml`, `release.yml`).
+- **File names** — `{task}-{env|language|resource}` (`invalidate-cloudfront.yml`); task-only
+  names for single-purpose files (`ci.yml`, `checks.yml`, `deploy.yml`, `release.yml`).
 - **Display names** — quoted `{Category}: {Task}` (a colon+space is invalid unquoted YAML):
   `ci` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
 - **`workflow_run` matches display names** — the deploy workflows watch `ci`; renaming a
@@ -67,17 +66,28 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 
 ## Deploy — `workflow_run` on ci success
 
-The two S3 deploys share the same shape: download the artifact (`run-id` of the triggering
-ci), assume the per-environment **deploy role** (OIDC), `aws s3 sync` to the bucket root,
-then assume the **invalidate role** for an inline `/*` invalidation (lookup by the
-`<project>-<env>-site` comment convention; skip when the distro is absent). The Pages deploy
-never touches AWS (see below).
+One workflow — `deploy.yml` — carries all three targets. Each job gates itself with a
+job-level `if:` on the triggering ref; never a workflow-level gate (a caller-level gate is what
+changed the reported check name for the shared checks in `checks.yml`). The two S3 jobs share
+the same shape: download the artifact (`run-id` of the triggering ci), assume the **deploy
+role** (OIDC), `aws s3 sync` to the bucket root, then assume the **invalidate role** for an
+inline `/*` invalidation (lookup by the `<project>-<env>-site` comment convention; skip when
+the distro is absent). The Pages job never touches AWS.
 
-| Workflow | Runs on | Environment | Target | Gate |
+| Job | Runs on | Environment | Target | Gate |
 | --- | --- | --- | --- | --- |
-| `deploy-staging-s3.yml` | ci success on `main` | `staging` (auto, ungated) | `<project>-staging-site` (S3 + CloudFront) | content-hash skip (below) |
-| `deploy-pre-prod-s3.yml` | ci success on `v*` tags | `pre-prod` | `<project>-prod-site` (S3 + CloudFront) — AWS mirror | tag only |
-| `deploy-prod-pages.yml` | ci success on `v*` tags | `prod` (required reviewer) | GitHub Pages (canonical) | tag only + approval |
+| `deploy-staging` | ci success on `main` | `staging` (auto, ungated) | `<project>-staging-site` (S3 + CloudFront) | content-hash skip (below) |
+| `deploy-prod-s3` | ci success on `v*` tags | **none** — see the OIDC note | `<project>-prod-site` (S3 + CloudFront) — the prod AWS plane | tag only |
+| `deploy-pages` | ci success on `v*` tags | `prod` (required reviewer) | GitHub Pages (canonical) | tag only + approval |
+
+- **No `environment:` on the AWS jobs, deliberately.** The deploy roles' OIDC trust allows
+  `ref:refs/heads/main` (plus `environment:staging` / `environment:pre-prod`) and a
+  `workflow_run` job without an environment presents the ref form. Declaring one switches the
+  sub to `environment:<name>` and breaks `sts:AssumeRoleWithWebIdentity` — which is why the AWS
+  plane's env label was dropped rather than renamed. The Pages job is exempt: its `id-token`
+  is for GitHub Pages, not STS. See `scripts/bootstrap_aws.sh`.
+- **Permissions are per job, not workflow-level** — least privilege: only `deploy-pages`
+  carries `pages: write`.
 
 - **Least privilege:** the Pages job uses the official Pages actions
   (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) with `pages: write` +

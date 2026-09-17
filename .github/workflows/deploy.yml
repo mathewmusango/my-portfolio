@@ -1,0 +1,177 @@
+name: Deploy
+
+# ONE deploy workflow, three targets, all driven by the `ci` workflow finishing:
+#   main push -> staging (S3 + CloudFront), auto and ungated
+#   v* tag    -> prod AWS mirror (S3 + CloudFront) — ungated, lands first
+#             -> prod GitHub Pages (the canonical site) — gated by the required
+#                reviewer on the `prod` environment
+# Each job carries its own `if:` gate rather than a workflow-level one: a
+# caller-level gate is what changed the reported check name for the shared
+# checks, and the job-level form keeps the run legible. The workflow fires on
+# every ci completion and each job decides — on main the two prod jobs skip, on
+# a v* tag staging skips.
+#
+# NO `environment:` on the AWS jobs by design — the deploy roles' OIDC trust
+# accepts `ref:refs/heads/main` (the sub a workflow_run job presents, since the
+# run lives on the default branch). Declaring an environment switches the sub to
+# `environment:<name>`, which the same trust only allows for the names it lists
+# (`environment:staging` / `environment:pre-prod` in scripts/bootstrap_aws.sh) —
+# so adding one here would break the STS assume. The Pages job is different: its
+# `id-token` is for GitHub Pages, not AWS, so it needs no AWS trust and can carry
+# the `prod` environment that supplies the reviewer gate.
+#
+# Staging skips sync + invalidation when the artifact is byte-identical to the
+# last staging deploy. Marker: a zero-byte object keyed by the content hash
+# under .deploy-hash/<sha256> — written with PutObject, checked by existence with
+# ListBucket (the deploy role has no s3:GetObject, so the marker is never read).
+# Content, not commits, is compared — so a docs-only merge or multi-commit batch
+# that produces the same site skips cleanly and staging can never go stale.
+# Missing marker = first deploy. Revision-date embeds can make the hash differ
+# across day boundaries — then it deploys as usual (never stale, best-effort).
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
+
+jobs:
+  # ------------------------------------------------------------------ staging
+  deploy-staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    permissions:
+      id-token: write
+      actions: read
+      contents: read
+    steps:
+      - name: Download site artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: site
+          path: site
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Compare artifact hash with last deployed content (.deploy-hash marker)
+        id: check
+        run: |
+          HASH="$(find site -type f | sort | xargs sha256sum | sha256sum | awk '{print $1}')"
+          # Existence check only (ListBucket) — the deploy role has no s3:GetObject,
+          # so the marker is a zero-byte object keyed by the content hash.
+          if aws s3 ls "s3://${{ secrets.PROJECT }}-staging-site/.deploy-hash/$HASH" 2>/dev/null | grep -q .; then
+            echo "Site content unchanged since the last staging deploy — skipping sync + invalidation."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Site content changed (or first deploy) — deploying."
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Sync site to staging S3 (bucket root — site serves at /)
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          aws s3 sync site/ "s3://${{ secrets.PROJECT }}-staging-site/" --delete --no-progress --exclude ".deploy-hash/*"
+          aws s3api put-object --bucket "${{ secrets.PROJECT }}-staging-site" --key ".deploy-hash/${{ steps.check.outputs.hash }}"
+
+      - name: Assume edge-invalidate role (least privilege)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Invalidate staging CloudFront (lookup by comment convention)
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ secrets.PROJECT }}-staging-site'].Id" --output text)"
+          if [ -n "$ID" ]; then
+            aws cloudfront create-invalidation --distribution-id "$ID" --paths "/*"
+          else
+            echo "distribution not found yet — skipping invalidation (content synced)"
+          fi
+
+  # ------------------------------------------- prod: AWS mirror (S3 + CloudFront)
+  deploy-prod-s3:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    runs-on: ubuntu-latest
+    # No `environment:` — see the header note. The AWS plane IS prod (the prod
+    # bucket + prod roles); `pre-prod` was a misnomer and is retired, and the
+    # ref-form sub is what keeps the AWS assume working.
+    permissions:
+      id-token: write
+      actions: read
+      contents: read
+    steps:
+      - name: Download site artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: site
+          path: site
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Sync site to prod S3 (bucket root — site serves at /)
+        run: aws s3 sync site/ "s3://${{ secrets.PROJECT }}-prod-site/" --delete --no-progress
+
+      - name: Assume edge-invalidate role (least privilege)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Invalidate prod CloudFront (lookup by comment convention)
+        run: |
+          ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ secrets.PROJECT }}-prod-site'].Id" --output text)"
+          if [ -n "$ID" ]; then
+            aws cloudfront create-invalidation --distribution-id "$ID" --paths "/*"
+          else
+            echo "distribution not found yet — skipping invalidation (content synced)"
+          fi
+
+  # ------------------------------------ prod: GitHub Pages (canonical, gated)
+  deploy-pages:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    # Serialize Pages deployments — back-to-back prod releases queue instead of
+    # racing; never cancel an in-progress deploy (production must complete).
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
+      - name: Download site artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: site
+          path: site
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
