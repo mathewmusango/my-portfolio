@@ -21,19 +21,19 @@ flowchart LR
         DEV[podman-compose · serve.py<br/>HTTPS via mkcert]
     end
     subgraph GHA[GitHub Actions]
-        B[ci.yml — build + checks] -->|main| D1[deploy-staging-s3]
-        B -->|v* tag| D2[deploy-pre-prod-s3]
-        B -->|v* tag| D3[deploy-prod-pages]
+        B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
+        B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
-    D1 --> STG[staging — S3 + CloudFront · OAC]
-    D2 --> PRE[pre-prod — S3 + CloudFront · OAC]
-    D3 --> PRD[prod — GitHub Pages]
+    DS --> STG[staging — S3 + CloudFront · OAC]
+    DP --> PAWS[prod — S3 + CloudFront · OAC]
+    DP --> PPAGES[prod — GitHub Pages]
 ```
 
-**Prod 有闸门保护**：Pages 部署运行在 GitHub `prod` 环境的必需审阅者之后 — AWS
-镜像（`pre-prod`）先上线，Pages 经批准后才发布。两条交付平面各有闸门：
-**内容** — `main` → staging · `v*` → pre-prod → 带闸门 Pages；**基础设施** —
-`main` → staging 自动 apply · `v*` → prod 仅 plan。
+**Prod 有闸门保护**：`v*` 将一个构建产物交付到两条 prod 平面 — AWS 镜像
+（S3 + CloudFront）和 GitHub Pages（规范站点）— 两者都要等待 `prod` GitHub
+环境中的必需审阅者，因此没有任何东西未经审阅就到达 prod。两条交付平面各有
+自己的闸门：**内容** — `main` → staging · `v*` → prod（经审阅）；
+**基础设施** — `main` → staging 自动 apply · `v*` → prod 仅 plan。
 
 ## 指标 — 访客分析
 
@@ -50,7 +50,7 @@ flowchart LR
 CloudFront 提供地理信息头，因此**任何 IP 地址都不会到达 Lambda**
 （[为什么？](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md#why-cloudfront){ target="_blank" rel="noopener" }）。
 写入和读取 Lambda 各有自己的最小权限角色；API 公开但受来源限制。**staging**
-运行自己的栈；**pre-prod + prod** 共用一个；**dev** 运行 Ministack（无边缘）。
+运行自己的栈；**prod** 共用一个；**dev** 运行 Ministack（无边缘）。
 原始事件在 90 天后过期。
 
 ## Terraform — 控制平面
@@ -76,8 +76,8 @@ flowchart LR
     C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
-    A -->|workflow_run · main| S[deploy → staging env]
-    A -->|workflow_run · v*| P[deploy → pre-prod → gated prod]
+    A -->|workflow_run · main| S[deploy → staging]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]

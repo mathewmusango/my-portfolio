@@ -1,0 +1,104 @@
+name: Deploy
+
+# ONE deploy workflow, three jobs, all driven by the `ci` workflow finishing:
+#   main push -> staging (S3 + CloudFront), auto and ungated
+#   v* tag    -> prod AWS mirror (S3 + CloudFront)   — gated
+#             -> prod GitHub Pages (the canonical site) — gated
+# BOTH prod planes wait on the same `prod` environment's required reviewer, so
+# nothing reaches prod unreviewed; staging is ungated by design.
+#
+# The jobs here are deliberately thin — trigger, gate, permissions, one `uses:`
+# — and the shared logic lives in the two composite actions beside this file
+# (`.github/actions/deploy-s3`, `.github/actions/deploy-pages`). They are leaf
+# actions, not a library hop, for a reason worth remembering: a job that calls a
+# reusable workflow CANNOT carry `environment:` (only name/uses/with/secrets/
+# needs/if/permissions are allowed), so a gate hosted in another repo would be
+# untestable and could fail open — a prod deploy with no review and no error.
+# Keeping the job local keeps the gate local; the logic is still in one place.
+#
+# `environment:` is load-bearing, not decoration. A job that declares one
+# presents the OIDC sub `repo:OWNER/REPO:environment:<name>` instead of the ref
+# form, and AWS STS accepts only the shapes listed in the deploy roles' trust
+# (`scripts/bootstrap_aws.sh`) — which is why the prod trust carries
+# `environment:prod` (added 2026-09-17, BEFORE this job was gated: the trust has
+# to accept the shape before the job starts presenting it). Renaming the
+# environment without updating that trust breaks every AWS assume. The env-form
+# sub also carries no ref, so a tag-only job is enforced by its own `if:` below,
+# not by the trust. The Pages job needs no AWS trust — its `id-token` is for
+# GitHub Pages.
+#
+# A composite action cannot read `secrets`, so every value it needs arrives
+# through `with:`; the artifact token is `github.token`, which composites can
+# read (the job's `actions: read` is what makes it work).
+on:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
+
+jobs:
+  # ------------------------------------------------------------------ staging
+  deploy-staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    permissions:
+      id-token: write
+      actions: read
+      contents: read
+    steps:
+      - uses: ./.github/actions/deploy-s3
+        with:
+          project: ${{ secrets.PROJECT }}
+          env: staging
+          run_id: ${{ github.event.workflow_run.id }}
+          deploy_role_arn: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          hash_skip: "true" # byte-identical artifacts skip sync + invalidation
+
+  # ------------------------------------------- prod: AWS mirror (S3 + CloudFront)
+  deploy-prod-s3:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    runs-on: ubuntu-latest
+    # Gated like the Pages plane — one reviewer approves a prod release. The AWS
+    # plane IS prod (prod bucket, PROD_* roles); `pre-prod` was a misnomer.
+    environment:
+      name: prod
+    permissions:
+      id-token: write
+      actions: read
+      contents: read
+    steps:
+      - uses: ./.github/actions/deploy-s3
+        with:
+          project: ${{ secrets.PROJECT }}
+          env: prod
+          run_id: ${{ github.event.workflow_run.id }}
+          deploy_role_arn: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          hash_skip: "false" # a release always deploys
+
+  # ------------------------------------ prod: GitHub Pages (canonical, gated)
+  deploy-pages:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v') }}
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    # Serialize Pages deployments — back-to-back prod releases queue instead of
+    # racing; never cancel an in-progress deploy (production must complete).
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
+      - id: deploy
+        uses: ./.github/actions/deploy-pages
+        with:
+          run_id: ${{ github.event.workflow_run.id }}

@@ -19,11 +19,11 @@ flowchart TB
         WF[terraform.yml] -->|assumes| ROLES
     end
     ROLES -->|plan · apply| SITE[site — S3 + CloudFront OAC<br/>staging · prod]
-    ROLES -->|plan · apply| MET[metrics — CF geo → API GW<br/>→ Lambda writer + reader → DynamoDB<br/>staging own stack · pre-prod + prod shared]
+    ROLES -->|plan · apply| MET[metrics — CF geo → API GW<br/>→ Lambda writer + reader → DynamoDB<br/>staging own stack · one prod stack]
 ```
 
-The AWS-side picture at a glance — the details follow. (`pre-prod` deploys content onto the
-**prod** stack; it is not a separate Terraform environment.)
+The AWS-side picture at a glance — the details follow. (A `v*` release ships the site onto the
+**prod** stack; the GitHub Pages plane is separate and not Terraform-managed.)
 
 ## Design principles
 
@@ -40,10 +40,10 @@ The AWS-side picture at a glance — the details follow. (`pre-prod` deploys con
 > (OIDC) or the CLI. Ops extras (`toggle-env`, `invalidate-cloudfront`) are documented in
 > [`.github/workflows/README.md`](../.github/workflows/README.md).
 
-> **On `pre-prod`:** the root README's deploy pipeline has a third stage, `pre-prod` — an
-> AWS-hosted mirror of the canonical site, used to verify a release before it ships to GitHub
-> Pages. It is not a separate Terraform environment: `pre-prod` runs on the same `prod` AWS
-> stack documented here (site + metrics), so nothing below changes for it.
+> **On `prod`:** a `v*` release ships one artifact to two prod planes — the AWS **prod**
+> stack documented here (site + CloudFront, plus the prod metrics stack), and GitHub Pages (the
+> canonical site). Both are gated by the required reviewer on the `prod` environment. There is no
+> separate `pre-prod` environment: the AWS plane has always *been* prod — same bucket, same roles.
 
 ## Why CloudFront?
 

@@ -35,7 +35,7 @@ project deliberately applies the practices expected of production software — o
 a public repository, at portfolio scale, where every trade-off is visible:
 
 - **Everything ships like real software** — PRs, required checks, approvals, releases.
-- **Every environment is a real environment** — dev, staging, pre-prod, prod.
+- **Every environment is a real environment** — dev, staging, prod.
 - **Security is designed in** — no long-lived credentials, private storage, least privilege.
 - **Privacy is an architectural property** — visitor analytics collect geo only, never IPs.
 - **History is honest** — a [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }, tagged releases, and an [SBOM per release](https://github.com/mathewmusango/my-portfolio/releases){ target="_blank" rel="noopener" }.
@@ -56,8 +56,9 @@ carries the delivery, metrics, and control-plane diagrams.)
 
 Three deploy targets, one artifact. `main` deploys to **staging** (an S3 +
 CloudFront pair in AWS, bucket private, served through OAC). `v*` tags deploy to
-**pre-prod** — an AWS mirror of the canonical site — and then to **prod**:
-GitHub Pages, behind a required reviewer in the `prod` environment.
+**prod** on two planes: the AWS mirror (S3 + CloudFront) and **prod** GitHub
+Pages — the canonical site — **both** behind a required reviewer in the `prod`
+environment.
 
 ### Metrics — visitor analytics
 
@@ -81,7 +82,7 @@ Two delivery planes, each with its own gate:
 
 | Plane | Path | Gate |
 |---|---|---|
-| **Content** | `main` → staging · `v*` → pre-prod → gated Pages | required reviewer on `prod` |
+| **Content** | `main` → staging · `v*` → prod (AWS mirror + Pages), both reviewed | required reviewer on `prod` |
 | **Infrastructure** | `main` → staging auto-applies · `v*` → prod plan-only | manual `terraform apply` |
 
 Deploys run on every successful CI build of the right ref
@@ -116,8 +117,8 @@ A change ships through four phases — each documented in
    ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    untouched surfaces **skip and report success**, so the required checks
    never block an unrelated PR.
-3. **Deploy** — `workflow_run` on ci success: `main` → staging, `v*` →
-   pre-prod + gated prod (see [Delivery model](#delivery-model)).
+3. **Deploy** — `workflow_run` on ci success (`deploy.yml`): `main` → staging, `v*` →
+   prod on both planes (reviewed) (see [Delivery model](#delivery-model)).
 4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
    SBOM; Terraform plans on every infra change (apply stays manual);
    `toggle-env` / `invalidate-cloudfront` are manual operational extras.

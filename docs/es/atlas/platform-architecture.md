@@ -23,21 +23,21 @@ flowchart LR
         DEV[podman-compose · serve.py<br/>HTTPS via mkcert]
     end
     subgraph GHA[GitHub Actions]
-        B[ci.yml — build + checks] -->|main| D1[deploy-staging-s3]
-        B -->|v* tag| D2[deploy-pre-prod-s3]
-        B -->|v* tag| D3[deploy-prod-pages]
+        B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
+        B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
-    D1 --> STG[staging — S3 + CloudFront · OAC]
-    D2 --> PRE[pre-prod — S3 + CloudFront · OAC]
-    D3 --> PRD[prod — GitHub Pages]
+    DS --> STG[staging — S3 + CloudFront · OAC]
+    DP --> PAWS[prod — S3 + CloudFront · OAC]
+    DP --> PPAGES[prod — GitHub Pages]
 ```
 
-**Prod está protegido por una puerta**: el despliegue de Pages se ejecuta detrás
-de un revisor obligatorio en el entorno `prod` de GitHub — el espejo AWS
-(`pre-prod`) llega primero y Pages se publica tras la aprobación. Dos planos de
-entrega, cada uno con su puerta: **contenido** — `main` → staging · `v*` →
-pre-prod → Pages con puerta; **infraestructura** — `main` → staging se aplica
-solo · `v*` → solo plan en prod.
+**Prod está protegido por una puerta**: `v*` entrega un solo artefacto a ambos
+planos de prod — el espejo AWS (S3 + CloudFront) y GitHub Pages (el sitio
+canónico) — y ambos esperan al revisor obligatorio en el entorno `prod` de
+GitHub, así que nada llega a prod sin revisión. Dos planos de entrega, cada uno
+con su propia puerta: **contenido** — `main` → staging · `v*` → prod
+(revisado); **infraestructura** — `main` → staging se aplica solo · `v*` →
+solo plan en prod.
 
 ## Métricas — analítica de visitas
 
@@ -56,7 +56,7 @@ jamás a la Lambda**
 ([¿por qué?](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md#why-cloudfront){ target="_blank" rel="noopener" }).
 Las lambdas escritora y lectora tienen cada una su propio rol de mínimo
 privilegio; la API es pública pero restringida por origen. **staging** ejecuta su
-propia pila; **pre-prod + prod** comparten una; **dev** ejecuta Ministack (sin
+propia pila; **prod** usa una sola; **dev** ejecuta Ministack (sin
 edge). Los eventos brutos expiran a los 90 días.
 
 ## Terraform — el plano de control
@@ -83,8 +83,8 @@ flowchart LR
     C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
-    A -->|workflow_run · main| S[deploy → staging env]
-    A -->|workflow_run · v*| P[deploy → pre-prod → gated prod]
+    A -->|workflow_run · main| S[deploy → staging]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]

@@ -46,19 +46,19 @@ flowchart LR
         DEV[podman-compose · serve.py<br/>HTTPS via mkcert]
     end
     subgraph GHA[GitHub Actions]
-        B[ci.yml — build + checks] -->|main| D1[deploy-staging-s3]
-        B -->|v* tag| D2[deploy-pre-prod-s3]
-        B -->|v* tag| D3[deploy-prod-pages]
+        B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
+        B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
-    D1 --> STG[staging — S3 + CloudFront · OAC]
-    D2 --> PRE[pre-prod — S3 + CloudFront · OAC]
-    D3 --> PRD[prod — GitHub Pages]
+    DS --> STG[staging — S3 + CloudFront · OAC]
+    DP --> PAWS[prod — S3 + CloudFront · OAC]
+    DP --> PPAGES[prod — GitHub Pages]
 ```
 
-**Prod is gated**: the Pages deploy runs behind a required reviewer in the `prod` GitHub
-environment — `pre-prod` (the AWS mirror) lands first, then Pages ships on approval. Two
-delivery planes, each with its own gate: **content** — `main` → staging · `v*` → pre-prod →
-gated Pages; **infrastructure** — `main` → staging auto-applies · `v*` → prod plan-only.
+**Prod is gated**: `v*` ships one artifact to both prod planes — the AWS mirror (S3 +
+CloudFront) and GitHub Pages (the canonical site) — and **both** wait on the required reviewer in
+the `prod` GitHub environment, so nothing reaches prod unreviewed. Two delivery planes, each with
+its own gate: **content** — `main` → staging · `v*` → prod (reviewed); **infrastructure** — `main`
+→ staging auto-applies · `v*` → prod plan-only.
 
 ### Metrics — visitor analytics
 
@@ -72,7 +72,7 @@ flowchart LR
     R -->|Scan · Query| DB
 ```
 
-**staging** runs its own stack; **pre-prod + prod** share one; **dev** runs Ministack (no edge).
+**staging** runs its own stack; **prod** runs one; **dev** runs Ministack (no edge).
 Writer and reader lambdas each have their own least-privilege role. Privacy-first: geo only — no
 IPs stored, raw events expire — CloudFront supplies the geo headers, so no IP address ever
 reaches the Lambda ([Why CloudFront?](terraform/README.md#why-cloudfront)).
@@ -146,8 +146,8 @@ flowchart LR
     C -->|pass| B[ci — ci.yml]
     V --> B
     B --> A[site artifact]
-    A -->|workflow_run · main| S[deploy → staging env]
-    A -->|workflow_run · v*| P[deploy → pre-prod → gated prod]
+    A -->|workflow_run · main| S[deploy → staging]
+    A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]
@@ -163,10 +163,10 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
   PRs by relevance: untouched surfaces **skip and report success**, so the required checks never
   block unrelated PRs. The same checks run locally (`scripts/check_local.sh` — changed-files by
   default, `--full` for whole-repo, mirroring the workflows exactly).
-- **Deploy** — `workflow_run` on ci success: `main` → **staging** (S3 + CloudFront), `v*` tags
-  → **pre-prod** (AWS mirror) → gated **prod** (GitHub Pages). Staging **skips** when the
-  artifact is byte-identical to the last deploy (content-hash marker); prod runs in the `prod`
-  environment behind a required reviewer.
+- **Deploy** — `workflow_run` on ci success, one file: `deploy.yml` — `main` → **staging**
+  (S3 + CloudFront); `v*` tags → **prod** on both planes (the AWS mirror and the GitHub Pages
+  publish), each waiting on the `prod` environment's required reviewer. Staging **skips** when the
+  artifact is byte-identical to the last deploy (content-hash marker).
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
   plans on `terraform/**` changes (apply stays manual); `toggle-env` and `invalidate-cloudfront`
   are manual operational extras.

@@ -66,7 +66,16 @@ case "$ENV" in
     ;;
   prod)
     REF_PATTERNS='["ref:refs/tags/v*"]'
-    DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:pre-prod"]'
+    # The prod deploy jobs declare an environment, so their OIDC sub is
+    # repo:OWNER@*/REPO@*:environment:<name> (not the ref form). Allow every
+    # environment form the prod jobs present + keep the ref form for the
+    # no-environment manual dispatches (invalidate-cloudfront.yml,
+    # toggle-env.yml). Same trust serves deploy/invalidate/toggle roles.
+    #   environment:pre-prod — the three-environment model, still what `main`
+    #     runs; prune it only after the consolidation (#57) has merged.
+    #   environment:prod     — the consolidated jobs, where BOTH prod planes
+    #     (AWS S3 + Pages) are gated by the same `prod` environment.
+    DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:pre-prod", "environment:prod"]'
     ;;
 esac
 

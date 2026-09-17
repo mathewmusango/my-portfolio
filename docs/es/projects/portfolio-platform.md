@@ -37,7 +37,7 @@ software de producción — en un repositorio público, a escala de portafolio,
 donde cada decisión es visible:
 
 - **Todo se publica como software real** — PRs, verificaciones obligatorias, aprobaciones, releases.
-- **Cada entorno es un entorno real** — dev, staging, pre-prod, prod.
+- **Cada entorno es un entorno real** — dev, staging, prod.
 - **La seguridad está diseñada desde el inicio** — sin credenciales de larga duración, almacenamiento privado, mínimo privilegio.
 - **La privacidad es una propiedad arquitectónica** — la analítica de visitas recoge solo geo, nunca IPs.
 - **La historia es honesta** — un [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }, releases etiquetados y un [SBOM por release](https://github.com/mathewmusango/my-portfolio/releases){ target="_blank" rel="noopener" }.
@@ -58,9 +58,9 @@ del repositorio lleva los diagramas de entrega, métricas y plano de control.)
 
 Tres destinos de despliegue, un solo artefacto. `main` despliega a **staging**
 (un par S3 + CloudFront en AWS, bucket privado, servido a través de OAC). Las
-etiquetas `v*` despliegan a **pre-prod** — un espejo AWS del sitio canónico — y
-luego a **prod**: GitHub Pages, detrás de un revisor obligatorio en el entorno
-`prod`.
+etiquetas `v*` despliegan a **prod** en dos planos: el espejo AWS
+(S3 + CloudFront) y **prod** GitHub Pages — el sitio canónico — **ambos** detrás
+de un revisor obligatorio en el entorno `prod`.
 
 ### Métricas — analítica de visitas
 
@@ -86,7 +86,7 @@ Dos planos de entrega, cada uno con su propia puerta:
 
 | Plano | Ruta | Puerta |
 |---|---|---|
-| **Contenido** | `main` → staging · `v*` → pre-prod → Pages con puerta | revisor obligatorio en `prod` |
+| **Contenido** | `main` → staging · `v*` → prod (espejo AWS + Pages), ambos revisados | revisor obligatorio en `prod` |
 | **Infraestructura** | `main` → staging se aplica solo · `v*` → solo plan en prod | `terraform apply` manual |
 
 Los despliegues se ejecutan en cada build de CI correcto de la ref adecuada
@@ -122,8 +122,8 @@ Un cambio se publica en cuatro fases — cada una documentada en
    modificadas ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    las superficies no tocadas **se omiten y reportan éxito**, así las
    verificaciones obligatorias nunca bloquean un PR no relacionado.
-3. **Deploy** — `workflow_run` al éxito de ci: `main` → staging, `v*` →
-   pre-prod + prod con puerta (ver [Modelo de entrega](#delivery-model)).
+3. **Deploy** — `workflow_run` al éxito de ci: `main` → staging, `v*` → prod en
+   ambos planos, revisados (ver [Modelo de entrega](#delivery-model)).
 4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
    CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo
    manual); `toggle-env` / `invalidate-cloudfront` son extras operativos manuales.

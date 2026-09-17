@@ -1,0 +1,107 @@
+name: "Deploy: S3"
+description: >-
+  Sync the CI-built site to <project>-<env>-site and invalidate that
+  distribution (found by the <project>-<env>-site comment convention). One
+  action serves every S3 target — staging and the prod AWS plane differ only by
+  the environment token and the roles they assume.
+
+inputs:
+  project:
+    description: Project prefix for the bucket and the distribution comment.
+    required: true
+  env:
+    description: Environment token — bucket <project>-<env>-site, comment <project>-<env>-site.
+    required: true
+  run_id:
+    description: The ci run that produced the `site` artifact.
+    required: true
+  deploy_role_arn:
+    description: OIDC role for the S3 sync (scoped to this environment's bucket).
+    required: true
+  invalidate_role_arn:
+    description: OIDC role for the CloudFront invalidation — deliberately a separate role from the sync.
+    required: true
+  aws_region:
+    description: AWS region.
+    required: true
+  hash_skip:
+    description: >-
+      "true" to skip the sync + invalidation when the artifact is byte-identical
+      to the last deploy (staging only). The marker is a zero-byte object keyed
+      by the content hash, existence-checked with ListBucket and never read —
+      the deploy role deliberately has no s3:GetObject. Missing marker = first
+      deploy. Revision-date embeds can make the hash differ across day
+      boundaries — then it deploys as usual (never stale, best-effort).
+    required: false
+    default: "false"
+
+outputs:
+  changed:
+    description: '"true" when the sync + invalidation ran (always "true" when hash_skip is off).'
+    value: ${{ steps.check.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Download site artifact
+      uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      with:
+        name: site
+        path: site
+        github-token: ${{ github.token }}
+        run-id: ${{ inputs.run_id }}
+
+    - name: Assume deploy role (OIDC)
+      uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+      with:
+        role-to-assume: ${{ inputs.deploy_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: Decide whether to deploy (content-hash skip)
+      id: check
+      shell: bash
+      run: |
+        # A release always deploys; only a hash_skip caller can skip.
+        if [ "${{ inputs.hash_skip }}" != "true" ]; then
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        HASH="$(find site -type f | sort | xargs sha256sum | sha256sum | awk '{print $1}')"
+        # Existence check only (ListBucket) — the deploy role has no s3:GetObject,
+        # so the marker is a zero-byte object keyed by the content hash.
+        if aws s3 ls "s3://${{ inputs.project }}-${{ inputs.env }}-site/.deploy-hash/$HASH" 2>/dev/null | grep -q .; then
+          echo "Site content unchanged since the last deploy — skipping sync + invalidation."
+          echo "changed=false" >> "$GITHUB_OUTPUT"
+        else
+          echo "Site content changed (or first deploy) — deploying."
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Sync site to S3 (bucket root — the site serves at /)
+      if: steps.check.outputs.changed == 'true'
+      shell: bash
+      run: |
+        aws s3 sync site/ "s3://${{ inputs.project }}-${{ inputs.env }}-site/" --delete --no-progress --exclude ".deploy-hash/*"
+        # Plant the marker for the next run's skip check (hash is set only on the
+        # hash_skip path, so a release plants nothing).
+        if [ -n "${{ steps.check.outputs.hash }}" ]; then
+          aws s3api put-object --bucket "${{ inputs.project }}-${{ inputs.env }}-site" --key ".deploy-hash/${{ steps.check.outputs.hash }}"
+        fi
+
+    - name: Assume edge-invalidate role (least privilege)
+      uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+      with:
+        role-to-assume: ${{ inputs.invalidate_role_arn }}
+        aws-region: ${{ inputs.aws_region }}
+
+    - name: Invalidate CloudFront (lookup by comment convention)
+      if: steps.check.outputs.changed == 'true'
+      shell: bash
+      run: |
+        ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ inputs.project }}-${{ inputs.env }}-site'].Id" --output text)"
+        if [ -n "$ID" ]; then
+          aws cloudfront create-invalidation --distribution-id "$ID" --paths "/*"
+        else
+          echo "distribution not found yet — skipping invalidation (content synced)"
+        fi
