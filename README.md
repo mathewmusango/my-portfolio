@@ -150,7 +150,7 @@ flowchart LR
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
-    X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]
+    X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
 
 Each of the four phases below is documented in [`.github/workflows/README.md`](.github/workflows/README.md)
@@ -172,8 +172,9 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
   Pages publish), each waiting on the `prod` environment's required reviewer. Staging **skips** when
   the artifact is byte-identical to the last deploy (content-hash marker).
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
-  plans on `terraform/**` changes (apply stays manual); `toggle-env` and `invalidate-cloudfront`
-  are manual operational extras.
+  plans on `terraform/**` changes (apply stays manual); `cloudfront.yml` — invalidate / switch,
+  both jobs calling shared reusable leaves in the public `my-workflows` library — is the manual
+  operational extra.
 
 ## Infrastructure as Code (Terraform)
 

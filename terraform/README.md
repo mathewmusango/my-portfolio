@@ -37,8 +37,8 @@ The AWS-side picture at a glance — the details follow. (A `v*` release ships t
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
 > manual)**. Local dev applies against Ministack; real-AWS applies happen via the workflow
-> (OIDC) or the CLI. Ops extras (`toggle-env`, `invalidate-cloudfront`) are documented in
-> [`.github/workflows/README.md`](../.github/workflows/README.md).
+> (OIDC) or the CLI. The manual ops extra (`cloudfront.yml` — invalidate / switch, over shared reusable
+> leaves) is documented in [`.github/workflows/README.md`](../.github/workflows/README.md).
 
 > **On `prod`:** a `v*` release ships one artifact to two prod planes — the AWS **prod**
 > stack documented here (site + CloudFront, plus the prod metrics stack), and GitHub Pages (the
