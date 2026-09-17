@@ -66,13 +66,25 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 
 ## Deploy — `workflow_run` on ci success
 
-One workflow — `deploy.yml` — carries all three targets. Each job gates itself with a
-job-level `if:` on the triggering ref; never a workflow-level gate (a caller-level gate is what
-changed the reported check name for the shared checks in `checks.yml`). The two S3 jobs share
-the same shape: download the artifact (`run-id` of the triggering ci), assume the **deploy
-role** (OIDC), `aws s3 sync` to the bucket root, then assume the **invalidate role** for an
-inline `/*` invalidation (lookup by the `<project>-<env>-site` comment convention; skip when
-the distro is absent). The Pages job never touches AWS.
+One workflow — `deploy.yml` — carries all three targets, and holds only the trigger, the gate, the
+permissions and one `uses:` per job. The logic lives in two composite actions beside it:
+[`.github/actions/deploy-s3`](../actions/deploy-s3/action.yml) — download the artifact, assume
+the **deploy role** (OIDC), `aws s3 sync` to the bucket root, then assume the **invalidate role**
+for an inline `/*` invalidation (lookup by the `<project>-<env>-site` comment convention; skip
+when the distro is absent) — and
+[`.github/actions/deploy-pages`](../actions/deploy-pages/action.yml) — configure → upload →
+deploy, never touching AWS. One S3 action serves both environments; `hash_skip` turns on the
+staging content-hash skip. Each job gates itself with a job-level `if:` on the triggering ref;
+never a workflow-level gate (a caller-level gate is what changed the reported check name for the
+shared checks in `checks.yml`).
+
+- **Why leaf actions here rather than reusable workflows in the library:** a job that calls a
+  reusable workflow may carry only `name`/`uses`/`with`/`secrets`/`needs`/`if`/`permissions` —
+  **`environment:` is rejected** — so the reviewer gate could not stay in the consumer, and a
+  gate hosted in another repo could fail open (a prod deploy with no review and no error). A
+  composite keeps the job, its gate and its permissions here, with the logic in one place.
+  Constraint to remember: a composite **cannot read `secrets`**, so every sensitive value
+  arrives through `with:` — the artifact token is `github.token`, which composites can read.
 
 | Job | Runs on | Environment | Target | Gate |
 | --- | --- | --- | --- | --- |
