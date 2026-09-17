@@ -1,140 +1,26 @@
 name: Deploy
 
-# ONE deploy workflow. A single `detect` job answers "which target is this ci run for?" and the
-# jobs below each read that answer — so the two prod jobs SHARE one condition instead of
-# repeating the expression. (The checks leaves use the same shape, except there the decision
-# needs a git diff; here it is already in the event payload.)
-#
-#   ci success on `main` -> staging -> aws-s3-staging    (S3 + CloudFront)
-#   ci success on `v*`   -> prod    -> aws-s3-prod       (S3 + CloudFront)
-#                                  -> github-pages-prod (GitHub Pages, the canonical site)
-#   anything else (a failed ci, a feature branch) -> `none` -> every job skips.
-#
-# BOTH prod planes wait on the same `prod` environment's required reviewer, so nothing reaches
-# prod unreviewed; staging is ungated by design.
-#
-# The jobs are thin — gate, permissions, one `uses:` — and the logic lives in the two local
-# composite actions beside this file (`actions/aws-s3`, `actions/github-pages`). Leaf actions
-# rather than library reusables for a reason worth remembering: a job that calls a reusable
-# workflow CANNOT carry `environment:` (only name/uses/with/secrets/needs/if/permissions are
-# allowed), so a gate hosted in another repo could fail open — a prod deploy with no review and
-# no error. Keeping the job local keeps the gate local. The price of a local action is that each
-# job must `actions/checkout` first: `uses: ./...` is resolved from the JOB WORKSPACE, so the
-# repo has to be on disk even when the action only needs the artifact. A remote action ref would
-# not need it.
-#
-# `environment:` is load-bearing, not decoration: a job that declares one presents the OIDC sub
-# `repo:OWNER/REPO:environment:<name>` instead of the ref form, and AWS STS accepts only the
-# shapes listed in the deploy roles' trust (`scripts/bootstrap_aws.sh`) — which is why the prod
-# trust carries `environment:prod`, added BEFORE the gate existed (the trust must accept the
-# shape before the job starts presenting it). Renaming the environment without updating that
-# trust breaks every AWS assume. The env-form sub also carries no ref, so the tag-only rule
-# lives in `detect` here, never in the trust.
-#
-# A composite action cannot read `secrets`, so every value it needs arrives through `with:`; the
-# artifact token is `github.token`, which composites can read (the job's `actions: read` is what
-# makes it work).
 on:
   workflow_run:
     workflows: ["ci"]
     types: [completed]
 
 jobs:
-  # The one question, answered once. No permissions — it only reads the event payload.
-  detect:
-    runs-on: ubuntu-latest
-    permissions: {}
-    outputs:
-      target: ${{ steps.classify.outputs.target }}
-    steps:
-      - id: classify
-        env:
-          HEAD: ${{ github.event.workflow_run.head_branch }}
-          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-        run: |
-          # `types: [completed]` fires on every completion, failures included — so a failed ci
-          # must classify as `none`, never as a deployable target.
-          target=none
-          if [ "$CONCLUSION" = "success" ]; then
-            case "$HEAD" in
-              main) target=staging ;;
-              v*) target=prod ;;
-            esac
-          fi
-          echo "target=$target" >> "$GITHUB_OUTPUT"
-          echo "ci on '$HEAD' concluded '$CONCLUSION' -> target=$target"
-
-  # ------------------------------------------------------------------ staging
-  aws-s3-staging:
-    needs: detect
-    if: ${{ needs.detect.outputs.target == 'staging' }}
-    runs-on: ubuntu-latest
-    environment:
-      name: staging
+  staging:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || startsWith(github.event.workflow_run.head_branch, 'v')) }}
     permissions:
+      contents: read
+      actions: read
       id-token: write
-      actions: read
-      contents: read
-    steps:
-      # `uses: ./...` needs the workspace populated — see the header note.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/aws-s3
-        with:
-          project: ${{ secrets.PROJECT }}
-          env: staging
-          run_id: ${{ github.event.workflow_run.id }}
-          deploy_role_arn: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
-          invalidate_role_arn: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          hash_skip: "true" # byte-identical artifacts skip sync + invalidation
+    uses: ./.github/workflows/deploy-staging.yml
+    secrets: inherit
 
-  # ------------------------------------------- prod: AWS plane (S3 + CloudFront)
-  aws-s3-prod:
-    needs: detect
-    if: ${{ needs.detect.outputs.target == 'prod' }}
-    runs-on: ubuntu-latest
-    # Gated like the Pages plane — one reviewer approves a prod release. The AWS plane IS prod
-    # (prod bucket, PROD_* roles); `pre-prod` was a misnomer.
-    environment:
-      name: prod
+  prod:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || startsWith(github.event.workflow_run.head_branch, 'v')) }}
     permissions:
+      contents: read
+      actions: read
       id-token: write
-      actions: read
-      contents: read
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/aws-s3
-        with:
-          project: ${{ secrets.PROJECT }}
-          env: prod
-          run_id: ${{ github.event.workflow_run.id }}
-          deploy_role_arn: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
-          invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
-          aws_region: ${{ secrets.AWS_REGION }}
-          hash_skip: "false" # a release always deploys
-
-  # ------------------------------------ prod: GitHub Pages (canonical, gated)
-  github-pages-prod:
-    needs: detect
-    # The same condition as aws-s3-prod — one answer, read twice. Change it in `detect`.
-    if: ${{ needs.detect.outputs.target == 'prod' }}
-    runs-on: ubuntu-latest
-    environment:
-      name: prod
-      url: ${{ steps.deploy.outputs.page_url }}
-    permissions:
-      contents: read
-      actions: read
       pages: write
-      id-token: write
-    # Serialize Pages deployments — back-to-back prod releases queue instead of racing; never
-    # cancel an in-progress deploy (production must complete).
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - id: deploy
-        uses: ./.github/actions/github-pages
-        with:
-          run_id: ${{ github.event.workflow_run.id }}
+    uses: ./.github/workflows/deploy-prod.yml
+    secrets: inherit

@@ -1,0 +1,73 @@
+name: "Deploy: prod"
+
+on:
+  workflow_call:
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      deploy: ${{ steps.classify.outputs.deploy }}
+    steps:
+      - id: classify
+        env:
+          HEAD: ${{ github.event.workflow_run.head_branch }}
+          TRIGGER: ${{ github.event.workflow_run.event }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          deploy=false
+          if [ "$CONCLUSION" = "success" ] && [ "$TRIGGER" = "push" ]; then
+            if gh api --silent "repos/$REPO/git/ref/tags/$HEAD" 2>/dev/null; then
+              deploy=true
+            fi
+          fi
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+          echo "ci on '$HEAD' ($TRIGGER) concluded '$CONCLUSION' -> prod deploy=$deploy"
+
+  aws-s3:
+    needs: detect
+    if: ${{ needs.detect.outputs.deploy == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/aws-s3
+        with:
+          project: ${{ secrets.PROJECT }}
+          env: prod
+          run_id: ${{ github.event.workflow_run.id }}
+          deploy_role_arn: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          hash_skip: "false"
+
+  github-pages:
+    needs: detect
+    if: ${{ needs.detect.outputs.deploy == 'true' }}
+    runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: ${{ steps.deploy.outputs.page_url }}
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - id: deploy
+        uses: ./.github/actions/github-pages
+        with:
+          run_id: ${{ github.event.workflow_run.id }}

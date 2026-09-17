@@ -9,10 +9,11 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 ## Naming conventions
 
 - **File names** — `{task}-{env|language|resource}` (`invalidate-cloudfront.yml`); task-only
-  names for single-purpose files (`ci.yml`, `checks.yml`, `deploy.yml`, `release.yml`).
+  names for single-purpose files (`ci.yml`, `checks.yml`, `deploy.yml`, `release.yml`). The deploy
+  caller is `deploy.yml`; the per-environment reusables it calls are `deploy-{env}.yml`.
 - **Display names** — quoted `{Category}: {Task}` (a colon+space is invalid unquoted YAML):
   `ci` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
-- **`workflow_run` matches display names** — the deploy workflows watch `ci`; renaming a
+- **`workflow_run` matches display names** — the deploy workflow watches `ci`; renaming a
   display name requires updating every `workflow_run` reference.
 
 ## ci — `ci.yml` (`ci`)
@@ -66,49 +67,62 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 
 ## Deploy — `workflow_run` on ci success
 
-One workflow — `deploy.yml` — carries all three targets. A single `detect` job answers *which*
-*run this is* (a `v*` tag → prod, `main` → staging, anything else or a failed `ci` → `none`) and
-every job reads that one answer, so the two prod jobs share a condition rather than repeating it.
-After that each job holds only its gate, its `permissions` and one `uses:`. The logic lives in two
-composite actions beside it: [`aws-s3`](../actions/aws-s3/action.yml) — download the artifact,
-assume the **deploy role** (OIDC), `aws s3 sync` to the bucket root, then assume the
-**invalidate role** for an inline `/*` invalidation (lookup by the `<project>-<env>-site` comment
-convention; skip when the distro is absent) — and [`github-pages`](../actions/github-pages/action.yml)
-— configure → upload → deploy, never touching AWS. One S3 action serves both environments;
-`hash_skip` turns on the staging content-hash skip.
+Three files. [`deploy.yml`](deploy.yml) is the **caller** — the trigger plus one job per
+environment — and [`deploy-staging.yml`](deploy-staging.yml) /
+[`deploy-prod.yml`](deploy-prod.yml) are the **local reusable workflows** holding that
+environment's jobs. Each caller job calls its environment's reusable, so the called jobs render
+**nested under the calling job** — the run graph reads as two environment groups, and every check
+name carries its environment:
 
-- **`detect` needs no git diff and no permissions.** The checks leaves compute their decision from
-  a checkout diff; here the answer is already in the event payload (`workflow_run.head_branch` +
-  `.conclusion`), so `detect` is a `permissions: {}` job with one `case` statement.
+| Caller job | Calls | Reported check names | Environment | Target |
+| --- | --- | --- | --- | --- |
+| `staging` | `deploy-staging.yml` | `staging / detect` · `staging / aws-s3` | `staging` (ungated) | `<project>-staging-site` (S3 + CloudFront) |
+| `prod` | `deploy-prod.yml` | `prod / detect` · `prod / aws-s3` · `prod / github-pages` | `prod` (required reviewer) | `<project>-prod-site` + GitHub Pages (canonical) |
+
+- **Each group's `detect` answers its own environment's question** (this replaced one top-level
+  `detect` answering for both). Staging needs a **push to `main`**; prod needs a real **`v*` tag**.
+  The caller `if:` is only the cheap eligibility test — ci succeeded and the ref is `main` or `v*` —
+  and is deliberately loose, because the payload cannot tell a tag from a branch of the same name.
+  Prod's `detect` resolves that for real (`repos/…/git/ref/tags/<name>`; a 404 means it was a
+  branch) before anything prod runs, and staging's needs no token at all (`permissions: {}`, no
+  checkout — the answer is in the event payload).
+- **The gates live in the callee because they have to.** A job that calls a reusable workflow may
+  carry only `name`/`uses`/`with`/`secrets`/`strategy`/`needs`/`if`/`concurrency`/`permissions` —
+  **`environment:` is rejected** (GitHub's supported-keyword list for reusable-calling jobs). So
+  each callee job declares its environment literally, which is a second win: no classification can
+  resolve to an unprotected name. The callees are **local** files, so the gate sits one commit from
+  the workflow it guards — a library hop would put it behind a cross-repo pin.
+- **`permissions` on a calling job is a CEILING.** A called workflow can only downgrade, never
+  elevate, so each caller job grants the union its callee's jobs need (`contents: read`,
+  `actions: read`, `id-token: write`, plus `pages: write` on the prod group) and each callee job
+  narrows per job — only `github-pages` carries `pages: write`.
+
+- **The logic is still two composite actions** beside the caller:
+  [`aws-s3`](../actions/aws-s3/action.yml) — download the artifact, assume the **deploy role**
+  (OIDC), `aws s3 sync` to the bucket root, then assume the **invalidate role** for an inline `/*`
+  invalidation (lookup by the `<project>-<env>-site` comment convention; skip when the distro is
+  absent) — and [`github-pages`](../actions/github-pages/action.yml) — configure → upload → deploy,
+  never touching AWS. One S3 action serves both environments; the environment token and `hash_skip`
+  (`"true"` for staging only) are what differ. Composites still **cannot read `secrets`**, so every
+  sensitive value arrives through `with:` — the artifact token is `github.token`, which composites
+  can read — and the caller passes the rest down with `secrets: inherit`.
 - **The AWS jobs check the repo out first, and that is not optional.** `uses: ./...` resolves from
   the JOB WORKSPACE, so the action cannot exist until the checkout has run — even though the action
   itself only needs the artifact (learned the hard way: the staging job failed its first main push
   after #70 with `Can't find 'action.yml'`). A remote action ref would not need the step.
-
-- **Why leaf actions here rather than reusable workflows in the library:** a job that calls a
-  reusable workflow may carry only `name`/`uses`/`with`/`secrets`/`needs`/`if`/`permissions` —
-  **`environment:` is rejected** — so the reviewer gate could not stay in the consumer, and a
-  gate hosted in another repo could fail open (a prod deploy with no review and no error). A
-  composite keeps the job, its gate and its permissions here, with the logic in one place.
-  Constraint to remember: a composite **cannot read `secrets`**, so every sensitive value
-  arrives through `with:` — the artifact token is `github.token`, which composites can read.
-
-| Job | Runs on | Environment | Target | Gate |
-| --- | --- | --- | --- | --- |
-| `aws-s3-staging` | ci success on `main` | `staging` (auto, ungated) | `<project>-staging-site` (S3 + CloudFront) | content-hash skip (below) |
-| `aws-s3-prod` | ci success on `v*` tags | `prod` (required reviewer) | `<project>-prod-site` (S3 + CloudFront) — the prod AWS plane | tag only + approval |
-| `github-pages-prod` | ci success on `v*` tags | `prod` (required reviewer) | GitHub Pages (canonical) | tag only + approval |
+- **Why not one `aws-s3` job serving both environments** (the shape this replaced):
+  `environment: name: ${{ needs.detect.outputs.target }}` works, but it collapses both environments
+  into one check name, one un-nested box, and a name that is data rather than a literal. Splitting
+  per environment costs one extra `detect` runner per run and buys exact names
+  (`staging / aws-s3` ≠ `prod / aws-s3`), a literal guard per file, and the grouped graph.
 
 - **`environment:` is load-bearing, not decoration.** A job that declares one presents the OIDC
   sub `repo:OWNER/REPO:environment:<name>` instead of the ref form, and AWS STS accepts only the
-  shapes listed in the deploy roles' trust (`scripts/bootstrap_aws.sh` — prod lists
-  `ref:refs/heads/main`, `environment:pre-prod`, `environment:prod`). So `environment:prod` had to
-  be added to that trust **before** the AWS prod job was gated; renaming the environment without
-  updating the trust breaks every AWS assume. The env-form sub also carries no ref, so a tag-only
-  job is enforced by its own `if:` gate, never by the trust — the reviewer is what restrains it.
-- **Permissions are per job, not workflow-level** — least privilege: only `github-pages-prod`
-  carries `pages: write`.
-
+  shapes listed in the deploy roles' trust (`scripts/bootstrap_aws.sh` — `ref:refs/heads/main`,
+  `environment:staging`, `environment:prod`). So `environment:prod` had to be added to that trust
+  **before** the AWS prod job was gated; renaming an environment without updating the trust breaks
+  every AWS assume. The env-form sub also carries no ref, so a tag-only job is enforced by its own
+  `detect`, never by the trust — the reviewer is what restrains it.
 - **Least privilege:** the Pages job uses the official Pages actions
   (`configure-pages` → `upload-pages-artifact` → `deploy-pages`) with `pages: write` +
   `id-token: write` and **no `contents: write`** (`contents: read` + `actions: read` cover the
