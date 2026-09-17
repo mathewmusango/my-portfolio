@@ -47,6 +47,9 @@ jobs:
       actions: read
       contents: read
     steps:
+      # A local action (`./...`) is resolved from the JOB'S WORKSPACE, so the repo has to be on
+      # disk before it can be used — even though the action itself only needs the artifact.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/deploy-s3
         with:
           project: ${{ secrets.PROJECT }}
@@ -70,6 +73,8 @@ jobs:
       actions: read
       contents: read
     steps:
+      # See the note on deploy-staging — the local action must exist in the workspace.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: ./.github/actions/deploy-s3
         with:
           project: ${{ secrets.PROJECT }}
@@ -98,6 +103,8 @@ jobs:
       group: "pages"
       cancel-in-progress: false
     steps:
+      # See the note on deploy-staging — the local action must exist in the workspace.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - id: deploy
         uses: ./.github/actions/deploy-pages
         with:
