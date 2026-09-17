@@ -1,4 +1,4 @@
-name: "Deploy: S3"
+name: "Deploy: AWS S3"
 description: >-
   Sync the CI-built site to <project>-<env>-site and invalidate that
   distribution (found by the <project>-<env>-site comment convention). One

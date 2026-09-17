@@ -159,14 +159,18 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
 
 - **ci** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
   to `main` and `v*` tags; uploads the built `site/` as an artifact.
-- **Checks** — one workflow per surface (`checks-{shell,python,js,terraform,yml}.yml`), gated on
-  PRs by relevance: untouched surfaces **skip and report success**, so the required checks never
-  block unrelated PRs. The same checks run locally (`scripts/check_local.sh` — changed-files by
-  default, `--full` for whole-repo, mirroring the workflows exactly).
-- **Deploy** — `workflow_run` on ci success, one file: `deploy.yml` — `main` → **staging**
-  (S3 + CloudFront); `v*` tags → **prod** on both planes (the AWS mirror and the GitHub Pages
-  publish), each waiting on the `prod` environment's required reviewer. Staging **skips** when the
-  artifact is byte-identical to the last deploy (content-hash marker).
+- **Checks** — one workflow, `checks.yml`, calling the shared reusables in
+  [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows) (pinned by SHA).
+  Each reusable self-gates on changed files, so an untouched surface **skips and reports success**
+  and the required checks never block unrelated PRs. The checks run locally too
+  (`scripts/check_local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
+  workflows exactly).
+- **Deploy** — `workflow_run` on ci success: `deploy.yml` is the caller (trigger + one job per
+  environment) and `deploy-{staging,prod}.yml` are the local reusables it calls, so the called jobs
+  nest under the caller and a deploy reads as a `staging` group and a `prod` group — `main` →
+  **staging** (S3 + CloudFront); `v*` tags → **prod** on both planes (the AWS mirror and the GitHub
+  Pages publish), each waiting on the `prod` environment's required reviewer. Staging **skips** when
+  the artifact is byte-identical to the last deploy (content-hash marker).
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
   plans on `terraform/**` changes (apply stays manual); `toggle-env` and `invalidate-cloudfront`
   are manual operational extras.
