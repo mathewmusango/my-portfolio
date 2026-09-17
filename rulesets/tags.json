@@ -1,5 +1,5 @@
 {
-  "name": "release tags (v*)",
+  "name": "tag: v*",
   "target": "tag",
   "enforcement": "active",
   "conditions": {
