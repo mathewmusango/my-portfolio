@@ -97,19 +97,30 @@ name carries its environment:
   `actions: read`, `id-token: write`, plus `pages: write` on the prod group) and each callee job
   narrows per job — only `github-pages` carries `pages: write`.
 
-- **The logic is still two composite actions** beside the caller:
-  [`aws-s3`](../actions/aws-s3/action.yml) — download the artifact, assume the **deploy role**
-  (OIDC), `aws s3 sync` to the bucket root, then assume the **invalidate role** for an inline `/*`
-  invalidation (lookup by the `<project>-<env>-site` comment convention; skip when the distro is
-  absent) — and [`github-pages`](../actions/github-pages/action.yml) — configure → upload → deploy,
-  never touching AWS. One S3 action serves both environments; the environment token and `hash_skip`
-  (`"true"` for staging only) are what differ. Composites still **cannot read `secrets`**, so every
-  sensitive value arrives through `with:` — the artifact token is `github.token`, which composites
-  can read — and the caller passes the rest down with `secrets: inherit`.
-- **The AWS jobs check the repo out first, and that is not optional.** `uses: ./...` resolves from
+- **The shared logic is one composite action** — [`aws-s3`](../actions/aws-s3/action.yml): download the
+  artifact, assume the **deploy role** (OIDC), `aws s3 sync` to the bucket root, then assume the
+  **invalidate role** for an inline `/*` invalidation (lookup by the `<project>-<env>-site` comment
+  convention; skip when the distro is absent). It serves both environments; the environment token and
+  `hash_skip` (`"true"` for staging only) are what differ. A composite cannot read `secrets`, so its
+  values arrive through `with:` (the artifact token is `github.token`, which composites can read).
+  The **Pages steps are inline** in the prod callee — they run once, so a composite would be
+  indirection with nothing to share — and that job needs **no checkout**: every step is a remote action.
+- **Secrets are mapped at the call, not inherited.** Each caller job passes the four secrets its callee
+  declares (`secrets:` with `PROJECT`, `AWS_REGION`, `DEPLOY_ROLE_ARN`, `INVALIDATE_ROLE_ARN`) instead
+  of `secrets: inherit`, so a callee sees exactly what it uses; the names inside a callee are
+  environment-neutral and the caller is what picks the prefixed repo secret.
+- **Job hardening:** an explicit `timeout-minutes` on every deploy job (5 for a `detect`, 15 staging /
+  30 prod — the platform default is 360), and a **per-environment `concurrency` group on the AWS
+  planes** (`deploy-<env>-aws-s3`, `cancel-in-progress: false`) — two merges in quick succession would
+  otherwise sync the same bucket at once, both with `--delete`. Queued rather than cancelled: a
+  cancelled sync would leave the bucket half-updated. Pages keeps its `pages` group.
+- **The S3 job checks the repo out first, and that is not optional.** `uses: ./...` resolves from
   the JOB WORKSPACE, so the action cannot exist until the checkout has run — even though the action
   itself only needs the artifact (learned the hard way: the staging job failed its first main push
-  after #70 with `Can't find 'action.yml'`). A remote action ref would not need the step.
+  after #70 with `Can't find 'action.yml'`). It is the only checkout left in the deploy: the Pages
+  job's steps are all remote actions, and the `detect` jobs need nothing on disk. Referencing the
+  action as `owner/repo/.github/actions/...@<sha>` would remove it too, at the cost of a same-repo pin
+  nothing bumps automatically.
 - **Why not one `aws-s3` job serving both environments** (the shape this replaced):
   `environment: name: ${{ needs.detect.outputs.target }}` works, but it collapses both environments
   into one check name, one un-nested box, and a name that is data rather than a literal. Splitting
