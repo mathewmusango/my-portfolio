@@ -31,8 +31,7 @@
         "required_review_thread_resolution": true,
         "require_extra_approval_for_unattributed_changes": true,
         "allowed_merge_methods": [
-          "squash",
-          "rebase"
+          "squash"
         ]
       }
     },
@@ -95,6 +94,9 @@
     },
     {
       "type": "creation"
+    },
+    {
+      "type": "required_signatures"
     },
     {
       "type": "code_scanning",
