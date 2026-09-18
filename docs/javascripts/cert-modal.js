@@ -11,7 +11,21 @@
     '<polyline points="15 3 21 3 21 9"/>' +
     '<line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
+  function sanitizeEmbedUrl(rawUrl) {
+    if (!rawUrl) return null;
+    try {
+      var parsed = new URL(rawUrl, window.location.origin);
+      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+      return parsed.toString();
+    } catch (error) {
+      return null;
+    }
+  }
+
   function openCertModal(embedUrl, title, newTabUrl) {
+    var safeEmbedUrl = sanitizeEmbedUrl(embedUrl);
+    if (!safeEmbedUrl) return;
+
     var overlay = document.createElement("div");
     overlay.className = "resume-modal-overlay";
     overlay.setAttribute("role", "dialog");
@@ -28,7 +42,7 @@
     close.innerHTML = "&times;";
 
     var iframe = document.createElement("iframe");
-    iframe.src = embedUrl;
+    iframe.src = safeEmbedUrl;
     iframe.title = title;
     iframe.className = "resume-modal-frame";
     iframe.loading = "lazy";
