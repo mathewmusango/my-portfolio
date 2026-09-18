@@ -2,10 +2,20 @@ name: "Deploy: prod"
 
 on:
   workflow_call:
+    secrets:
+      PROJECT:
+        required: true
+      AWS_REGION:
+        required: true
+      DEPLOY_ROLE_ARN:
+        required: true
+      INVALIDATE_ROLE_ARN:
+        required: true
 
 jobs:
   detect:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
     outputs:
@@ -32,8 +42,12 @@ jobs:
     needs: detect
     if: ${{ needs.detect.outputs.deploy == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment:
       name: prod
+    concurrency:
+      group: deploy-prod-aws-s3
+      cancel-in-progress: false
     permissions:
       contents: read
       actions: read
@@ -45,8 +59,8 @@ jobs:
           project: ${{ secrets.PROJECT }}
           env: prod
           run_id: ${{ github.event.workflow_run.id }}
-          deploy_role_arn: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
-          invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
           aws_region: ${{ secrets.AWS_REGION }}
           hash_skip: "false"
 
@@ -54,20 +68,35 @@ jobs:
     needs: detect
     if: ${{ needs.detect.outputs.deploy == 'true' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     environment:
       name: prod
       url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
     permissions:
       contents: read
       actions: read
       pages: write
       id-token: write
-    concurrency:
-      group: "pages"
-      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - id: deploy
-        uses: ./.github/actions/github-pages
+      - name: Download site artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          run_id: ${{ github.event.workflow_run.id }}
+          name: site
+          path: site
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4
