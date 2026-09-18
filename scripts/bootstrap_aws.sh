@@ -60,8 +60,8 @@ case "$ENV" in
     # Deploy jobs declare an environment, so GitHub's OIDC sub is
     # repo:OWNER@*/REPO@*:environment:<name> (not ref-form). Allow the
     # environment form for the env-bearing deploy jobs + keep the ref form for
-    # the no-environment manual dispatches (invalidate-cloudfront.yml,
-    # toggle-env.yml). Same trust serves deploy/invalidate/toggle roles.
+    # the no-environment manual dispatches (cloudfront.yml). Same trust serves
+    # deploy/invalidate/toggle roles.
     DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:staging"]'
     ;;
   prod)
@@ -69,8 +69,8 @@ case "$ENV" in
     # The prod deploy jobs declare an environment, so their OIDC sub is
     # repo:OWNER@*/REPO@*:environment:<name> (not the ref form). Allow every
     # environment form the prod jobs present + keep the ref form for the
-    # no-environment manual dispatches (invalidate-cloudfront.yml,
-    # toggle-env.yml). Same trust serves deploy/invalidate/toggle roles.
+    # no-environment manual dispatches (cloudfront.yml). Same trust serves
+    # deploy/invalidate/toggle roles.
     #   environment:pre-prod — the three-environment model, still what `main`
     #     runs; prune it only after the consolidation (#57) has merged.
     #   environment:prod     — the consolidated jobs, where BOTH prod planes

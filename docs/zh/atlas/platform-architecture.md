@@ -80,7 +80,7 @@ flowchart LR
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
-    X[workflow_dispatch] --> TG[toggle-env] & INV[invalidate]
+    X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
 
 实现参考（每个工作流、角色和运维附加项）：
