@@ -1,5 +1,5 @@
 {
-  "name": "release tags (v*)",
+  "name": "tag: v*",
   "target": "tag",
   "enforcement": "active",
   "conditions": {
@@ -10,13 +10,7 @@
       ]
     }
   },
-  "bypass_actors": [
-    {
-      "actor_id": 5,
-      "actor_type": "RepositoryRole",
-      "bypass_mode": "always"
-    }
-  ],
+  "bypass_actors": [],
   "rules": [
     {
       "type": "required_status_checks",
