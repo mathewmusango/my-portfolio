@@ -101,6 +101,7 @@ def _patched_init(self, *args, **kwargs):
     # Optional TLS (mkcert local CA): wrap the bound socket before serving.
     if TLS_CERT and TLS_KEY and os.path.isfile(TLS_CERT) and os.path.isfile(TLS_KEY):
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.minimum_version = ssl.TLSVersion.TLSv1_2
         context.load_cert_chain(TLS_CERT, TLS_KEY)
         self.socket = context.wrap_socket(self.socket, server_side=True)
         print(f"[serve.py] HTTPS on {self.server_address} (cert {TLS_CERT})")
