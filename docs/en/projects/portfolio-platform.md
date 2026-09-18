@@ -120,8 +120,9 @@ A change ships through four phases — each documented in
 3. **Deploy** — `workflow_run` on ci success (`deploy.yml`): `main` → staging, `v*` →
    prod on both planes (reviewed) (see [Delivery model](#delivery-model)).
 4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
-   SBOM; Terraform plans on every infra change (apply stays manual);
-   `toggle-env` / `invalidate-cloudfront` are manual operational extras.
+   SBOM; Terraform plans on every infra change (apply stays manual); `cloudfront.yml` —
+   invalidate / switch, both jobs calling shared reusable leaves in the public
+   `my-workflows` library — is the manual operational extra.
 
 Check names are the gate names — the shared checks report as `<caller> / <leaf>`
 (e.g. `python / ruff`, `terraform / fmt`) alongside `build`, so

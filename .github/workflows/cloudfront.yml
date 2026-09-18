@@ -1,0 +1,70 @@
+name: "Infra: CloudFront"
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "What to do"
+        required: true
+        default: "invalidate"
+        type: choice
+        options:
+          - invalidate
+          - switch
+      environment:
+        description: "Target environment"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - prod
+      paths:
+        description: "invalidate only — space-separated paths (default /*)"
+        required: false
+        default: "/*"
+      component:
+        description: "switch only — what to flip"
+        required: false
+        default: "site"
+        type: choice
+        options:
+          - site
+          - metrics
+      mode:
+        description: "switch only — attribute flip, nothing is removed"
+        required: false
+        default: "off"
+        type: choice
+        options:
+          - "off"
+          - "on"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  invalidate:
+    if: ${{ github.event.inputs.operation == 'invalidate' }}
+    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-invalidate.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      paths: ${{ github.event.inputs.paths }}
+    secrets:
+      project: ${{ secrets.PROJECT }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      staging_invalidate_role_arn: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
+      prod_invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+
+  switch:
+    if: ${{ github.event.inputs.operation == 'switch' }}
+    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-switch.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
+    with:
+      environment: ${{ github.event.inputs.environment }}
+      component: ${{ github.event.inputs.component }}
+      mode: ${{ github.event.inputs.mode }}
+    secrets:
+      project: ${{ secrets.PROJECT }}
+      aws_region: ${{ secrets.AWS_REGION }}
+      toggle_role_arn: ${{ secrets.STAGING_TOGGLE_ROLE_ARN }}

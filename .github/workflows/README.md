@@ -8,9 +8,10 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
 
 ## Naming conventions
 
-- **File names** — `{task}-{env|language|resource}` (`invalidate-cloudfront.yml`); task-only
-  names for single-purpose files (`ci.yml`, `checks.yml`, `deploy.yml`, `release.yml`). The deploy
-  caller is `deploy.yml`; the per-environment reusables it calls are `deploy-{env}.yml`.
+- **File names** — task-only names for single-purpose files (`ci.yml`, `checks.yml`, `deploy.yml`,
+  `release.yml`, `terraform.yml`, `cloudfront.yml`); `{task}-{env|language|resource}` once a repo
+  grows a second file for the same kind of job. The deploy caller is `deploy.yml`; the
+  per-environment reusables it calls are `deploy-{env}.yml`.
 - **Display names** — quoted `{Category}: {Task}` (a colon+space is invalid unquoted YAML):
   `ci` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
 - **`workflow_run` matches display names** — the deploy workflow watches `ci`; renaming a
@@ -169,19 +170,20 @@ excludes `.deploy-hash/*` so the marker survives `--delete`.
 - **`terraform.yml`** — plans on any change to `terraform/**`: `main` → staging (auto-apply),
   `v*` tags → prod (plan only — apply stays manual via `workflow_dispatch`). Deep docs:
   [`terraform/README.md`](../terraform/README.md).
-- **`toggle-env.yml`** + `scripts/toggle_cloudfront.sh` — manual dispatch: disable/enable
-  **staging** CloudFront distributions (component `site`|`metrics` × action `disable`|`enable`)
-  by flipping `Enabled` in place (no terraform apply, nothing deleted). **Staging only by
-  design** — prod has no toggle role. Caveat: the flag lives outside terraform state, so the
-  next apply restores `enabled=true`. Uses the staging edge-toggle role (per-env secret).
-- **`invalidate-cloudfront.yml`** + `scripts/invalidate_cloudfront.sh <staging|prod> [paths]` —
-  manual edge purges for out-of-band content changes (the reference implementation for the
-  inline deploy invalidation):
-
-  ```sh
-  scripts/invalidate_cloudfront.sh staging            # full invalidation (/*)
-  scripts/invalidate_cloudfront.sh prod "/about/ /metrics/"   # specific paths
-  ```
+- **`cloudfront.yml`** — the one manual CloudFront entry point (dispatch, `operation:
+  invalidate|switch`). It holds no AWS logic: each job calls a **shared reusable leaf** in the
+  public `mathewmusango/my-workflows` library, SHA-pinned — `cloudfront-invalidate.yml` (purge;
+  `environment` + `paths`, role chosen per environment) and `cloudfront-switch.yml` (flip
+  `Enabled` in place; `component` × `mode` `on|off`). Distinct from the deploy workflow, which
+  invalidates **inline** after each sync.
+- **Switch is staging-only in practice** — the role passed is the staging edge-toggle role, so a
+  prod distribution cannot be touched even though the leaf accepts an `environment`; least
+  privilege is what enforces it. Caveat: `Enabled` lives outside terraform state, so the next
+  apply restores `enabled=true`.
+- **No script copy lives here** — the leaves are the single implementation, so a local
+  `scripts/*_cloudfront.sh` would be a second one that drifts. Read the leaf for the exact AWS
+  calls when you need them outside CI. The inline invalidation inside the deploy action is
+  separate and unchanged.
 
 ## Auth model
 
