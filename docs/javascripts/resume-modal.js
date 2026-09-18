@@ -22,6 +22,19 @@
     '<polyline points="15 3 21 3 21 9"/>' +
     '<line x1="10" y1="14" x2="21" y2="3"/></svg>';
 
+  function getSafePageUrl(rawUrl) {
+    if (!rawUrl) return null;
+    try {
+      var parsed = new URL(rawUrl, window.location.href);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+        return parsed.href;
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
+  }
+
   function openModal(src) {
     var overlay = document.createElement("div");
     overlay.className = "resume-modal-overlay";
@@ -135,16 +148,18 @@
   document.addEventListener("click", function (event) {
     var btn = event.target.closest("button[data-page-action]");
     if (!btn) return;
-    var url = btn.getAttribute("data-page-src") || "";
+    var rawUrl = btn.getAttribute("data-page-src") || "";
+    var safeUrl = getSafePageUrl(rawUrl);
+    if (!safeUrl) return;
     if (btn.getAttribute("data-page-action") === "download") {
       var link = document.createElement("a");
-      link.href = url;
+      link.href = safeUrl;
       link.download = DOWNLOAD_NAME;
       document.body.appendChild(link);
       link.click();
       link.remove();
     } else {
-      window.open(url, "_blank", "noopener");
+      window.open(safeUrl, "_blank", "noopener");
     }
   });
 })();
