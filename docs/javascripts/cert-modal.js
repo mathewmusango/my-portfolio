@@ -14,7 +14,7 @@
   function sanitizeEmbedUrl(rawUrl) {
     if (!rawUrl) return null;
     try {
-      var parsed = new URL(rawUrl, window.location.origin);
+      var parsed = new URL(rawUrl, window.location.href);
       if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
       return parsed.toString();
     } catch (error) {
@@ -25,6 +25,8 @@
   function openCertModal(embedUrl, title, newTabUrl) {
     var safeEmbedUrl = sanitizeEmbedUrl(embedUrl);
     if (!safeEmbedUrl) return;
+
+    var safeNewTabUrl = sanitizeEmbedUrl(newTabUrl) || safeEmbedUrl;
 
     var overlay = document.createElement("div");
     overlay.className = "resume-modal-overlay";
@@ -55,7 +57,7 @@
     fab.innerHTML = EXTERNAL_ICON;
     fab.addEventListener("click", function () {
       var link = document.createElement("a");
-      link.href = newTabUrl;
+      link.href = safeNewTabUrl;
       link.target = "_blank";
       link.rel = "noopener";
       document.body.appendChild(link);

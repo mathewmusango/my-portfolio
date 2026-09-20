@@ -36,6 +36,9 @@
   }
 
   function openModal(src) {
+    src = getSafePageUrl(src);
+    if (!src) return;
+
     var overlay = document.createElement("div");
     overlay.className = "resume-modal-overlay";
     overlay.setAttribute("role", "dialog");
