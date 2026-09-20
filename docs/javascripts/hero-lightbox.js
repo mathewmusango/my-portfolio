@@ -5,12 +5,25 @@
 (function () {
   if (!document.querySelector("button[data-lightbox-src]")) return;
 
+  function getSafeLightboxSrc(rawSrc) {
+    if (!rawSrc) return null;
+    try {
+      var parsed = new URL(rawSrc, window.location.href);
+      var isHttp = parsed.protocol === "http:" || parsed.protocol === "https:";
+      if (!isHttp) return null;
+      if (parsed.origin !== window.location.origin) return null;
+      return parsed.href;
+    } catch (e) {
+      return null;
+    }
+  }
+
   document.addEventListener("click", function (event) {
     var btn = event.target.closest("button[data-lightbox-src]");
     if (!btn) return;
     event.preventDefault();
 
-    var src = btn.getAttribute("data-lightbox-src");
+    var src = getSafeLightboxSrc(btn.getAttribute("data-lightbox-src"));
     if (!src) return;
 
     var overlay = document.createElement("div");
