@@ -1,12 +1,5 @@
 # Security Policy
 
-## Reporting a Vulnerability
+This repository is a static portfolio site, plus the Terraform that provisions the infrastructure it runs on and the CI that deploys it.
 
-This is a personal portfolio site. If you find a security issue, please report
-via [email](mailto:musangomathew@gmail.com).
-
-## Supported Versions
-
-Security fixes are applied to the latest release. Dependencies are pinned in
-`requirements.txt`, audited on every CI build (`pip-audit`), and every release ships
-a CycloneDX SBOM (`sbom.cdx.json`) for downstream review.
+If something here should not be public or you find a security issue, use **Security → Report a vulnerability**, or [email](mailto:musangomathew@gmail.com).
