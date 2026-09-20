@@ -13,10 +13,11 @@ services:
       - ./scripts:/app/scripts
       - ./CHANGELOG.md:/app/CHANGELOG.md:ro
       - ./certs:/app/certs:ro
-      - ./.git:/app/.git:ro
+      - ${PORTFOLIO_GIT_DIR:-./.git}:/app/.git:ro
     # Metrics beacon endpoint (host env → container; empty = beacon disabled)
     environment:
       - METRICS_ENDPOINT
+      - GIT_WORK_TREE=/app
     command: ["python", "/app/scripts/serve.py", "--dev-addr", "0.0.0.0:8000", "--tls-cert", "/app/certs/portfolio.pem", "--tls-key", "/app/certs/portfolio-key.pem"]
     healthcheck:
       test:
