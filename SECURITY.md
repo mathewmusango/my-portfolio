@@ -2,14 +2,8 @@
 
 ## Reporting a Vulnerability
 
-This is a personal portfolio/resume site — static content with no authentication or
-user data. If you find a security issue in the site, its build pipeline, or its
-dependencies, please report it **privately** instead of opening a public issue:
-
-- **Email:** [Email me](mailto:musangomathew@gmail.com)
-
-Include a description of the issue, steps to reproduce, and the affected component
-(site content, dependencies, CI/CD). Reports are acknowledged within 7 days.
+This is a personal portfolio site. If you find a security issue, please report
+via [email](mailto:musangomathew@gmail.com).
 
 ## Supported Versions
 
