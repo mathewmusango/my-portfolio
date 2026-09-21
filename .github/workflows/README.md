@@ -25,6 +25,11 @@ secrets it uses, and the gotchas. The **system view** (how a change ships) lives
   check, CSS sanity check — with the per-environment `site_url` (tags → prod, main → staging)
   and `METRICS_ENDPOINT`.
 - Uploads the built `site/` as an artifact (7-day retention).
+- Ends with the **browser smoke check** — `scripts/check_browser.py` serves the built site and
+  drives the runner's preinstalled headless Firefox at `/resume/`, `/es/resume/`, `/zh/resume/`
+  and `assets/pdf-viewer.html`, failing when a page does not render or reports a script error. It
+  rides the existing required `build` check, so no new check name is registered, and the job
+  declares an explicit `timeout-minutes: 20`.
 
 ## Checks — `checks.yml`
 
