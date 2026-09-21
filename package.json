@@ -7,6 +7,6 @@
   "devDependencies": {
     "mermaid": "11.17.1",
     "pdfjs-dist": "6.3.289",
-    "tablesort": "5.2.1"
+    "tablesort": "5.7.1"
   }
 }
