@@ -14,12 +14,12 @@ jobs:
   python:
     uses: mathewmusango/my-workflows/.github/workflows/checks-python.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   shell:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
+    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
   terraform:
     uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
   yaml:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
+    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
   secrets:
     uses: mathewmusango/my-workflows/.github/workflows/security-secrets.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
   deps:
-    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@60bbf7e773dae68e8a4884698def52a8c63f20cf # v2026.0916.0520
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
