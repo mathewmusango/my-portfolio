@@ -239,7 +239,6 @@ plugins:
         - javascripts/resume-modal.js
         - javascripts/cert-modal.js
         - javascripts/hero-lightbox.js
-        - javascripts/pdf-viewer.js
         - javascripts/geo-map.js
         - javascripts/tags-grid.js
         - javascripts/footer-visits.js
@@ -254,8 +253,6 @@ extra_javascript:
   - javascripts/resume-modal.js
   - javascripts/cert-modal.js
   - javascripts/hero-lightbox.js
-  - assets/js/pdf.min.js
-  - javascripts/pdf-viewer.js
   - assets/js/tablesort.min.js
   - assets/js/tablesort.dotsep.min.js
   - javascripts/tablesort.js

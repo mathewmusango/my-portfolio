@@ -28,7 +28,8 @@ engineering behind it ([Architecture](#architecture)).
 | Site       | [MkDocs](https://www.mkdocs.org/) 1.6.1 + [Material](https://squidfunk.github.io/mkdocs-material/) 9.7.7 |
 | Theme      | Material — dark slate (default), light toggle, teal `#00897b` accent   |
 | Plugins    | Search (suggest/highlight), git revision dates + contributors, minify |
-| PDF viewer | pdf.js (self-hosted) with clickable, new-tab links overlays            |
+| PDF viewer | pdf.js 6.3.289 (self-hosted, ESM) with clickable, new-tab links overlays |
+| Vendored JS | pdf.js · Mermaid · Tablesort version-pinned in `package.json` for Dependabot visibility |
 | Analytics  | Privacy-first visitor metrics — CloudFront geo headers → API Gateway → Lambda → DynamoDB (no IPs stored, 90-day TTL) |
 
 ## Architecture

@@ -10,6 +10,13 @@
 // DOMContentLoaded only fires once. A MutationObserver starts the viewer
 // whenever #pdf-pages appears, and each container instance renders only once
 // (re-navigating to the page creates a fresh container, so it re-renders).
+import * as pdfjsLib from "../assets/js/pdf.min.js";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "../assets/js/pdf.worker.min.js",
+  import.meta.url
+).href;
+
 (function () {
   var pdf = null;
   var renderToken = 0;
@@ -19,18 +26,10 @@
   function start(containerEl) {
     container = containerEl;
     var url = container.getAttribute("data-pdf-url");
-    if (!url || typeof pdfjsLib === "undefined") {
+    if (!url) {
       container.innerHTML = '<p class="pdf-error">Resume preview unavailable.</p>';
       return;
     }
-
-    // Derive the worker path from the PDF URL, which already carries the
-    // correct depth for the current language (/resume/ vs /es/resume/ and the
-    // standalone viewer at /assets/pdf-viewer.html).
-    pdfjsLib.GlobalWorkerOptions.workerSrc = url.replace(
-      /pdf\/[^/]+$/,
-      "js/pdf.worker.min.js"
-    );
 
     var loading = document.createElement("p");
     loading.className = "pdf-loading";
