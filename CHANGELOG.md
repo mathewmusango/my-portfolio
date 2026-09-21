@@ -2,20 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 **Release policy:** event-driven, not time-driven — release when a coherent,
 confirmed feature batch lands (no fixed schedule). Releases are provenance
 snapshots (tagged source + site.zip + SBOM); the live site updates on every
-push regardless. Version bumps: minor (`x.y.0`) for features, patch (`x.y.z`)
-for fixes only, major for breaking changes.
+push regardless. Versions are **timestamp tags** — `v<year>.<MMDD>.<HHMM>`, e.g.
+`v2026.0917.2243` — cut at release time. A timestamp carries no severity, so a
+breaking change is called out in the release notes rather than encoded in the
+version.
 
 **Unreleased section:** meaningful changes land under `## [Unreleased]` as they
 are introduced via issues/PRs (a new section is opened by the first change of a
-cycle). A release **renames** that section to its version (`## [X.Y.Z] - date`)
-and adds no empty successor — the next cycle's `## [Unreleased]` is opened by
-its first landed change.
+cycle). A release **renames** that section to its tag without the leading `v`
+(`## [<year>.<MMDD>.<HHMM>] - date`) and adds no empty successor — the next
+cycle's `## [Unreleased]` is opened by its first landed change.
 
 ## [Unreleased]
 
@@ -23,6 +24,7 @@ its first landed change.
 - **Manual CloudFront ops consolidated and shared** — `invalidate-cloudfront.yml` + `toggle-env.yml` become one dispatch entry point, `cloudfront.yml`, whose two jobs call shared reusable leaves in the public `my-workflows` library (`cloudfront-invalidate.yml`, `cloudfront-switch.yml` — the latter flipping `Enabled` with `mode: on|off` — pinned `@0f6fa47` `# v2026.0917.2243`). A reusable is right here and wrong for deploy, for the same reason inverted: these are dispatch ops with an environment *input*, so there is no reviewer gate to lose. The AWS logic now lives once for every project using the `<project>-<env>-<component>` comment convention, and this repo's two script copies were **deleted** rather than kept as a second implementation; the deploy action's inline invalidation is unchanged.
 - **Deploy hardening — tighter jobs, explicit secrets, no wasted checkout** — the prod Pages steps are now inline in `deploy-prod.yml` (they run once, so the composite was indirection with nothing to share — and it cost a full `actions/checkout` in that job purely so `uses: ./…` would resolve; the deploy reads the ci **artifact**, never the tree, so the Pages job no longer checks out at all). Every deploy job gained an explicit `timeout-minutes` (5 for a `detect`, 15 staging / 30 prod — the platform default is 360), the AWS planes are serialized per environment (`concurrency: deploy-<env>-aws-s3`, `cancel-in-progress: false`, so two quick merges cannot sync the same bucket at once, both with `--delete`; queued rather than cancelled, because a cancelled sync would leave the bucket half-updated), and each caller job now maps the four secrets its callee declares instead of `secrets: inherit`. The one checkout left is the S3 job's, which `uses: ./.github/actions/aws-s3` requires.
 - **One deploy workflow, two environments — and the run graph shows it** — the three per-target workflows (`deploy-staging-s3.yml` + `deploy-pre-prod-s3.yml` + `deploy-prod-pages.yml`) collapse into `deploy.yml` (the caller: the trigger plus one job per environment) and two **local reusable workflows** that hold each environment's jobs, `deploy-staging.yml` and `deploy-prod.yml`. A called workflow's jobs render nested under the calling job, so a deploy now reads as two environment groups — `staging / detect` · `staging / aws-s3` · `prod / detect` · `prod / aws-s3` · `prod / github-pages` — and **each group's `detect` answers its own question**: staging requires a **push to `main`**, prod requires a real **`v*` tag** (resolved against the API, so a branch named like a tag is no longer mistaken for one and the `ci`-failure case is decided in one place). The retired `pre-prod` name is gone for good: the AWS plane (S3 + CloudFront, `<project>-prod-site`) has always *been* prod, so it is named prod. **Both prod planes are gated** by the `prod` environment's required reviewer — staging stays automatic — and because gating the AWS plane moves its OIDC `sub` to the environment form, the prod deploy trust gained `environment:prod` first (`scripts/bootstrap_aws.sh`; re-run the prod bootstrap before this lands) (#57). The jobs stay thin — `environment:`, `permissions` and one `uses:` per job — with the shared S3 logic in one composite action (`.github/actions/aws-s3`), which the staging and prod S3 targets share through an environment token; the Pages steps are inline in the prod callee. Two constraints shape this and are worth remembering: a job that calls a reusable workflow **cannot carry `environment:`**, so the reviewer gate lives in the callee — and the callees are **local** files, not library reusables, so the gate sits in this repo, one commit from the workflow it guards; and a caller job's `permissions` is a **ceiling** that the callee can only downgrade, so each caller grants the union its callee's jobs need.
+- **Release documentation now matches the tag scheme** — `CHANGELOG.md` no longer claims adherence to Semantic Versioning and no longer explains minor/patch/major bumps, because a timestamp cannot express them; it states the scheme the tags actually use (`v<year>.<MMDD>.<HHMM>`, cut at release time, with a breaking change called out in the release notes) and records that a section heading carries the tag **without** its leading `v`. That last part is load-bearing: `scripts/releases_hook.py` builds each timeline link as `v{version}`, so a `v` in the heading would render `vv2026…` targets and defeat the hook's tag-promotion duplicate check — the generator itself needs no change, since its tag pattern already matches the timestamp form. The three atlas release pages stop citing semver.org for the same reason; published sections keep their SemVer headings as history (#92).
 
 ### Fixed
 - **Modal and lightbox URLs are validated before use — and relative targets resolve against the page again** — the three attribute-driven scripts (`resume-modal`, `cert-modal`, `hero-lightbox`) piped a raw `data-*` value into `link.href` / `window.open` / `iframe.src` / `img.src`. Each now resolves the value through a small helper and accepts only `http:`/`https:`, so `javascript:` or `data:` can no longer reach a sink; the lightbox additionally requires same-origin, because every `data-lightbox-src` is a local asset. `cert-modal` also stops resolving against `window.location.origin`: the credential viewer is a **relative** `../credentials.html?id=…`, so an origin-based base pointed it at the domain root, which 404s on the gh-pages deploy — masked until now only because the root-hosted CloudFront mirror resolves both forms identically. The modal's "open in new tab" target is validated at the sink like the iframe. Clears three `js/xss-through-dom` CodeQL alerts (#86).
