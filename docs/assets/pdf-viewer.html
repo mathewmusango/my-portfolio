@@ -82,15 +82,13 @@
 <div id="pdf-pages" data-pdf-url="pdf/resume.pdf" role="region" aria-label="Resume"></div>
 
 <script>
-  // Optional ?pdf=<path relative to /assets/> selects the document (e.g. the
-  // Spanish resume: ?pdf=pdf/resume.es.pdf).
-  var q = location.search.match(/[?&]pdf=([^&]+)/);
-  if (q) {
-    document.getElementById("pdf-pages").setAttribute("data-pdf-url", decodeURIComponent(q[1]));
+  var m = location.search.match(/[?&]pdf=([^&]+)/);
+  var p = m && decodeURIComponent(m[1]);
+  if (p && /^pdf\/resume(-es|-zh)?\.pdf$/.test(p)) {
+    document.getElementById("pdf-pages").setAttribute("data-pdf-url", p);
   }
 </script>
 
-<script src="../assets/js/pdf.min.js"></script>
-<script src="../javascripts/pdf-viewer.min.js"></script>
+<script type="module" src="../javascripts/pdf-viewer.js"></script>
 </body>
 </html>

@@ -10,6 +10,13 @@
 // DOMContentLoaded only fires once. A MutationObserver starts the viewer
 // whenever #pdf-pages appears, and each container instance renders only once
 // (re-navigating to the page creates a fresh container, so it re-renders).
+import * as pdfjsLib from "../assets/js/pdf.min.js";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "../assets/js/pdf.worker.min.js",
+  import.meta.url
+).href;
+
 (function () {
   var pdf = null;
   var renderToken = 0;
@@ -19,25 +26,17 @@
   function start(containerEl) {
     container = containerEl;
     var url = container.getAttribute("data-pdf-url");
-    if (!url || typeof pdfjsLib === "undefined") {
+    if (!url) {
       container.innerHTML = '<p class="pdf-error">Resume preview unavailable.</p>';
       return;
     }
-
-    // Derive the worker path from the PDF URL, which already carries the
-    // correct depth for the current language (/resume/ vs /es/resume/ and the
-    // standalone viewer at /assets/pdf-viewer.html).
-    pdfjsLib.GlobalWorkerOptions.workerSrc = url.replace(
-      /pdf\/[^/]+$/,
-      "js/pdf.worker.min.js"
-    );
 
     var loading = document.createElement("p");
     loading.className = "pdf-loading";
     loading.textContent = "Loading resume…";
     container.appendChild(loading);
 
-    pdfjsLib.getDocument(url).promise
+    pdfjsLib.getDocument({ url: url }).promise
       .then(function (pdfDoc) {
         pdf = pdfDoc;
         loading.remove();
@@ -95,12 +94,13 @@
       // WeasyPrint can emit vertically inverted link rects (top > bottom).
       // Normalize, then clip matched text spans to this area so each link's
       // hit box stays precise even when one text run holds several links.
-      var rect = viewport.convertToViewportRectangle(annotation.rect);
+      var cornerA = viewport.convertToViewportPoint(annotation.rect[0], annotation.rect[1]);
+      var cornerB = viewport.convertToViewportPoint(annotation.rect[2], annotation.rect[3]);
       var aBox = {
-        left: Math.min(rect[0], rect[2]),
-        top: Math.min(rect[1], rect[3]),
-        right: Math.max(rect[0], rect[2]),
-        bottom: Math.max(rect[1], rect[3])
+        left: Math.min(cornerA[0], cornerB[0]),
+        top: Math.min(cornerA[1], cornerB[1]),
+        right: Math.max(cornerA[0], cornerB[0]),
+        bottom: Math.max(cornerA[1], cornerB[1])
       };
       var box = null;
       for (var i = 0; i < items.length; i++) {

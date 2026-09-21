@@ -1,0 +1,12 @@
+{
+  "name": "my-portfolio-vendored-js",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Version pins for the JavaScript vendored under docs/assets/. Dependabot visibility only; nothing is built from this manifest.",
+  "devDependencies": {
+    "mermaid": "11.17.1",
+    "pdfjs-dist": "6.3.289",
+    "tablesort": "5.2.1"
+  }
+}

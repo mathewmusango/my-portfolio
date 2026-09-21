@@ -2,6 +2,7 @@ site/
 __pycache__/
 *.pyc
 .DS_Store
+node_modules/
 
 # Local deployment values (see .env.sample)
 .env
