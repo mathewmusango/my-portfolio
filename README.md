@@ -159,7 +159,10 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
 [`CONTRIBUTING.md`](CONTRIBUTING.md) (the required-checks table):
 
 - **ci** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
-  to `main` and `v*` tags; uploads the built `site/` as an artifact.
+  to `main` and `v*` tags; uploads the built `site/` as an artifact. The `build` job ends with a
+  **browser smoke check** (`scripts/check_browser.py`): it loads the four viewer pages in headless
+  Firefox and fails when one stops rendering, which is the class of runtime regression no static
+  check can see.
 - **Checks** — one workflow, `checks.yml`, calling the shared reusables in
   [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows) (pinned by SHA).
   Each reusable self-gates on changed files, so an untouched surface **skips and reports success**
