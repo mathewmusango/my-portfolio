@@ -5,7 +5,7 @@
   "type": "module",
   "description": "Version pins for the JavaScript vendored under docs/assets/. Dependabot visibility only; nothing is built from this manifest.",
   "devDependencies": {
-    "mermaid": "11.17.1",
+    "mermaid": "12.0.0",
     "pdfjs-dist": "6.3.289",
     "tablesort": "5.7.1"
   }
