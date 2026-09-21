@@ -36,7 +36,7 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     loading.textContent = "Loading resume…";
     container.appendChild(loading);
 
-    pdfjsLib.getDocument(url).promise
+    pdfjsLib.getDocument({ url: url }).promise
       .then(function (pdfDoc) {
         pdf = pdfDoc;
         loading.remove();
@@ -94,12 +94,13 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
       // WeasyPrint can emit vertically inverted link rects (top > bottom).
       // Normalize, then clip matched text spans to this area so each link's
       // hit box stays precise even when one text run holds several links.
-      var rect = viewport.convertToViewportRectangle(annotation.rect);
+      var cornerA = viewport.convertToViewportPoint(annotation.rect[0], annotation.rect[1]);
+      var cornerB = viewport.convertToViewportPoint(annotation.rect[2], annotation.rect[3]);
       var aBox = {
-        left: Math.min(rect[0], rect[2]),
-        top: Math.min(rect[1], rect[3]),
-        right: Math.max(rect[0], rect[2]),
-        bottom: Math.max(rect[1], rect[3])
+        left: Math.min(cornerA[0], cornerB[0]),
+        top: Math.min(cornerA[1], cornerB[1]),
+        right: Math.max(cornerA[0], cornerB[0]),
+        bottom: Math.max(cornerA[1], cornerB[1])
       };
       var box = null;
       for (var i = 0; i < items.length; i++) {
