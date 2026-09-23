@@ -1,6 +1,6 @@
 """Load the built site in headless Firefox and assert the resume viewer renders.
 
-Usage: python3 scripts/check_browser.py SITE_DIR [--timeout SECONDS]
+Usage: python3 scripts/checks/browser.py SITE_DIR [--timeout SECONDS]
 
 Serves a copy of SITE_DIR with a probe injected into the viewer pages, drives
 headless Firefox at each page, and exits non-zero when a page fails to render or

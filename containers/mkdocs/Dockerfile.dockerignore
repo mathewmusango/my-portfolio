@@ -1,0 +1,13 @@
+.git/
+.github/
+containers/
+terraform/
+scripts/
+site/
+certs/
+**/__pycache__/
+**/*.py[cod]
+**/.venv/
+**/node_modules/
+**/*.pem
+**/*.key

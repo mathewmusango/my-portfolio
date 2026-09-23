@@ -99,7 +99,7 @@ marker scheme that keeps docs-only merges from churning the bucket
 - **Containers only** — `podman-compose up` runs the MkDocs dev server; no local Python/venv needed.
 - **HTTPS locally** via a per-machine [mkcert](https://github.com/FiloSottile/mkcert){ target="_blank" rel="noopener" } root CA — parity with the TLS of the deployed site.
 - The dev container also serves a `/health` endpoint used by its own healthcheck.
-- Local checks mirror CI exactly (`check-compose.yaml` + `scripts/check_changed.sh`).
+- Local checks mirror CI exactly (`containers/checks/compose.yml` + `scripts/checks/local.sh`).
 
 Getting-started steps: [the repo README](https://github.com/mathewmusango/my-portfolio#getting-started){ target="_blank" rel="noopener" }.
 

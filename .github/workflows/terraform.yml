@@ -1,12 +1,5 @@
 name: "Infra: Terraform"
 
-# Environment is controlled from GitHub by the trigger:
-#   push main (terraform/**)  -> staging — plan + AUTO-APPLY
-#   push v* tag               -> prod   — plan only (apply stays manual)
-#   workflow_dispatch         -> choose environment + action
-# Prod is NEVER auto-applied — a blind auto-apply is how stacks get destroyed.
-# Uses OIDC. Secrets: STAGING/PROD_TERRAFORM_ROLE_ARN, PROJECT, AWS_REGION,
-# STAGING/PROD_ALLOWED_ORIGIN (see terraform/ci + scripts/bootstrap_aws.sh).
 on:
   push:
     branches: [main]
@@ -37,9 +30,6 @@ permissions:
   id-token: write
   contents: read
 
-# One run per environment at a time — a queued run waits for the in-flight
-# apply rather than racing it for the state lock (github context only, since
-# this resolves before the env step runs).
 concurrency:
   group: terraform-${{ github.event.inputs.environment != 'auto' && github.event.inputs.environment || (startsWith(github.ref, 'refs/tags/v') && 'prod' || 'staging') }}
   cancel-in-progress: false
@@ -79,15 +69,8 @@ jobs:
             -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
-      # No separate validate step: the plan below validates the configuration, and
-      # the shared `checks-terraform` check runs fmt/validate/lint/security on PRs.
       - name: Plan (${{ steps.env.outputs.environment }})
         run: |
-          # Free-Tier default: WAF + private VPC are OFF (the Logs VPC endpoint
-          # and WAF are outside the Free Tier). The Lambda origin gate (403 for
-          # non-site origins) + least-privilege IAM are the free security
-          # controls. Geo headers come from CloudFront — BOTH envs get the edge.
-          # Flip enable_vpc/enable_waf for the hardened variant.
           terraform plan -input=false -no-color -out=tf.plan \
             -var "environment=${{ steps.env.outputs.environment }}" \
             -var "project=${{ secrets.PROJECT }}" \
