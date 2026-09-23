@@ -116,7 +116,8 @@ echo "127.0.0.1 portfolio.mathewmusango.test" | sudo tee -a /etc/hosts
 ```sh
 git clone https://github.com/mathewmusango/my-portfolio.git
 cd my-portfolio
-podman-compose -f compose.yaml up -d
+scripts/dev.sh build
+scripts/dev.sh start
 ```
 
 Open <https://portfolio.mathewmusango.test:8000> — the dev server (live-reload) also exposes a
@@ -127,9 +128,10 @@ Open <https://portfolio.mathewmusango.test:8000> — the dev server (live-reload
 The repository is the **single source of truth** — the same `docs/` tree builds the local site and
 the deployed one. Setup and first run are in [Getting Started](#getting-started); the details:
 
-- **Live-reload dev server** — `compose.yaml` (podman, container `my-portfolio`) runs
+- **Live-reload dev server** — `containers/mkdocs/compose.yaml` (podman, container `my-portfolio`) runs
   `scripts/serve.py`, an HTTPS-capable MkDocs dev server that also exposes `/health` (the
-  container healthcheck curls it).
+  container healthcheck curls it). [`scripts/dev.sh`](scripts/README.md) drives the container's
+  build, start, restart and stop.
 - **HTTPS** — TLS via the local [mkcert](https://github.com/FiloSottile/mkcert) CA (certs in
   `certs/`, gitignored); `serve.py` falls back to plain HTTP with a warning if the certs are
   missing. Setup commands are in [Getting Started](#getting-started).
@@ -160,14 +162,14 @@ Each of the four phases below is documented in [`.github/workflows/README.md`](.
 
 - **ci** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
   to `main` and `v*` tags; uploads the built `site/` as an artifact. The `build` job ends with a
-  **browser smoke check** (`scripts/check_browser.py`): it loads the four viewer pages in headless
+  **browser smoke check** (`scripts/checks/browser.py`): it loads the four viewer pages in headless
   Firefox and fails when one stops rendering, which is the class of runtime regression no static
   check can see.
 - **Checks** — one workflow, `checks.yml`, calling the shared reusables in
   [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows) (pinned by SHA).
   Each reusable self-gates on changed files, so an untouched surface **skips and reports success**
   and the required checks never block unrelated PRs. The checks run locally too
-  (`scripts/check_local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
+  (`scripts/checks/local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
   workflows exactly).
 - **Deploy** — `workflow_run` on ci success: `deploy.yml` is the caller (trigger + one job per
   environment) and `deploy-{staging,prod}.yml` are the local reusables it calls, so the called jobs

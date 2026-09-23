@@ -104,7 +104,7 @@ documentación agiten el bucket
 - **Solo contenedores** — `podman-compose up` ejecuta el servidor de desarrollo de MkDocs; no se necesita Python/venv local.
 - **HTTPS local** mediante una CA raíz [mkcert](https://github.com/FiloSottile/mkcert){ target="_blank" rel="noopener" } por máquina — paridad con el TLS del sitio desplegado.
 - El contenedor de desarrollo también sirve un endpoint `/health` usado por su propio healthcheck.
-- Las verificaciones locales reflejan CI exactamente (`check-compose.yaml` + `scripts/check_changed.sh`).
+- Las verificaciones locales reflejan CI exactamente (`containers/checks/compose.yml` + `scripts/checks/local.sh`).
 
 Pasos de inicio: [el README del repositorio](https://github.com/mathewmusango/my-portfolio#getting-started){ target="_blank" rel="noopener" }.
 

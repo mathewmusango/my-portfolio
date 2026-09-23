@@ -55,11 +55,11 @@ runs:
 
     - name: Check links
       shell: bash
-      run: python3 scripts/check_links.py site/
+      run: python3 scripts/checks/links.py site/
 
     - name: Check translations
       shell: bash
-      run: python3 scripts/check_translations.py
+      run: python3 scripts/checks/translations.py
 
     - name: CSS sanity check
       shell: bash

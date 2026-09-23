@@ -90,7 +90,7 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
 - **只用容器** — `podman-compose up` 运行 MkDocs 开发服务器；无需本地 Python/venv。
 - **本地 HTTPS** 通过每台机器的 [mkcert](https://github.com/FiloSottile/mkcert){ target="_blank" rel="noopener" } 根 CA — 与线上站点的 TLS 对齐。
 - 开发容器还提供 `/health` 端点，供其自身的 healthcheck 使用。
-- 本地检查与 CI 完全一致（`check-compose.yaml` + `scripts/check_changed.sh`）。
+- 本地检查与 CI 完全一致（`containers/checks/compose.yml` + `scripts/checks/local.sh`）。
 
 上手步骤见[仓库 README](https://github.com/mathewmusango/my-portfolio#getting-started){ target="_blank" rel="noopener" }。
 

@@ -1,10 +1,11 @@
 # Contributing
 
-> **Note:** this is a **personal project developed in the open** — the
-> OSS-style process below (branch protection, PRs, checks, releases, CoC) is a
-> deliberate *practice*, not a community project. Expect the maintainer's own
-> changes to dominate; external contributions are welcome but the process is
-> primarily how the maintainer works with themselves.
+> [!NOTE]
+> This is a **personal project developed in the open** — the OSS-style process below
+> (branch protection, PRs, checks, releases, CoC) is a deliberate *practice*, not a
+> community project. Expect the maintainer's own changes to dominate; external
+> contributions are welcome, but the process is primarily how the maintainer works
+> with themselves.
 
 Thanks for taking the time to contribute! This project follows standard
 open-source practices — even the maintainer's own changes go through pull
@@ -57,8 +58,8 @@ names below are what you'll see on PRs:
 | `terraform / security` | Checkov security scan |
 | `yaml / syntax` | YAML parse of every yml/yaml |
 | `yaml / actionlint` | actionlint on `.github/workflows/**` |
-| `secrets / gitleaks` | Secret scanning (new — not required yet) |
-| `deps / dependency-review` | Dependency review on PRs (new — not required yet) |
+| `secrets / gitleaks` | Secret scanning |
+| `deps / dependency-review` | Dependency review on PRs |
 
 ## Issues
 

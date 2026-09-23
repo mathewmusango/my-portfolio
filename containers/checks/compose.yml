@@ -1,0 +1,84 @@
+name: checks
+services:
+  shell:
+    image: docker.io/koalaman/shellcheck-alpine:latest
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command:
+      - sh
+      - -c
+      - |
+        find . -path './site' -prune -o -path './.git' -prune -o -type f \( -name '*.sh' -o -path './.githooks/*' \) -print0 2>/dev/null | xargs -0 -r shellcheck -S warning
+
+  python:
+    image: ghcr.io/astral-sh/ruff:latest
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["check", ".", "--no-cache"]
+
+  yaml:
+    image: docker.io/rhysd/actionlint:latest
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["-no-color"]
+
+  yaml-syntax:
+    image: docker.io/library/ruby:alpine
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command:
+      - sh
+      - -c
+      - |
+        find . -path './site' -prune -o -path './.git' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print 2>/dev/null | while IFS= read -r f; do
+          ruby -ryaml -e "YAML.load_file(ARGV[0])" "$$f" || { echo "FAILED: $$f"; exit 1; }
+          echo "ok: $$f"
+        done
+
+  js:
+    image: docker.io/library/node:alpine
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command:
+      - sh
+      - -c
+      - |
+        find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do
+          node --check "$$f" || { echo "FAILED: $$f"; exit 1; }
+        done
+        echo 'js: all files syntax-checked'
+
+  terraform-fmt:
+    image: docker.io/hashicorp/terraform:1.15.9
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["fmt", "-check", "-recursive", "-diff", "terraform/"]
+
+  terraform-validate:
+    image: docker.io/hashicorp/terraform:1.15.9
+    entrypoint: ["/bin/sh", "-c"]
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics validate -no-color"]
+
+  terraform-lint:
+    image: ghcr.io/terraform-linters/tflint:latest
+    entrypoint: ["/bin/sh", "-c"]
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["tflint --init && cd terraform && tflint --recursive --format compact --config /repo/.tflint.hcl && cd ci && tflint --format compact --config /repo/.tflint.hcl"]
+
+  terraform-security:
+    image: ghcr.io/bridgecrewio/checkov:3.3.15
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]

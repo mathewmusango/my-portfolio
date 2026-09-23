@@ -1,7 +1,40 @@
-.venv/
-site/
-__pycache__/
-*.pyc
+# VCS and CI
 .git/
-.gitignore
+**/.gitignore
+.github/
+**/README.md
+
+# Secrets and local configuration
+.env
+**/certs/
+**/*.pem
+**/*.key
+
+# OS
 .DS_Store
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/*.egg-info/
+**/.pytest_cache/
+**/.ruff_cache/
+**/.mypy_cache/
+**/.venv/
+**/venv/
+**/*.whl
+
+# Node
+**/node_modules/
+**/coverage/
+**/*.tsbuildinfo
+**/*.log
+
+# Build output and Terraform state
+**/site/
+**/build/
+**/dist/
+**/.cache/
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
