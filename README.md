@@ -116,7 +116,8 @@ echo "127.0.0.1 portfolio.mathewmusango.test" | sudo tee -a /etc/hosts
 ```sh
 git clone https://github.com/mathewmusango/my-portfolio.git
 cd my-portfolio
-podman-compose -f containers/mkdocs/compose.yaml up -d
+scripts/dev.sh build
+scripts/dev.sh start
 ```
 
 Open <https://portfolio.mathewmusango.test:8000> — the dev server (live-reload) also exposes a
@@ -129,7 +130,8 @@ the deployed one. Setup and first run are in [Getting Started](#getting-started)
 
 - **Live-reload dev server** — `containers/mkdocs/compose.yaml` (podman, container `my-portfolio`) runs
   `scripts/serve.py`, an HTTPS-capable MkDocs dev server that also exposes `/health` (the
-  container healthcheck curls it).
+  container healthcheck curls it). [`scripts/dev.sh`](scripts/README.md) drives the container's
+  build, start, restart and stop.
 - **HTTPS** — TLS via the local [mkcert](https://github.com/FiloSottile/mkcert) CA (certs in
   `certs/`, gitignored); `serve.py` falls back to plain HTTP with a warning if the certs are
   missing. Setup commands are in [Getting Started](#getting-started).
