@@ -3,7 +3,7 @@ services:
   mkdocs:
     build:
       context: ../..
-      dockerfile: containers/mkdocs/Dockerfile
+      dockerfile: containers/site/Dockerfile
     container_name: my-portfolio
     stop_signal: SIGINT
     ports:

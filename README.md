@@ -82,13 +82,13 @@ reaches the Lambda ([Why CloudFront?](terraform/README.md#why-cloudfront)).
 
 ```mermaid
 flowchart TB
-    BOOT[terraform/ci — bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
+    BOOT[terraform/bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
     BOOT --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
     WORK[GitHub Actions workflows] -->|assume role| ROLES
     ROLES -->|plan · apply · sync| STACKS[site + metrics stacks<br/>staging · prod]
 ```
 
-`terraform/ci` creates the per-environment state backends and the OIDC roles GitHub Actions
+`terraform/bootstrap` creates the per-environment state backends and the OIDC roles GitHub Actions
 assumes to build and run the stacks. **Bootstrap is the one out-of-band step** — an AWS user,
 outside GitHub Actions, creates them with its own IAM permissions; no workflow ever uses keys.
 
@@ -128,7 +128,7 @@ Open <https://portfolio.mathewmusango.test:8000> — the dev server (live-reload
 The repository is the **single source of truth** — the same `docs/` tree builds the local site and
 the deployed one. Setup and first run are in [Getting Started](#getting-started); the details:
 
-- **Live-reload dev server** — `containers/mkdocs/compose.yaml` (podman, container `my-portfolio`) runs
+- **Live-reload dev server** — `containers/site/compose.yaml` (podman, container `my-portfolio`) runs
   `scripts/serve.py`, an HTTPS-capable MkDocs dev server that also exposes `/health` (the
   container healthcheck curls it). [`scripts/dev.sh`](scripts/README.md) drives the container's
   build, start, restart and stop.
@@ -192,7 +192,7 @@ owes the full implementation (resources, event schema, security, local dev):
 - **Metrics** — privacy-first visitor analytics: geo comes from CloudFront headers (no IPs
   stored, 90-day TTL) via API Gateway → writer/reader lambdas → DynamoDB, origin-gated;
   WAF / private VPC are opt-in.
-- **Control plane** — `terraform/ci` bootstraps the per-environment state backends (S3 +
+- **Control plane** — `terraform/bootstrap` bootstraps the per-environment state backends (S3 +
   DynamoDB lock) and the per-job OIDC roles (see [Architecture](#architecture)). Staging
   applies automatically on `main`; prod applies stay manual. State/secrets are never committed.
 

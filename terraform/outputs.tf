@@ -1,17 +1,17 @@
 # --- Site ---
 output "site_bucket" {
   description = "Private site bucket (content synced by the deploy workflow)."
-  value       = var.enable_site ? aws_s3_bucket.site[0].id : null
+  value       = module.site.bucket_id
 }
 
 output "site_distribution_id" {
   description = "CloudFront distribution serving the site — id for invalidation."
-  value       = var.enable_site ? aws_cloudfront_distribution.site[0].id : null
+  value       = module.site.distribution_id
 }
 
 output "site_url" {
   description = "Public site URL (CloudFront edge)."
-  value       = var.enable_site ? "https://${aws_cloudfront_distribution.site[0].domain_name}" : null
+  value       = module.site.site_url
 }
 
 # --- Metrics (only when enable_metrics) ---

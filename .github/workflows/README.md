@@ -80,7 +80,7 @@ flowchart LR
     JR --> RES[site + metrics stacks]
 ```
 
-ci/checks/release talk to the GitHub API with the auto-scoped `GITHUB_TOKEN` (Release elevates it to `contents: write` to create the Release). Deploys and Terraform assume **AWS roles via OIDC** — one least-privilege role per job per environment; the only key-based step is the out-of-band `terraform/ci` bootstrap, run as an AWS user.
+ci/checks/release talk to the GitHub API with the auto-scoped `GITHUB_TOKEN` (Release elevates it to `contents: write` to create the Release). Deploys and Terraform assume **AWS roles via OIDC** — one least-privilege role per job per environment; the only key-based step is the out-of-band `terraform/bootstrap` bootstrap, run as an AWS user.
 
 The per-environment role ARNs and deployment values live as **repo secrets** (Settings → Secrets and variables → Actions), referenced by name from the workflows. Names follow a fixed pattern (`ENV` ∈ `STAGING` / `PROD`):
 

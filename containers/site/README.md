@@ -1,4 +1,4 @@
-# containers/mkdocs (the MkDocs dev image)
+# containers/site (the MkDocs dev image)
 
 One image and one compose service: the site's live-reload dev server — [`Dockerfile`](Dockerfile) built by [`compose.yaml`](compose.yaml). [`scripts/dev.sh`](../../scripts/README.md) drives the four steps:
 
@@ -11,9 +11,9 @@ Raw compose, for driving it by hand — the gitdir is handed over absolutely, be
 
 ```sh
 PORTFOLIO_GIT_DIR="$(git rev-parse --path-format=absolute --git-common-dir)" \
-  podman-compose -f containers/mkdocs/compose.yaml build
+  podman-compose -f containers/site/compose.yaml build
 PORTFOLIO_GIT_DIR="$(git rev-parse --path-format=absolute --git-common-dir)" \
-  podman-compose -f containers/mkdocs/compose.yaml up -d --no-build
+  podman-compose -f containers/site/compose.yaml up -d --no-build
 ```
 
 > [!WARNING]

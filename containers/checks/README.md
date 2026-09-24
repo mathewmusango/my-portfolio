@@ -24,8 +24,8 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 | `yaml-syntax` | `ruby:alpine` | `ruby -ryaml` over every `*.yml` / `*.yaml` |
 | `js` | `node:alpine` | `node --check` over every `*.js` |
 | `terraform-fmt` | `hashicorp/terraform` 1.15.9 | `terraform fmt -check -recursive -diff terraform/` |
-| `terraform-validate` | `hashicorp/terraform` 1.15.9 | `init -backend=false -lockfile=readonly` then `validate`, on all three roots |
-| `terraform-lint` | `terraform-linters/tflint` | `tflint --init`, then recursive on `terraform/` and `terraform/ci`, both against the root `.tflint.hcl` |
+| `terraform-validate` | `hashicorp/terraform` 1.15.9 | `init -backend=false -lockfile=readonly` then `validate`, on both roots |
+| `terraform-lint` | `terraform-linters/tflint` | `tflint --init`, then recursive on `terraform/` and `terraform/bootstrap`, both against the root `.tflint.hcl` |
 | `terraform-security` | `bridgecrewio/checkov` 3.3.15 | `checkov -d terraform --framework terraform --quiet --soft-fail` |
 
 `secrets` and `deps` have no service on purpose: `gitleaks` and `dependency-review` are CI-only surfaces, the second because it reads a pull-request diff.
@@ -36,7 +36,7 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 - Images carry mutable `latest` tags on purpose (they track whatever CI uses); the first run pulls them. `yaml` uses the docker.io mirror because ghcr.io answered HTTP 403 for the actionlint image on this machine.
 - Entrypoints differ per image, which is why the commands are shaped the way they are: `ruff`, `actionlint`, `terraform` and `tflint` run the tool directly (args only), `checkov`'s `/entrypoint.sh` already execs `checkov` (also args only), and the alpine images need an explicit `sh -c`.
 - `python` passes `--no-cache` because the mount is read-only and ruff would otherwise try to write `.ruff_cache/` into it.
-- `terraform-validate` sets `TF_DATA_DIR` per root, so `init` writes its working directory outside the read-only mount, and `-lockfile=readonly` uses the committed lockfiles. `terraform-lint` runs `--init` at the repo root, where `.tflint.hcl` auto-loads, and its plugin cache lands under `$HOME` inside the container.
+- `terraform-validate` sets `TF_DATA_DIR` per root, so `init` writes its working directory outside the read-only mount, and `-lockfile=readonly` uses the committed lockfiles. Provider and lint-plugin downloads persist in named volumes (`tf-plugins`, `tflint-plugins`), so only the first run pays for them — the repo mount stays read-only and the caches never touch the tree. Child modules are validated **through the root that calls them** — `init` resolves and compiles them — so there is no per-module pass and no module lockfile to keep in step. `terraform-lint` runs `--init` at the repo root, where `.tflint.hcl` auto-loads, and its plugin cache lands under `$HOME` inside the container.
 - `terraform-security` runs `--quiet --soft-fail`, so Checkov findings are **informational** until the audit backlog is cleared.
 - Needs podman and `podman-compose` on the host. The GitHub workflows stay the authoritative gate.
 
