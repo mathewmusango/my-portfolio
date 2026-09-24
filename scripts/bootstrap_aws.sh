@@ -52,7 +52,7 @@ REPO_JSON="[$REPO_JSON]"
 AWS_PROFILE="${AWS_PROFILE:-prod}"
 export AWS_PROFILE
 
-cd "$ROOT/terraform/ci"
+cd "$ROOT/terraform/bootstrap"
 
 case "$ENV" in
   staging)

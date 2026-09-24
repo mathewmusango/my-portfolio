@@ -63,13 +63,13 @@ edge). Los eventos brutos expiran a los 90 días.
 
 ```mermaid
 flowchart TB
-    BOOT[terraform/ci — bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
+    BOOT[terraform/bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
     BOOT --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
     WORK[GitHub Actions workflows] -->|assume role| ROLES
     ROLES -->|plan · apply · sync| STACKS[site + metrics stacks<br/>staging · prod]
 ```
 
-`terraform/ci` crea los backends de estado por entorno y los roles OIDC que
+`terraform/bootstrap` crea los backends de estado por entorno y los roles OIDC que
 GitHub Actions asume para construir y ejecutar las pilas. **El bootstrap es el
 único paso fuera de banda** — un usuario de AWS, fuera de GitHub Actions, los
 crea; ningún workflow usa jamás claves.

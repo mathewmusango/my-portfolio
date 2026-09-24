@@ -63,7 +63,7 @@ tags:
 
 ### Terraform — 控制平面
 
-`terraform/ci` 创建按环境的 state 后端以及 GitHub Actions 用于构建和运行各栈的
+`terraform/bootstrap` 创建按环境的 state 后端以及 GitHub Actions 用于构建和运行各栈的
 OIDC 角色。**Bootstrap 是唯一带外步骤** — 一个 GitHub Actions 之外的 AWS 用户
 用自己的 IAM 权限创建它们；任何工作流都不会使用密钥。实现细节见
 [`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }。

@@ -4,10 +4,10 @@ What the repository runs on a developer's machine: the dev container's lifecycle
 
 ## `dev.sh` — the dev container
 
-[`dev.sh`](dev.sh) drives the MkDocs dev container declared in [`containers/mkdocs/`](../containers/mkdocs/README.md).
+[`dev.sh`](dev.sh) drives the MkDocs dev container declared in [`containers/site/`](../containers/site/README.md).
 
 ```sh
-scripts/dev.sh build      # build the image from containers/mkdocs/Dockerfile
+scripts/dev.sh build      # build the image from containers/site/Dockerfile
 scripts/dev.sh start      # start the container, without building
 scripts/dev.sh restart    # recreate the container from the compose file
 scripts/dev.sh stop       # stop the container

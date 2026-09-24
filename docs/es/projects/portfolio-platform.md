@@ -73,7 +73,7 @@ restringida por origen ([¿por qué CloudFront?](https://github.com/mathewmusang
 
 ### Terraform — el plano de control
 
-`terraform/ci` crea los backends de estado por entorno y los roles OIDC que
+`terraform/bootstrap` crea los backends de estado por entorno y los roles OIDC que
 GitHub Actions asume para construir y ejecutar las pilas. **El bootstrap es el
 único paso fuera de banda** — un usuario de AWS, fuera de GitHub Actions, los
 crea con sus propios permisos IAM; ningún workflow usa jamás claves. Detalle de

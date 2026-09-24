@@ -60,13 +60,13 @@ runs one; **dev** runs Ministack (no edge). Raw events expire after 90 days.
 
 ```mermaid
 flowchart TB
-    BOOT[terraform/ci — bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
+    BOOT[terraform/bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
     BOOT --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
     WORK[GitHub Actions workflows] -->|assume role| ROLES
     ROLES -->|plan · apply · sync| STACKS[site + metrics stacks<br/>staging · prod]
 ```
 
-`terraform/ci` creates the per-environment state backends and the OIDC roles
+`terraform/bootstrap` creates the per-environment state backends and the OIDC roles
 GitHub Actions assumes to build and run the stacks. **Bootstrap is the one
 out-of-band step** — an AWS user, outside GitHub Actions, creates them; no
 workflow ever uses keys.

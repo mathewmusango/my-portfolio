@@ -25,7 +25,7 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 | `js` | `node:alpine` | `node --check` over every `*.js` |
 | `terraform-fmt` | `hashicorp/terraform` 1.15.9 | `terraform fmt -check -recursive -diff terraform/` |
 | `terraform-validate` | `hashicorp/terraform` 1.15.9 | `init -backend=false -lockfile=readonly` then `validate`, on both roots |
-| `terraform-lint` | `terraform-linters/tflint` | `tflint --init`, then recursive on `terraform/` and `terraform/ci`, both against the root `.tflint.hcl` |
+| `terraform-lint` | `terraform-linters/tflint` | `tflint --init`, then recursive on `terraform/` and `terraform/bootstrap`, both against the root `.tflint.hcl` |
 | `terraform-security` | `bridgecrewio/checkov` 3.3.15 | `checkov -d terraform --framework terraform --quiet --soft-fail` |
 
 `secrets` and `deps` have no service on purpose: `gitleaks` and `dependency-review` are CI-only surfaces, the second because it reads a pull-request diff.

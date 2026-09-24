@@ -57,13 +57,13 @@ CloudFront 提供地理信息头，因此**任何 IP 地址都不会到达 Lambd
 
 ```mermaid
 flowchart TB
-    BOOT[terraform/ci — bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
+    BOOT[terraform/bootstrap<br/>manual · run as an AWS user] --> STATE[(state backends<br/>S3 + DynamoDB lock<br/>staging · prod · local dev)]
     BOOT --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
     WORK[GitHub Actions workflows] -->|assume role| ROLES
     ROLES -->|plan · apply · sync| STACKS[site + metrics stacks<br/>staging · prod]
 ```
 
-`terraform/ci` 创建按环境的 state 后端以及 GitHub Actions 用于构建和运行各栈的
+`terraform/bootstrap` 创建按环境的 state 后端以及 GitHub Actions 用于构建和运行各栈的
 OIDC 角色。**Bootstrap 是唯一带外步骤** — 一个 GitHub Actions 之外的 AWS 用户
 创建它们；任何工作流都不会使用密钥。
 

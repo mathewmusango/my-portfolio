@@ -43,7 +43,7 @@ updates:
       prefix: "deps"
 
   - package-ecosystem: "terraform"
-    directory: "/terraform/ci"
+    directory: "/terraform/bootstrap"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

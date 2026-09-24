@@ -70,7 +70,7 @@ the API is public but origin-gated ([why CloudFront?](https://github.com/mathewm
 
 ### Terraform — the control plane
 
-`terraform/ci` creates the per-environment state backends and the OIDC roles
+`terraform/bootstrap` creates the per-environment state backends and the OIDC roles
 GitHub Actions assumes to build and run the stacks. **Bootstrap is the one
 out-of-band step** — an AWS user, outside GitHub Actions, creates them with its
 own IAM permissions; no workflow ever uses keys. Implementation detail:
