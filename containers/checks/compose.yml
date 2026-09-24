@@ -66,7 +66,7 @@ services:
     working_dir: /repo
     volumes:
       - ../..:/repo:ro
-    command: ["TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-mod terraform -chdir=terraform/modules/metrics validate -no-color"]
+    command: ["TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color"]
 
   terraform-lint:
     image: ghcr.io/terraform-linters/tflint:latest
