@@ -64,8 +64,11 @@ services:
     image: docker.io/hashicorp/terraform:1.15.9
     entrypoint: ["/bin/sh", "-c"]
     working_dir: /repo
+    environment:
+      TF_PLUGIN_CACHE_DIR: /plugin-cache
     volumes:
       - ../..:/repo:ro
+      - tf-plugins:/plugin-cache
     command: ["TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-root terraform -chdir=terraform validate -no-color && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci init -backend=false -input=false -lockfile=readonly && TF_DATA_DIR=/tmp/tf-ci terraform -chdir=terraform/ci validate -no-color"]
 
   terraform-lint:
@@ -74,6 +77,7 @@ services:
     working_dir: /repo
     volumes:
       - ../..:/repo:ro
+      - tflint-plugins:/root/.tflint.d
     command: ["tflint --init && cd terraform && tflint --recursive --format compact --config /repo/.tflint.hcl && cd ci && tflint --format compact --config /repo/.tflint.hcl"]
 
   terraform-security:
@@ -82,3 +86,7 @@ services:
     volumes:
       - ../..:/repo:ro
     command: ["-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]
+
+volumes:
+  tf-plugins:
+  tflint-plugins:
