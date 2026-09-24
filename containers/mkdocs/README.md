@@ -1,11 +1,23 @@
 # containers/mkdocs (the MkDocs dev image)
 
-One image and one compose service: the site's live-reload dev server — [`Dockerfile`](Dockerfile) built by [`compose.yaml`](compose.yaml). [`scripts/dev.sh`](../../scripts/README.md) drives the four steps; by hand:
+One image and one compose service: the site's live-reload dev server — [`Dockerfile`](Dockerfile) built by [`compose.yaml`](compose.yaml). [`scripts/dev.sh`](../../scripts/README.md) drives the four steps:
 
 ```sh
-podman-compose -f containers/mkdocs/compose.yaml build
-podman-compose -f containers/mkdocs/compose.yaml up -d --no-build
+scripts/dev.sh build
+scripts/dev.sh start
 ```
+
+Raw compose, for driving it by hand — the gitdir is handed over absolutely, because a relative `PORTFOLIO_GIT_DIR` is resolved from **this** folder, not the repository root:
+
+```sh
+PORTFOLIO_GIT_DIR="$(git rev-parse --path-format=absolute --git-common-dir)" \
+  podman-compose -f containers/mkdocs/compose.yaml build
+PORTFOLIO_GIT_DIR="$(git rev-parse --path-format=absolute --git-common-dir)" \
+  podman-compose -f containers/mkdocs/compose.yaml up -d --no-build
+```
+
+> [!WARNING]
+> A relative `PORTFOLIO_GIT_DIR` that was written for the repository root now points below this folder — `../.git/modules/<name>` resolves to `containers/.git/modules/<name>`. Podman **creates that empty directory**, the container starts happily with an empty `/app/.git`, and the git-backed plugins quietly fall back: the site serves, minus its revision dates and committers. Nothing errors.
 
 ## What it is
 
