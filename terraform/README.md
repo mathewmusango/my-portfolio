@@ -25,6 +25,48 @@ flowchart TB
 The AWS-side picture at a glance — the details follow. (A `v*` release ships the site onto the
 **prod** stack; the GitHub Pages plane is separate and not Terraform-managed.)
 
+## Layout — the four axes
+
+Read the folder along four axes. They are a *reading order*, not folders: Terraform's unit of
+composition is the directory, so a "folder per concern" inside one root is impossible — a folder
+means a separate root, with its own state and its own provider pin.
+
+| Axis | Where it lives |
+| --- | --- |
+| Infrastructure definition | `main.tf` (composition only) plus `modules/site/` and `modules/metrics/` |
+| Security | `ci/` — its own root, because the OIDC role and the state bucket must exist before any workflow can run |
+| Configuration | `variables.tf` / `versions.tf` / `outputs.tf`, the same shape in every root |
+| Verification | the check stack (`containers/checks/`): `fmt`, `validate`, TFLint, Checkov |
+
+### Roots own the pin; modules declare a floor
+
+- `terraform/` and `terraform/ci/` are the **roots**. They are the only directories Dependabot
+  tracks, and they own the provider **pin** (`aws ~> 6.65`).
+- `modules/*` are **child modules**. Each declares a **floor** (`aws >= 5.0`) and never a ceiling: a
+  module pinning the same major as its caller makes the per-directory Dependabot PRs mutually
+  unsatisfiable, so neither can land (see the CHANGELOG).
+- A child module is **not** a root — no `validate` stage of its own, no lockfile, no Dependabot
+  entry. The root that calls it compiles it during `validate`, so there is nothing to keep in step.
+
+### A resource two modules share stays in the root
+
+The security-headers policy the site and metrics distributions both attach lives in `main.tf`, not in
+either module, and is passed down as a variable. Besides matching the ownership, this keeps it
+resolvable to checkov's graph — moving it into one module made `CKV2_AWS_32` fail on the *other*
+distribution's policy association.
+
+### Moving resources between a root and a module (`moved` blocks)
+
+Relocating a resource changes its state address. `moved` blocks in `main.tf` re-address it during the
+next apply, so live infrastructure is never replaced. Treat a non-empty plan after such a change as a
+bug — a no-op plan is the proof the addresses are right. The blocks added for the `modules/site`
+extraction can be deleted once **staging and prod** have both applied them, since their state is
+separate.
+
+> One trap worth keeping: `.gitignore` anchors `/site/` rather than `site/`. A bare `site/` matches a
+> directory of that name at **any** depth, so it silently ignored `modules/site/` — the module would
+> simply never have been committed.
+
 ## Design principles
 
 1. **No long-lived CI credentials** — GitHub Actions assumes OIDC roles, one per job; only the
