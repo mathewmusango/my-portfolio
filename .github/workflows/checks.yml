@@ -21,5 +21,9 @@ jobs:
     uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
   secrets:
     uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@c4f2563f7b18e3119eaa5b73bc147a6e0957a194 # v2026.0925.1228
+  gitguardian:
+    uses: mathewmusango/my-workflows/.github/workflows/security-gitguardian.yml@c4f2563f7b18e3119eaa5b73bc147a6e0957a194 # v2026.0925.1228
+    secrets:
+      GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
   deps:
     uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243

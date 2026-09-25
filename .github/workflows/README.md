@@ -31,9 +31,10 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 | `terraform` | `checks-terraform.yml` | `terraform / fmt` · `terraform / validate` · `terraform / lint` · `terraform / security` |
 | `yaml` | `checks-yaml.yml` | `yaml / syntax` · `yaml / actionlint` |
 | `secrets` | `security-gitleaks.yml` | `secrets / gitleaks` |
+| `gitguardian` | `security-gitguardian.yml` | `gitguardian / gitguardian` — needs the `GITGUARDIAN_API_KEY` secret; **not** a required check |
 | `deps` | `security-deps.yml` | `deps / dependency-review` — PRs only |
 
-- **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint, Checkov — informational, no AWS credentials) · `gitleaks` · `dependency-review` on dependency changes.
+- **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint, Checkov — informational, no AWS credentials) · `gitleaks` (pattern and entropy) and `gitguardian` (secret *validity*, via the `GITGUARDIAN_API_KEY` secret) · `dependency-review` on dependency changes.
 - **The reported names, not the reusable workflows' own names, are what the ruleset requires** — GitHub composes them as `<caller job key> / <leaf job name>`; the set is in [`rulesets/main.md`](../../rulesets/main.md).
 - **Local parity:** [`containers/checks/`](../../containers/checks/README.md) mirrors these commands (one service per check, identical tool images), driven by [`scripts/checks/local.sh`](../../scripts/checks/local.sh) and wired into the pre-commit hook. The GitHub workflows remain the authoritative gate.
 
