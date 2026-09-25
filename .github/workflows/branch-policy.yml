@@ -8,4 +8,4 @@ permissions:
 
 jobs:
   policies:
-    uses: mathewmusango/my-workflows/.github/workflows/branch-policy.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
+    uses: mathewmusango/my-workflows/.github/workflows/branch-policy.yml@e2f8b4c80d81b452e8b19ed21e9b5ac62d94100c # v2026.0925.1503Z
