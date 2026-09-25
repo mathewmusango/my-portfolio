@@ -30,12 +30,18 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 | `shell` | `checks-shell.yml` | `shell / shellcheck` |
 | `terraform` | `checks-terraform.yml` | `terraform / fmt` · `terraform / validate` · `terraform / lint` · `terraform / security` |
 | `yaml` | `checks-yaml.yml` | `yaml / syntax` · `yaml / actionlint` |
-| `secrets` | `security-secrets.yml` | `secrets / gitleaks` |
+| `secrets` | `security-gitleaks.yml` | `secrets / gitleaks` |
 | `deps` | `security-deps.yml` | `deps / dependency-review` — PRs only |
 
 - **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint, Checkov — informational, no AWS credentials) · `gitleaks` · `dependency-review` on dependency changes.
 - **The reported names, not the reusable workflows' own names, are what the ruleset requires** — GitHub composes them as `<caller job key> / <leaf job name>`; the set is in [`rulesets/main.md`](../../rulesets/main.md).
 - **Local parity:** [`containers/checks/`](../../containers/checks/README.md) mirrors these commands (one service per check, identical tool images), driven by [`scripts/checks/local.sh`](../../scripts/checks/local.sh) and wired into the pre-commit hook. The GitHub workflows remain the authoritative gate.
+
+## `branch-policy.yml` — policies
+
+- **One workflow, a shared leaf.** It holds no logic: the single job `policies` calls the shared `branch-policy.yml` leaf in `mathewmusango/my-workflows`, at the same SHA-pin and tag comment as `checks.yml`.
+- **Trigger:** `create:` only. It reports as `policies / branch` and is **not** a required check — a `create:`-triggered job fires *after* the ref exists, so it cannot gate the branch it names.
+- **Verdicts:** `main` and `dependabot/*` pass; every other name takes a typed prefix — `feature/`, `fix/`, `docs/`, `ci/`, `infra/`, `security/`, `governance/`, `deps/`, `content/` (not `chore/`, not `feat/`).
 
 ## Deploy — `workflow_run` on ci success
 

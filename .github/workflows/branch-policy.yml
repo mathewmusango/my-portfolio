@@ -1,0 +1,11 @@
+name: policies
+
+on:
+  create:
+
+permissions:
+  contents: read
+
+jobs:
+  policies:
+    uses: mathewmusango/my-workflows/.github/workflows/branch-policy.yml@c4f2563f7b18e3119eaa5b73bc147a6e0957a194 # v2026.0925.1228
