@@ -1,0 +1,21 @@
+name: security
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@e2f8b4c80d81b452e8b19ed21e9b5ac62d94100c # v2026.0925.1503Z
+  gitguardian:
+    uses: mathewmusango/my-workflows/.github/workflows/security-gitguardian.yml@e2f8b4c80d81b452e8b19ed21e9b5ac62d94100c # v2026.0925.1503Z
+    secrets:
+      GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
+  deps:
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@e2f8b4c80d81b452e8b19ed21e9b5ac62d94100c # v2026.0925.1503Z
+  terraform:
+    uses: mathewmusango/my-workflows/.github/workflows/security-terraform.yml@e2f8b4c80d81b452e8b19ed21e9b5ac62d94100c # v2026.0925.1503Z
