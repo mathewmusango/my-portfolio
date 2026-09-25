@@ -30,13 +30,23 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 | `shell` | `checks-shell.yml` | `shell / shellcheck` |
 | `terraform` | `checks-terraform.yml` | `terraform / fmt` · `terraform / validate` · `terraform / lint` · `terraform / security` |
 | `yaml` | `checks-yaml.yml` | `yaml / syntax` · `yaml / actionlint` |
+
+- **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint, Checkov — informational, no AWS credentials).
+
+## `security.yml` — Security
+
+- **The same shape, the same trigger, split by what it touches.** These are the jobs that read a secret and reach a third party, so they sit where that cost is visible — and they are the part the local stack deliberately does not mirror.
+- **Moving a job between this file and `checks.yml` does not rename it:** the reported name comes from the caller job key, so the split needed no ruleset edit.
+
+| Caller job | Reusable workflow | Reported check name |
+| --- | --- | --- |
 | `secrets` | `security-gitleaks.yml` | `secrets / gitleaks` |
 | `gitguardian` | `security-gitguardian.yml` | `gitguardian / gitguardian` — needs the `GITGUARDIAN_API_KEY` secret; **not** a required check |
 | `deps` | `security-deps.yml` | `deps / dependency-review` — PRs only |
 
-- **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint, Checkov — informational, no AWS credentials) · `gitleaks` (pattern and entropy) and `gitguardian` (secret *validity*, via the `GITGUARDIAN_API_KEY` secret) · `dependency-review` on dependency changes.
+- **Scanners:** `gitleaks` covers provider patterns and entropy; `gitguardian` adds secret *validity* checking — telling a live credential from a dead example — via the `GITGUARDIAN_API_KEY` repository secret. `dependency-review` reads the PR diff.
 - **The reported names, not the reusable workflows' own names, are what the ruleset requires** — GitHub composes them as `<caller job key> / <leaf job name>`; the set is in [`rulesets/main.md`](../../rulesets/main.md).
-- **Local parity:** [`containers/checks/`](../../containers/checks/README.md) mirrors these commands (one service per check, identical tool images), driven by [`scripts/checks/local.sh`](../../scripts/checks/local.sh) and wired into the pre-commit hook. The GitHub workflows remain the authoritative gate.
+- **Local parity:** [`containers/checks/`](../../containers/checks/README.md) mirrors the surfaces above (one service per check, identical tool images), driven by [`scripts/checks/local.sh`](../../scripts/checks/local.sh) and wired into the pre-commit hook. The GitHub workflows remain the authoritative gate.
 
 ## `branch-policy.yml` — policies
 
