@@ -10,10 +10,12 @@ permissions:
 
 jobs:
   secrets:
-    uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@c4f2563f7b18e3119eaa5b73bc147a6e0957a194 # v2026.0925.1228
+    uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
   gitguardian:
-    uses: mathewmusango/my-workflows/.github/workflows/security-gitguardian.yml@c4f2563f7b18e3119eaa5b73bc147a6e0957a194 # v2026.0925.1228
+    uses: mathewmusango/my-workflows/.github/workflows/security-gitguardian.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
     secrets:
       GITGUARDIAN_API_KEY: ${{ secrets.GITGUARDIAN_API_KEY }}
   deps:
-    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@c4f2563f7b18e3119eaa5b73bc147a6e0957a194 # v2026.0925.1228
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
+  terraform:
+    uses: mathewmusango/my-workflows/.github/workflows/security-terraform.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
