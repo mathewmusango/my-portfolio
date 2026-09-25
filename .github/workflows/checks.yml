@@ -19,3 +19,5 @@ jobs:
     uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
   yaml:
     uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z
+  docker:
+    uses: mathewmusango/my-workflows/.github/workflows/checks-docker.yml@9216ec8c5a9090a380998275e7498422a02df9df # v2026.0925.1427Z

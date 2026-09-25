@@ -30,8 +30,9 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 | `shell` | `checks-shell.yml` | `shell / shellcheck` |
 | `terraform` | `checks-terraform.yml` | `terraform / fmt` · `terraform / validate` · `terraform / lint` |
 | `yaml` | `checks-yaml.yml` | `yaml / syntax` · `yaml / actionlint` |
+| `docker` | `checks-docker.yml` | `docker / hadolint` — a Dockerfile lint plus a `docker compose config` on every compose file |
 
-- **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint — no AWS credentials).
+- **Surfaces:** shellcheck on every `*.sh` and `.githooks/**` · `ruff` on `**/*.py` · `node --check` on `**/*.js` · actionlint plus a YAML parse on `**/*.yml`/`**/*.yaml` (workflow edits self-validate) · the terraform stages on `terraform/**` and `.tflint.hcl` (`fmt -check`, `validate` on all three roots, TFLint — no AWS credentials) · hadolint on every `Dockerfile*` plus `docker compose config` on every compose file.
 
 ## `security.yml` — Security
 
