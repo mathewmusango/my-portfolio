@@ -50,11 +50,9 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 - **The reported names, not the reusable workflows' own names, are what the ruleset requires** — GitHub composes them as `<caller job key> / <leaf job name>`; the set is in [`rulesets/main.md`](../../rulesets/main.md).
 - **Local parity:** [`containers/checks/`](../../containers/checks/README.md) mirrors the surfaces above (one service per check, identical tool images), driven by [`scripts/checks/local.sh`](../../scripts/checks/local.sh) and wired into the pre-commit hook. The GitHub workflows remain the authoritative gate.
 
-## `branch-policy.yml` — policies
+## Branch names
 
-- **One workflow, a shared leaf.** It holds no logic: the single job `policies` calls the shared `branch-policy.yml` leaf in `mathewmusango/my-workflows`, at the same SHA-pin and tag comment as `checks.yml`.
-- **Trigger:** `create:` only. It reports as `policies / branch` and is **not** a required check — a `create:`-triggered job fires *after* the ref exists, so it cannot gate the branch it names.
-- **Verdicts:** `main` and `dependabot/*` pass; every other name takes a typed prefix — `feature/`, `fix/`, `docs/`, `ci/`, `infra/`, `security/`, `governance/`, `deps/`, `content/` (not `chore/`, not `feat/`).
+Not a workflow. The [`branches: all`](../../rulesets/all.md) ruleset enforces them — a `create:`-triggered check fires only after the ref exists, so it could report but never prevent.
 
 ## Deploy — `workflow_run` on ci success
 

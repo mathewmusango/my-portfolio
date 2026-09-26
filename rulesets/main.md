@@ -42,7 +42,3 @@ gh api repos/mathewmusango/my-portfolio/rulesets
 # they are read-only, and the id lives in the URL.
 gh api --method PUT repos/mathewmusango/my-portfolio/rulesets/22026993 --input rulesets/main.json
 ```
-
-**Verified.** Read back with `gh api repos/mathewmusango/my-portfolio/rulesets` on 2026-09-23: two rulesets, `branch: main` with twelve required contexts and no bypass actors, and `tag: v*`. A direct push to `main` was rejected on 2026-09-04 for both the admin and the write collaborator — *"Changes must be made through a pull request"* — and the required set has grown from 10 to 12 since, when the shared leaves were added.
-
-**Change flow.** Edit the JSON (export format) → apply it → update this record in the same pull request.

@@ -1,6 +1,9 @@
 {
+  "id": 22227856,
   "name": "tag: v*",
   "target": "tag",
+  "source_type": "Repository",
+  "source": "mathewmusango/my-portfolio",
   "enforcement": "active",
   "conditions": {
     "ref_name": {
@@ -10,8 +13,13 @@
       ]
     }
   },
-  "bypass_actors": [],
   "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
     {
       "type": "required_status_checks",
       "parameters": {
@@ -26,13 +34,8 @@
       }
     },
     {
-      "type": "creation"
-    },
-    {
-      "type": "deletion"
-    },
-    {
-      "type": "non_fast_forward"
+      "type": "update"
     }
-  ]
+  ],
+  "bypass_actors": []
 }
