@@ -1,0 +1,37 @@
+{
+  "id": 24025480,
+  "name": "branches: all",
+  "target": "branch",
+  "source_type": "Repository",
+  "source": "mathewmusango/my-portfolio",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "exclude": [
+        "refs/heads/main",
+        "refs/heads/dependabot/*",
+        "refs/heads/dependabot/*/*",
+        "refs/heads/dependabot/*/*/*",
+        "refs/heads/dependabot/*/*/*/*",
+        "refs/heads/feature/*",
+        "refs/heads/fix/*",
+        "refs/heads/docs/*",
+        "refs/heads/ci/*",
+        "refs/heads/infra/*",
+        "refs/heads/security/*",
+        "refs/heads/governance/*",
+        "refs/heads/deps/*",
+        "refs/heads/content/*"
+      ],
+      "include": [
+        "~ALL"
+      ]
+    }
+  },
+  "rules": [
+    {
+      "type": "creation"
+    }
+  ],
+  "bypass_actors": []
+}

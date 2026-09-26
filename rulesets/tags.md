@@ -2,25 +2,22 @@
 
 **Status:** 🟢 applied — live on `refs/tags/v*` · **Config:** [`tags.json`](tags.json)
 
-**Purpose.** Release tags are minted only by the maintainer, and only on a commit with a green `build`. Every other actor is bound by both rules.
+**Purpose.** Release tags are immutable, and are accepted only against a commit whose `build` passed.
 
 | Field | Value |
 | --- | --- |
-| Enforcement | `active` |
-| Rules | `creation` · `required_status_checks` (`build`) · `deletion` · `non_fast_forward` |
-| Bypass actors | repository admin — `creation` admits only its bypass actors, so an empty list would admit nobody and no release could be cut |
+| Rules | `required_status_checks` (`build`, strict) · `deletion` · `non_fast_forward` · `update` |
+| Bypass actors | none |
+
+**No `creation` rule, and that is load-bearing.** With no bypass actor, `creation` refuses every tag push — *"Cannot create ref due to creations being restricted"*, proved on `my-workflows` on 2026-09-25 — so while this ruleset carried it, **no release could be tagged**. It was dropped on 2026-09-25; the next release tag is the live test of the fix.
 
 ## Applying
 
 ```sh
 # Read it back — this is how the file here was produced
-gh api repos/mathewmusango/my-portfolio/rulesets
+gh api repos/mathewmusango/my-portfolio/rulesets/22227856
 
 # Replace it in place. Strip id, source and source_type from the body first:
 # they are read-only, and the id lives in the URL.
 gh api --method PUT repos/mathewmusango/my-portfolio/rulesets/22227856 --input rulesets/tags.json
 ```
-
-**Verified.** Read back with `gh api repos/mathewmusango/my-portfolio/rulesets` on 2026-09-23: `tag: v*`, `active`, four rules, admin-only bypass. A tag push as the write collaborator was rejected on 2026-09-04 — *"Cannot create ref due to creations being restricted"* — while an admin push is accepted by design, which is why the admin-side gate is the tag-guard process rather than the ruleset.
-
-**Change flow.** Edit the JSON (export format) → apply it → update this record in the same pull request.

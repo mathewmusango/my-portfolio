@@ -31,7 +31,7 @@ Set by hand; a clone or a pull carries none of them.
 
 | Setting | State |
 | --- | --- |
-| Rulesets | **applied** — two: `branch: main` (12 required contexts, no bypass) and `tag: v*` (admin bypass, so the maintainer can cut a release); recorded in [`../rulesets/`](../rulesets/README.md) |
+| Rulesets | **applied** — three: `branch: main` (12 required contexts), `branches: all` (the branch-name gate) and `tag: v*` — all with no bypass. Recorded in [`../rulesets/`](../rulesets/README.md) |
 | Labels | `dependencies` · `github-actions` — the two `dependabot.yml` names, both present. Dependabot silently ignores a label the repository does not have |
 | Push protection | on |
 | Secret scanning | on |
