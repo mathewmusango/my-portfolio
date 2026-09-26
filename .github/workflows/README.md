@@ -2,7 +2,7 @@
 
 Every workflow in `.github/workflows/` — what it does, how it is triggered, which checks it reports, and the roles and secrets it uses.
 
-Each file has its own section below. [`.github/`](../INDEX.md) indexes the folder, [`CONTRIBUTING.md`](../../CONTRIBUTING.md) carries the process (branching, required checks, issues, labels, releases), and the design decisions that outlived their pull requests are collected under [Design notes](#design-notes) at the end.
+Each file has its own section below. [`.github/`](../INDEX.md) indexes the folder, and the design decisions that outlived their pull requests are collected under [Design notes](#design-notes) at the end.
 
 ## Naming conventions
 
