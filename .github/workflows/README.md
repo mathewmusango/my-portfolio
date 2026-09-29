@@ -36,17 +36,16 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 
 ## `security.yml` — Security
 
-- **The same shape, the same trigger, split by concern.** These are the security tools rather than the linting surfaces; two of them read a secret and reach a third party, which stays visible here — and this is the part the local stack deliberately does not mirror.
+- **The same shape, the same trigger, split by concern.** These are the security tools rather than the linting surfaces — and this is the part the local stack deliberately does not mirror.
 - **Moving a job between this file and `checks.yml` does not rename it:** the reported name comes from the caller job key, so the split needed no ruleset edit.
 
 | Caller job | Reusable workflow | Reported check name |
 | --- | --- | --- |
 | `secrets` | `security-gitleaks.yml` | `secrets / gitleaks` |
-| `gitguardian` | `security-gitguardian.yml` | `gitguardian / gitguardian` — needs the `GITGUARDIAN_API_KEY` secret; **not** a required check |
 | `deps` | `security-deps.yml` | `deps / dependency-review` — PRs only |
 | `terraform` | `security-terraform.yml` | `terraform / security` — Checkov, currently informational |
 
-- **Scanners:** `gitleaks` covers provider patterns and entropy; `gitguardian` adds secret *validity* checking — telling a live credential from a dead example — via the `GITGUARDIAN_API_KEY` repository secret. `terraform` is the Checkov scan of `*.tf`, currently `soft_fail` while the audit backlog lands, and `dependency-review` reads the PR diff.
+- **Scanners:** `gitleaks` covers provider patterns and entropy. `terraform` is the Checkov scan of `*.tf`, currently `soft_fail` while the audit backlog lands, and `dependency-review` reads the PR diff.
 - **The reported names, not the reusable workflows' own names, are what the ruleset requires** — GitHub composes them as `<caller job key> / <leaf job name>`; the set is in [`rulesets/main.md`](../../rulesets/main.md).
 - **Local parity:** [`containers/checks/`](../../containers/checks/README.md) mirrors the surfaces above (one service per check, identical tool images), driven by [`scripts/checks/local.sh`](../../scripts/checks/local.sh) and wired into the pre-commit hook. The GitHub workflows remain the authoritative gate.
 
