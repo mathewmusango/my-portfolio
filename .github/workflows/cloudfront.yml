@@ -47,7 +47,7 @@ permissions:
 jobs:
   invalidate:
     if: ${{ github.event.inputs.operation == 'invalidate' }}
-    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-invalidate.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
+    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-invalidate.yml@7e3d932bef703c6ce353026484ed47fc86ae2507 # v2026.0922.1933
     with:
       environment: ${{ github.event.inputs.environment }}
       paths: ${{ github.event.inputs.paths }}
@@ -59,7 +59,7 @@ jobs:
 
   switch:
     if: ${{ github.event.inputs.operation == 'switch' }}
-    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-switch.yml@0f6fa4795f1256f9ebeb5873e193cba26c858a72 # v2026.0917.2243
+    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-switch.yml@7e3d932bef703c6ce353026484ed47fc86ae2507 # v2026.0922.1933
     with:
       environment: ${{ github.event.inputs.environment }}
       component: ${{ github.event.inputs.component }}
