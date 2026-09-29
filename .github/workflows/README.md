@@ -7,7 +7,7 @@ Each file has its own section below. [`.github/`](../INDEX.md) indexes the folde
 ## Naming conventions
 
 - **File names** — task-only for a single-purpose file (`ci.yml`, `checks.yml`, `deploy.yml`, `release.yml`, `terraform.yml`, `cloudfront.yml`); `{task}-{env|language|resource}` once a repo grows a second file for the same kind of job. The deploy caller is `deploy.yml`; the per-environment reusables it calls are `deploy-{env}.yml`.
-- **Display names** — quoted `{Category}: {Task}` (a colon+space is invalid unquoted YAML): `ci` · `Checks: {language}` · `Deploy: {env} {target}` · `Infra: {task}`.
+- **Display names** — a plain token for a standalone workflow (`ci` · `checks` · `security` · `Deploy` · `Release` · `CodeQL`), and `{Category}: {Task}` where a workflow belongs to a family — `Deploy: staging` · `Deploy: prod` (the per-environment reusables) and `Infra: Terraform` · `Infra: CloudFront` (the manual ops). Quote any name containing a colon+space; it is invalid unquoted YAML.
 - **`workflow_run` matches display names** — the deploy workflow watches `ci`; renaming a display name means updating every reference.
 
 ## `ci.yml` (`ci`)
