@@ -6,31 +6,125 @@ on:
     types: [completed]
 
 jobs:
-  staging:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || startsWith(github.event.workflow_run.head_branch, 'v')) }}
+  detect:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
-      actions: read
-      id-token: write
-    uses: ./.github/workflows/deploy-staging.yml
-    with:
-      project: ${{ vars.PROJECT }}
-      aws_region: ${{ vars.AWS_REGION }}
-    secrets:
-      DEPLOY_ROLE_ARN: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
-      INVALIDATE_ROLE_ARN: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
+    outputs:
+      staging: ${{ steps.classify.outputs.staging }}
+      prod: ${{ steps.classify.outputs.prod }}
+    steps:
+      - id: classify
+        env:
+          HEAD: ${{ github.event.workflow_run.head_branch }}
+          TRIGGER: ${{ github.event.workflow_run.event }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          staging=false
+          prod=false
+          if [ "$TRIGGER" = "push" ]; then
+            if [ "$HEAD" = "main" ]; then
+              staging=true
+            elif gh api --silent "repos/$REPO/git/ref/tags/$HEAD" 2>/dev/null; then
+              prod=true
+            fi
+          fi
+          echo "staging=$staging" >> "$GITHUB_OUTPUT"
+          echo "prod=$prod" >> "$GITHUB_OUTPUT"
+          echo "build on '$HEAD' ($TRIGGER) concluded '$CONCLUSION' -> staging=$staging prod=$prod"
 
-  prod:
-    if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || startsWith(github.event.workflow_run.head_branch, 'v')) }}
+  aws-s3-staging:
+    name: aws-s3 / staging
+    needs: detect
+    if: ${{ needs.detect.outputs.staging == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: staging
+    concurrency:
+      group: deploy-staging-aws-s3
+      cancel-in-progress: false
     permissions:
       contents: read
       actions: read
       id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/aws-s3
+        with:
+          project: ${{ vars.PROJECT }}
+          env: staging
+          run_id: ${{ github.event.workflow_run.id }}
+          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
+          aws_region: ${{ vars.AWS_REGION }}
+          hash_skip: "true"
+
+  aws-s3-prod:
+    name: aws-s3 / prod
+    needs: detect
+    if: ${{ needs.detect.outputs.prod == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: prod
+    concurrency:
+      group: deploy-prod-aws-s3
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/aws-s3
+        with:
+          project: ${{ vars.PROJECT }}
+          env: prod
+          run_id: ${{ github.event.workflow_run.id }}
+          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
+          aws_region: ${{ vars.AWS_REGION }}
+          hash_skip: "false"
+
+  github-pages-prod:
+    name: github-pages / prod
+    needs: detect
+    if: ${{ needs.detect.outputs.prod == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: prod
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: "pages"
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
       pages: write
-    uses: ./.github/workflows/deploy-prod.yml
-    with:
-      project: ${{ vars.PROJECT }}
-      aws_region: ${{ vars.AWS_REGION }}
-    secrets:
-      DEPLOY_ROLE_ARN: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
-      INVALIDATE_ROLE_ARN: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+      id-token: write
+    steps:
+      - name: Download site artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: site
+          path: site
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: site
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
