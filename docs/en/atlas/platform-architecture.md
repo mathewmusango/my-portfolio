@@ -86,6 +86,3 @@ flowchart LR
     T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
-
-Implementation reference (every workflow, role, and operational extra):
-[`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }.

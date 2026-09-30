@@ -156,9 +156,6 @@ flowchart LR
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
 
-Each of the four phases below is documented in [`.github/workflows/README.md`](.github/workflows/README.md)
-(the implementation reference — triggers, roles, secrets, required-check names):
-
 - **ci** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
   to `main` and `v*` tags; uploads the built `site/` as an artifact. The `build` job ends with a
   **browser smoke check** (`scripts/checks/browser.py`): it loads the four viewer pages in headless
@@ -208,7 +205,6 @@ owes the full implementation (resources, event schema, security, local dev):
 
 - [`README.md`](README.md) — this file: the system view (what the repo is, architecture, running it locally).
 - [`terraform/README.md`](terraform/README.md) — infrastructure implementation (site + metrics stacks, event model, security, local AWS emulation).
-- [`.github/workflows/README.md`](.github/workflows/README.md) — CI/CD implementation (every workflow, naming, roles, secrets, ops extras).
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — the short contribution note (one-person project).
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting.
 - [`CHANGELOG.md`](CHANGELOG.md) — release history.

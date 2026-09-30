@@ -110,8 +110,7 @@ Pasos de inicio: [el README del repositorio](https://github.com/mathewmusango/my
 
 ## CI / CD
 
-Un cambio se publica en cuatro fases — cada una documentada en
-[`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }:
+Un cambio se publica en cuatro fases:
 
 1. **ci** — `mkdocs build` estricto (enlaces rotos, traducciones desactualizadas
    y desequilibrio de CSS rompen el build), `pip-audit` y un artefacto del sitio
@@ -192,7 +191,6 @@ como [cronología de versiones](../../atlas/releases/).
 
 - **[README del repositorio](https://github.com/mathewmusango/my-portfolio/blob/main/README.md){ target="_blank" rel="noopener" }** — la vista del sistema: arquitectura, ejecución local.
 - **[`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }** — implementación y justificación de la infraestructura.
-- **[`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }** — cada workflow, rol y extra operativo.
 - **[`CONTRIBUTING.md`](https://github.com/mathewmusango/my-portfolio/blob/main/CONTRIBUTING.md){ target="_blank" rel="noopener" }** — cómo un cambio se convierte en una fusión.
 - **[Atlas del sitio](../../atlas/)** — cronología de versiones, etiquetas y el mapa de estructura del sitio.
 - **[GitHub Actions](https://github.com/mathewmusango/my-portfolio/actions){ target="_blank" rel="noopener" }** — el pipeline en vivo.
