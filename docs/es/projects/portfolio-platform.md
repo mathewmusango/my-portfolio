@@ -121,7 +121,7 @@ Un cambio se publica en cuatro fases:
    modificadas ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    las superficies no tocadas **se omiten y reportan éxito**, así las
    verificaciones obligatorias nunca bloquean un PR no relacionado.
-3. **Deploy** — `workflow_run` al éxito de ci: `main` → staging, `v*` → prod en
+3. **Deploy** — `workflow_run` al éxito de `build`: `main` → staging, `v*` → prod en
    ambos planos, revisados (ver [Modelo de entrega](#delivery-model)).
 4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
    CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo

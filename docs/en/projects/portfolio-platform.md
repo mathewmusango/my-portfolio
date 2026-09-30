@@ -116,7 +116,7 @@ A change ships through four phases:
    ([skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }):
    untouched surfaces **skip and report success**, so the required checks
    never block an unrelated PR.
-3. **Deploy** — `workflow_run` on ci success (`deploy.yml`): `main` → staging, `v*` →
+3. **Deploy** — `workflow_run` on `build` success (`deploy.yml`): `main` → staging, `v*` →
    prod on both planes (reviewed) (see [Delivery model](#delivery-model)).
 4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
    SBOM; Terraform plans on every infra change (apply stays manual); `cloudfront.yml` —
