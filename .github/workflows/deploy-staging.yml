@@ -9,6 +9,11 @@ on:
       aws_region:
         required: true
         type: string
+    secrets:
+      DEPLOY_ROLE_ARN:
+        required: true
+      INVALIDATE_ROLE_ARN:
+        required: true
 
 jobs:
   detect:
