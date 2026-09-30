@@ -56,7 +56,7 @@ cd "$ROOT/terraform/bootstrap"
 
 case "$ENV" in
   staging)
-    REF_PATTERNS='["ref:refs/heads/main"]'
+    REF_PATTERNS='["ref:refs/heads/main", "environment:staging"]'
     # Deploy jobs declare an environment, so GitHub's OIDC sub is
     # repo:OWNER@*/REPO@*:environment:<name> (not ref-form). Allow the
     # environment form for the env-bearing jobs + keep the ref form as a
@@ -64,7 +64,7 @@ case "$ENV" in
     DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:staging"]'
     ;;
   prod)
-    REF_PATTERNS='["ref:refs/tags/v*"]'
+    REF_PATTERNS='["ref:refs/tags/v*", "environment:prod"]'
     # The prod deploy jobs declare an environment, so their OIDC sub is
     # repo:OWNER@*/REPO@*:environment:<name> (not the ref form). Allow every
     # environment form the prod jobs present + keep the ref form as a

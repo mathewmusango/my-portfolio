@@ -193,9 +193,9 @@ flowchart LR
   Pages runs `prod` only, behind that environment's required reviewer. Staging **skips** when the
   artifact is byte-identical to the last deploy (content-hash marker); prod always deploys.
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
-  plans on `terraform/**` changes (apply stays manual); `cloudfront.yml` — invalidate / switch,
-  both jobs declaring `environment:` and reading their role ARN from it — is the manual
-  operational extra.
+  plans on `terraform/**` changes and auto-applies to staging on `main` (prod is a manual
+  dispatch, behind the `prod` reviewer); `cloudfront.yml` — invalidate / switch, both jobs
+  declaring `environment:` and reading their role ARN from it — is the manual operational extra.
 
 ## Infrastructure as Code (Terraform)
 
