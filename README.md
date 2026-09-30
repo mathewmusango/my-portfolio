@@ -4,7 +4,7 @@
 [![Web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
 [![My Portfolio](https://img.shields.io/github/v/release/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/releases)
 [![License](https://img.shields.io/github/license/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/blob/main/LICENSE)
-[![CI](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/ci.yml?branch=main)](https://github.com/mathewmusango/my-portfolio/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/build.yml?branch=main)](https://github.com/mathewmusango/my-portfolio/actions)
 
 ![Site preview](docs/assets/site-preview.png)
 *The live site — [mathewmusango.github.io/my-portfolio](https://mathewmusango.github.io/my-portfolio/)*
@@ -47,7 +47,7 @@ flowchart LR
         DEV[podman-compose · serve.py<br/>HTTPS via mkcert]
     end
     subgraph GHA[GitHub Actions]
-        B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
+        B[build.yml — build + checks] -->|main| DS[deploy.yml · staging]
         B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
     DS --> STG[staging — S3 + CloudFront · OAC]
@@ -146,7 +146,7 @@ How a change ships (the [Architecture](#architecture) site diagram shows the tar
 flowchart LR
     M[push / PR to main] --> C{required checks<br/>per-surface · skip-model}
     V[v* tag<br/>ruleset-gated] --> C
-    C -->|pass| B[ci — ci.yml]
+    C -->|pass| B[build — build.yml]
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
@@ -156,7 +156,7 @@ flowchart LR
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
 
-- **ci** (`ci.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
+- **build** (`build.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
   to `main` and `v*` tags; uploads the built `site/` as an artifact. The `build` job ends with a
   **browser smoke check** (`scripts/checks/browser.py`): it loads the four viewer pages in headless
   Firefox and fails when one stops rendering, which is the class of runtime regression no static
@@ -167,7 +167,7 @@ flowchart LR
   and the required checks never block unrelated PRs. The checks run locally too
   (`scripts/checks/local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
   workflows exactly).
-- **Deploy** — `workflow_run` on ci success: `deploy.yml` is the caller (trigger + one job per
+- **Deploy** — `workflow_run` on `build` success: `deploy.yml` is the caller (trigger + one job per
   environment) and `deploy-{staging,prod}.yml` are the local reusables it calls, so the called jobs
   nest under the caller and a deploy reads as a `staging` group and a `prod` group — `main` →
   **staging** (S3 + CloudFront); `v*` tags → **prod** on both planes (the AWS mirror and the GitHub

@@ -17,7 +17,7 @@
 
 | Context | Comes from |
 | --- | --- |
-| `build` | `ci.yml` — the site build, and the one context that is not a shared leaf |
+| `build` | `build.yml` — the site build, and the one context that is not a shared leaf |
 | `js / syntax` | the `js` caller job |
 | `python / ruff` | the `python` caller job |
 | `shell / shellcheck` | the `shell` caller job |

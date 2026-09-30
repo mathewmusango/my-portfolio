@@ -23,7 +23,7 @@ flowchart LR
         DEV[podman-compose · serve.py<br/>HTTPS via mkcert]
     end
     subgraph GHA[GitHub Actions]
-        B[ci.yml — build + checks] -->|main| DS[deploy.yml · staging]
+        B[build.yml — build + checks] -->|main| DS[deploy.yml · staging]
         B -->|v* tag| DP[deploy.yml · prod · required reviewer]
     end
     DS --> STG[staging — S3 + CloudFront · OAC]
@@ -80,7 +80,7 @@ crea; ningún workflow usa jamás claves.
 flowchart LR
     M[push / PR to main] --> C{required checks<br/>per-surface · skip-model}
     V[v* tag<br/>ruleset-gated] --> C
-    C -->|pass| B[ci — ci.yml]
+    C -->|pass| B[build — build.yml]
     V --> B
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
