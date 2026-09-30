@@ -8,9 +8,9 @@ on:
       AWS_REGION:
         required: true
       DEPLOY_ROLE_ARN:
-        required: true
+        required: false
       INVALIDATE_ROLE_ARN:
-        required: true
+        required: false
 
 jobs:
   detect:
