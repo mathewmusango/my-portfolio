@@ -139,20 +139,16 @@ resource "aws_iam_role" "invalidate" {
 }
 
 # Edge toggle role — flip Enabled on the project's distributions only.
-# STAGING ONLY (user decision 2026-08-29): prod has no toggle — an accidental
-# disable on the prod metrics edge would stop collection and risk the dataset;
-# staging is the test lever. Count-gated so prod never gets the role/policy.
 resource "aws_iam_role" "toggle" {
-  count = var.environment != "prod" ? 1 : 0
-  name  = var.toggle_role_name
+  name = var.toggle_role_name
 
   assume_role_policy = local.assume_role_policy_deploy
   tags               = var.tags
 }
 
 moved {
-  from = aws_iam_role.toggle
-  to   = aws_iam_role.toggle[0]
+  from = aws_iam_role.toggle[0]
+  to   = aws_iam_role.toggle
 }
 
 # --- Policy: terraform plan/apply on the metrics stack ---------------------
@@ -368,7 +364,6 @@ resource "aws_iam_policy" "edge_invalidate" {
 
 # --- Policy: CloudFront toggle (Enabled flip) ----------------------------
 resource "aws_iam_policy" "edge_toggle" {
-  count       = var.environment != "prod" ? 1 : 0
   name        = "${var.name_prefix}-${var.environment}-edge-toggle"
   description = "Allow GitHub Actions to flip Enabled on the project's CloudFront distributions (toggle-env)."
   # checkov:skip=CKV_AWS_355:CloudFront distribution actions require Resource '*' (AWS API limitation)
@@ -391,8 +386,8 @@ resource "aws_iam_policy" "edge_toggle" {
 }
 
 moved {
-  from = aws_iam_policy.edge_toggle
-  to   = aws_iam_policy.edge_toggle[0]
+  from = aws_iam_policy.edge_toggle[0]
+  to   = aws_iam_policy.edge_toggle
 }
 
 resource "aws_iam_role_policy_attachment" "metrics_terraform" {
@@ -411,14 +406,13 @@ resource "aws_iam_role_policy_attachment" "edge_invalidate" {
 }
 
 resource "aws_iam_role_policy_attachment" "edge_toggle" {
-  count      = var.environment != "prod" ? 1 : 0
-  role       = aws_iam_role.toggle[0].name
-  policy_arn = aws_iam_policy.edge_toggle[0].arn
+  role       = aws_iam_role.toggle.name
+  policy_arn = aws_iam_policy.edge_toggle.arn
 }
 
 moved {
-  from = aws_iam_role_policy_attachment.edge_toggle
-  to   = aws_iam_role_policy_attachment.edge_toggle[0]
+  from = aws_iam_role_policy_attachment.edge_toggle[0]
+  to   = aws_iam_role_policy_attachment.edge_toggle
 }
 
 # ---------------------------------------------------------------------------

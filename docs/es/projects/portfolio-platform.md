@@ -125,9 +125,8 @@ Un cambio se publica en cuatro fases:
    ambos planos, revisados (ver [Modelo de entrega](#delivery-model)).
 4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
    CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo
-   manual); `cloudfront.yml` — invalidate / switch, ambos jobs llaman a hojas
-   reutilizables compartidas en la biblioteca pública `my-workflows` — es el
-   extra operativo manual.
+   manual); `cloudfront.yml` — invalidate / switch, ambos jobs declaran `environment:` y leen de
+   ahí el ARN de su rol — es el extra operativo manual.
 
 Los nombres de las verificaciones son los nombres de las puertas — las
 verificaciones compartidas se reportan como `<caller> / <leaf>` (p. ej.

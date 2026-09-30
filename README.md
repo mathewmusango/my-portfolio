@@ -194,7 +194,7 @@ flowchart LR
   artifact is byte-identical to the last deploy (content-hash marker); prod always deploys.
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
   plans on `terraform/**` changes (apply stays manual); `cloudfront.yml` — invalidate / switch,
-  both jobs calling shared reusable leaves in the public `my-workflows` library — is the manual
+  both jobs declaring `environment:` and reading their role ARN from it — is the manual
   operational extra.
 
 ## Infrastructure as Code (Terraform)

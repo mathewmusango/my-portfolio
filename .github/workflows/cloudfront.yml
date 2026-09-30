@@ -47,24 +47,64 @@ permissions:
 jobs:
   invalidate:
     if: ${{ github.event.inputs.operation == 'invalidate' }}
-    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-invalidate.yml@7e3d932bef703c6ce353026484ed47fc86ae2507 # v2026.0922.1933
-    with:
-      environment: ${{ github.event.inputs.environment }}
-      paths: ${{ github.event.inputs.paths }}
-    secrets:
-      project: ${{ vars.PROJECT }}
-      aws_region: ${{ vars.AWS_REGION }}
-      staging_invalidate_role_arn: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
-      prod_invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Assume the invalidate role for the target environment (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.INVALIDATE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Invalidate the distribution (lookup by comment convention)
+        env:
+          PROJECT: ${{ vars.PROJECT }}
+          TARGET_ENV: ${{ github.event.inputs.environment }}
+          PATHS: ${{ github.event.inputs.paths }}
+        run: |
+          ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='$PROJECT-$TARGET_ENV-site'].Id" --output text)"
+          if [ -z "$ID" ]; then
+            echo "distribution '$PROJECT-$TARGET_ENV-site' not found — skipping invalidation (content synced)"
+            exit 0
+          fi
+          echo "Invalidating CloudFront '$PROJECT-$TARGET_ENV-site' ($ID): $PATHS"
+          aws cloudfront create-invalidation --distribution-id "$ID" --paths "$PATHS"
 
   switch:
     if: ${{ github.event.inputs.operation == 'switch' }}
-    uses: mathewmusango/my-workflows/.github/workflows/cloudfront-switch.yml@7e3d932bef703c6ce353026484ed47fc86ae2507 # v2026.0922.1933
-    with:
-      environment: ${{ github.event.inputs.environment }}
-      component: ${{ github.event.inputs.component }}
-      mode: ${{ github.event.inputs.mode }}
-    secrets:
-      project: ${{ vars.PROJECT }}
-      aws_region: ${{ vars.AWS_REGION }}
-      toggle_role_arn: ${{ secrets.STAGING_TOGGLE_ROLE_ARN }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ github.event.inputs.environment }}
+    steps:
+      - name: Assume the toggle role (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.TOGGLE_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Flip Enabled on the distribution
+        env:
+          PROJECT: ${{ vars.PROJECT }}
+          TARGET_ENV: ${{ github.event.inputs.environment }}
+          COMPONENT: ${{ github.event.inputs.component }}
+          MODE: ${{ github.event.inputs.mode }}
+        run: |
+          COMMENT="$PROJECT-$TARGET_ENV-$COMPONENT"
+          if [ "$MODE" = "on" ]; then
+            ENABLED=true
+          else
+            ENABLED=false
+          fi
+          ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='$COMMENT'].Id" --output text)"
+          if [ -z "$ID" ]; then
+            echo "distribution not found for comment '$COMMENT' — nothing to switch"
+            exit 0
+          fi
+          ETAG="$(aws cloudfront get-distribution --id "$ID" --query ETag --output text)"
+          aws cloudfront get-distribution --id "$ID" --query Distribution.DistributionConfig > /tmp/cf-switch-config.json
+          jq --argjson enabled "$ENABLED" '.Enabled = $enabled' /tmp/cf-switch-config.json > /tmp/cf-switch-config-new.json
+          aws cloudfront update-distribution --id "$ID" --if-match "$ETAG" --distribution-config file:///tmp/cf-switch-config-new.json
+          echo "cloudfront $COMMENT -> $MODE (distribution $ID)"
