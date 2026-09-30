@@ -105,8 +105,7 @@ Getting-started steps: [the repo README](https://github.com/mathewmusango/my-por
 
 ## CI / CD
 
-A change ships through four phases — each documented in
-[`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }:
+A change ships through four phases:
 
 1. **ci** — strict `mkdocs build` (broken links, stale translations and CSS
    imbalance fail the build), `pip-audit`, and a built-site artifact on every
@@ -182,7 +181,6 @@ that keeps it from recurring — the same loop this site documents as the
 
 - **[Repo README](https://github.com/mathewmusango/my-portfolio/blob/main/README.md){ target="_blank" rel="noopener" }** — the system view: architecture, running it locally.
 - **[`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }** — infrastructure implementation and rationale.
-- **[`.github/workflows/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/.github/workflows/README.md){ target="_blank" rel="noopener" }** — every workflow, role, and operational extra.
 - **[`CONTRIBUTING.md`](https://github.com/mathewmusango/my-portfolio/blob/main/CONTRIBUTING.md){ target="_blank" rel="noopener" }** — how a change becomes a merge.
 - **[Site Atlas](../../atlas/)** — release timeline, tags, and the site structure map.
 - **[GitHub Actions](https://github.com/mathewmusango/my-portfolio/actions){ target="_blank" rel="noopener" }** — the pipeline live.

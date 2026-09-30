@@ -9,8 +9,8 @@
 | Enforcement | `active` |
 | Merge methods | `squash` · `rebase` |
 | Approvals | 1 · stale reviews dismissed on push · review threads resolved |
-| Required checks | the twelve contexts below, strict |
 | Bypass actors | none |
+| Required checks | the twelve contexts below, strict |
 | Also | `creation` · `deletion` · `non_fast_forward` · `required_signatures` · `code_scanning` |
 
 ## The required contexts

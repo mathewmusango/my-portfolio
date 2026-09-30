@@ -81,8 +81,8 @@ separate.
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
 > manual)**. Local dev applies against Ministack; real-AWS applies happen via the workflow
-> (OIDC) or the CLI. The manual ops extra (`cloudfront.yml` — invalidate / switch, over shared reusable
-> leaves) is documented in [`.github/workflows/README.md`](../.github/workflows/README.md).
+> (OIDC) or the CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, over shared
+> reusable leaves).
 
 > **On `prod`:** a `v*` release ships one artifact to two prod planes — the AWS **prod**
 > stack documented here (site + CloudFront, plus the prod metrics stack), and GitHub Pages (the
@@ -181,9 +181,8 @@ just `POST`s to it, allowed by CORS from the site origin.
 ### Applying to real AWS
 
 Real-AWS applies run through GitHub Actions (`terraform.yml`): staging auto-applies on `main`;
-prod applies are manual dispatches — both via OIDC, no keys in workflows (see the auth model in
-[`.github/workflows/README.md`](../.github/workflows/README.md)). Manual CLI applies exist only
-for rare out-of-band work (e.g., a catch-up) and are documented in the project's **private
+prod applies are manual dispatches — both via OIDC, no keys in workflows. Manual CLI applies exist
+only for rare out-of-band work (e.g., a catch-up) and are documented in the project's **private
 runbook** — intentionally not in this public repo.
 
 CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the geo headers.
@@ -320,7 +319,7 @@ still applies.
   `local.tfvars`) — resource names and the table are prefixed, so both can
   coexist. **Terraform runs via GitHub Actions** — `terraform.yml` plans on
   `terraform/**` changes; staging auto-applies on `main`, prod applies manually
-  (see the map above + `.github/workflows/README.md` for roles/secrets).
+  (see the map above for roles/secrets).
 
 ## TFLint
 

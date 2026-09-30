@@ -3,7 +3,7 @@
 | File | What it is |
 | --- | --- |
 | [`main.json`](main.json) | the live ruleset on `refs/heads/main`, in GitHub's export/import format |
-| [`main.md`](main.md) | the record beside it — what it requires, how it was applied |
+| [`main.md`](main.md) | the record beside it — what it is configured with |
 | [`all.json`](all.json) | the live ruleset on every branch — the branch-name gate |
 | [`all.md`](all.md) | the record beside it, in the same shape |
 | [`tags.json`](tags.json) | the live ruleset on `refs/tags/v*`, in the same format |

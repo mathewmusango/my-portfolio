@@ -1,4 +1,4 @@
-# Ruleset: `v*` tags — record
+# Ruleset: `tag: v*` — record
 
 **Status:** 🟢 applied — live on `refs/tags/v*` · **Config:** [`tags.json`](tags.json)
 
@@ -6,8 +6,10 @@
 
 | Field | Value |
 | --- | --- |
-| Rules | `required_status_checks` (`build`, strict) · `deletion` · `non_fast_forward` · `update` |
+| Target | `refs/tags/v*` |
+| Required checks | `build`, strict |
 | Bypass actors | none |
+| Rules | `deletion` · `non_fast_forward` · `update` |
 
 **No `creation` rule, and that is load-bearing.** With no bypass actor, `creation` refuses every tag push — *"Cannot create ref due to creations being restricted"*, proved on `my-workflows` on 2026-09-25 — so while this ruleset carried it, **no release could be tagged**. It was dropped on 2026-09-25; the next release tag is the live test of the fix.
 
