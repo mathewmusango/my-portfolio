@@ -81,8 +81,8 @@ separate.
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
 > manual)**. Local dev applies against Ministack; real-AWS applies happen via the workflow
-> (OIDC) or the CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, over shared
-> reusable leaves).
+> (OIDC) or the CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, both jobs
+> declaring `environment:` and reading their role ARN from it).
 
 > **On `prod`:** a `v*` release ships one artifact to two prod planes — the AWS **prod**
 > stack documented here (site + CloudFront, plus the prod metrics stack), and GitHub Pages (the

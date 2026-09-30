@@ -59,18 +59,16 @@ case "$ENV" in
     REF_PATTERNS='["ref:refs/heads/main"]'
     # Deploy jobs declare an environment, so GitHub's OIDC sub is
     # repo:OWNER@*/REPO@*:environment:<name> (not ref-form). Allow the
-    # environment form for the env-bearing deploy jobs + keep the ref form for
-    # the no-environment manual dispatches (cloudfront.yml). Same trust serves
-    # deploy/invalidate/toggle roles.
+    # environment form for the env-bearing jobs + keep the ref form as a
+    # fallback. Same trust serves deploy/invalidate/toggle roles.
     DEPLOY_REF_PATTERNS='["ref:refs/heads/main", "environment:staging"]'
     ;;
   prod)
     REF_PATTERNS='["ref:refs/tags/v*"]'
     # The prod deploy jobs declare an environment, so their OIDC sub is
     # repo:OWNER@*/REPO@*:environment:<name> (not the ref form). Allow every
-    # environment form the prod jobs present + keep the ref form for the
-    # no-environment manual dispatches (cloudfront.yml). Same trust serves
-    # deploy/invalidate/toggle roles.
+    # environment form the prod jobs present + keep the ref form as a
+    # fallback. Same trust serves deploy/invalidate/toggle roles.
     #   environment:pre-prod — the three-environment model, still what `main`
     #     runs; prune it only after the consolidation (#57) has merged.
     #   environment:prod     — the consolidated jobs, where BOTH prod planes
@@ -165,7 +163,7 @@ echo "Bootstrap complete for $PROJECT/$ENV ($AWS_REGION):"
 echo "  terraform role: github-actions-$PROJECT-$ENV-terraform"
 echo "  deploy role:    github-actions-$PROJECT-$ENV-deploy (S3 sync)"
 echo "  invalidate role: github-actions-$PROJECT-$ENV-invalidate (edge purge)"
-echo "  toggle role:    github-actions-$PROJECT-$ENV-toggle (edge Enabled flip — staging only)"
+echo "  toggle role:    github-actions-$PROJECT-$ENV-toggle (edge Enabled flip)"
 echo "  state bucket:   $STATE_BUCKET (key $STATE_KEY)"
 echo "  lock table:     $PROJECT-$ENV-tfstate-lock"
 echo "  site buckets:   $PROJECT-$ENV-site*"

@@ -108,8 +108,8 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
    均经审阅（见[交付模型](#delivery-model)）。
 4. **发布与基础设施** — `v*` 标签创建带 CycloneDX SBOM 的 GitHub Release；每次
    基础设施变更 Terraform 都会 plan（apply 保持手动）；`cloudfront.yml` —
-   invalidate / switch，两个 job 都调用公共 `my-workflows` 库中的共享可复用
-   叶子工作流 — 是手动运维附加项。
+   invalidate / switch，两个 job 都声明 `environment:` 并从其中读取各自的角色 ARN —
+   是手动运维附加项。
 
 检查名就是闸门名 — 共享检查以 `<caller> / <leaf>` 形式报告（例如 `python / ruff`、
 `terraform / fmt`），与 `build` 并列，使分支保护和 ruleset 要求的与真正
