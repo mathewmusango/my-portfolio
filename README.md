@@ -182,12 +182,16 @@ flowchart LR
   and the required checks never block unrelated PRs. The checks run locally too
   (`scripts/checks/local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
   workflows exactly).
-- **Deploy** — `workflow_run` on `build` success: `deploy.yml` is the caller (trigger + one job per
-  environment) and `deploy-{staging,prod}.yml` are the local reusables it calls, so the called jobs
-  nest under the caller and a deploy reads as a `staging` group and a `prod` group — `main` →
-  **staging** (S3 + CloudFront); `v*` tags → **prod** on both planes (the AWS mirror and the GitHub
-  Pages publish), each waiting on the `prod` environment's required reviewer. Staging **skips** when
-  the artifact is byte-identical to the last deploy (content-hash marker).
+- **Deploy** — `workflow_run` on `build` success, all of it in `deploy.yml`: a single **`detect`** job
+  reads the run payload and answers both questions once — a push to `main` → **staging**, a real
+  `v*` tag (resolved against the API) → **prod** — and three plain jobs gate on its outputs:
+  `aws-s3 / staging`, `aws-s3 / prod` and `github-pages / prod`. They are **plain jobs**, so each
+  declares its own literal `environment:` and reads `DEPLOY_ROLE_ARN` / `INVALIDATE_ROLE_ARN`
+  **from that environment** — one name per environment, no `secrets:` mapping anywhere, and staging
+  cannot see prod's role. The S3 plane stays one implementation
+  ([`.github/actions/aws-s3`](.github/actions/aws-s3/action.yml), shared through its `env` token);
+  Pages runs `prod` only, behind that environment's required reviewer. Staging **skips** when the
+  artifact is byte-identical to the last deploy (content-hash marker); prod always deploys.
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
   plans on `terraform/**` changes (apply stays manual); `cloudfront.yml` — invalidate / switch,
   both jobs calling shared reusable leaves in the public `my-workflows` library — is the manual
