@@ -13,11 +13,9 @@ jobs:
       actions: read
       id-token: write
     uses: ./.github/workflows/deploy-staging.yml
-    secrets:
-      PROJECT: ${{ secrets.PROJECT }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      DEPLOY_ROLE_ARN: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
-      INVALIDATE_ROLE_ARN: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
+    with:
+      project: ${{ vars.PROJECT }}
+      aws_region: ${{ vars.AWS_REGION }}
 
   prod:
     if: ${{ github.event.workflow_run.conclusion == 'success' && (github.event.workflow_run.head_branch == 'main' || startsWith(github.event.workflow_run.head_branch, 'v')) }}
@@ -27,8 +25,6 @@ jobs:
       id-token: write
       pages: write
     uses: ./.github/workflows/deploy-prod.yml
-    secrets:
-      PROJECT: ${{ secrets.PROJECT }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      DEPLOY_ROLE_ARN: ${{ secrets.PROD_DEPLOY_ROLE_ARN }}
-      INVALIDATE_ROLE_ARN: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
+    with:
+      project: ${{ vars.PROJECT }}
+      aws_region: ${{ vars.AWS_REGION }}

@@ -52,8 +52,8 @@ jobs:
       environment: ${{ github.event.inputs.environment }}
       paths: ${{ github.event.inputs.paths }}
     secrets:
-      project: ${{ secrets.PROJECT }}
-      aws_region: ${{ secrets.AWS_REGION }}
+      project: ${{ vars.PROJECT }}
+      aws_region: ${{ vars.AWS_REGION }}
       staging_invalidate_role_arn: ${{ secrets.STAGING_INVALIDATE_ROLE_ARN }}
       prod_invalidate_role_arn: ${{ secrets.PROD_INVALIDATE_ROLE_ARN }}
 
@@ -65,6 +65,6 @@ jobs:
       component: ${{ github.event.inputs.component }}
       mode: ${{ github.event.inputs.mode }}
     secrets:
-      project: ${{ secrets.PROJECT }}
-      aws_region: ${{ secrets.AWS_REGION }}
+      project: ${{ vars.PROJECT }}
+      aws_region: ${{ vars.AWS_REGION }}
       toggle_role_arn: ${{ secrets.STAGING_TOGGLE_ROLE_ARN }}
