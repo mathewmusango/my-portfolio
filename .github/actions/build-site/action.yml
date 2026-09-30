@@ -3,25 +3,39 @@ description: Install dependencies, build strict, and run the site checks (pip-au
 
 inputs:
   site_url:
-    description: Production site URL to inject before building (optional).
-    required: false
-    default: ""
+    description: Site URL to inject before building. Required — must be an https:// URL.
+    required: true
   metrics_endpoint:
-    description: METRICS_ENDPOINT for the beacon (CloudFront/API URL). Empty = beacon disabled.
+    description: METRICS_ENDPOINT for the beacon (CloudFront/API URL). Empty disables the beacon; when set it must be an https:// URL.
     required: false
     default: ""
 
 runs:
   using: composite
   steps:
+    - name: Validate build inputs
+      shell: bash
+      env:
+        SITE_URL: ${{ inputs.site_url }}
+        METRICS: ${{ inputs.metrics_endpoint }}
+      run: |
+        ok=1
+        case "$SITE_URL" in
+          https://*) ;;
+          *) echo "::error::site_url must be a non-empty https:// URL (got '${SITE_URL:-<empty>}')"; ok=0 ;;
+        esac
+        if [ -n "$METRICS" ]; then
+          case "$METRICS" in
+            https://*) ;;
+            *) echo "::error::metrics_endpoint must be an https:// URL when set (got '$METRICS')"; ok=0 ;;
+          esac
+        fi
+        [ "$ok" = 1 ] || exit 1
+        echo "build inputs: site_url=$SITE_URL metrics_endpoint=${METRICS:-<unset, beacon disabled>}"
+
     - name: Inject site_url
-      if: inputs.site_url != ''
       shell: bash
       run: |
-        # Override the canonical site_url per environment — the artifact is
-        # deployed per-env (main -> staging, tags -> prod), so the baked
-        # canonical/OG/sitemap URLs must match. mkdocs.yml's value stays the
-        # local/prod default for builds that don't pass the input.
         if grep -q '^site_url:' mkdocs.yml; then
           sed -i "s|^site_url:.*|site_url: ${{ inputs.site_url }}|" mkdocs.yml
         else

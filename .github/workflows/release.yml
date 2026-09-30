@@ -26,6 +26,9 @@ jobs:
           python-version: "3.12"
 
       - uses: ./.github/actions/build-site
+        with:
+          site_url: ${{ vars.PROD_SITE_URL }}
+          metrics_endpoint: ${{ vars.PROD_METRICS_ENDPOINT }}
 
       - name: Package site
         run: |
