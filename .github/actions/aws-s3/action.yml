@@ -24,6 +24,12 @@ inputs:
   aws_region:
     description: AWS region.
     required: true
+  site_url:
+    description: The target environment's site URL, substituted for the build placeholder before deploying.
+    required: true
+  metrics_endpoint:
+    description: The target environment's metrics endpoint, substituted for the build placeholder before deploying.
+    required: true
   hash_skip:
     description: >-
       "true" to skip the sync + invalidation when the artifact is byte-identical
@@ -50,6 +56,13 @@ runs:
         path: site
         github-token: ${{ github.token }}
         run-id: ${{ inputs.run_id }}
+
+    - name: Substitute this environment's URLs
+      uses: ./.github/actions/inject-env-urls
+      with:
+        site_url: ${{ inputs.site_url }}
+        metrics_endpoint: ${{ inputs.metrics_endpoint }}
+        directory: site
 
     - name: Assume deploy role (OIDC)
       uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6

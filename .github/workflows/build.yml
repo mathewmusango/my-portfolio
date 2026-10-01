@@ -66,9 +66,6 @@ jobs:
           python-version: "3.12"
 
       - uses: ./.github/actions/build-site
-        with:
-          site_url: ${{ startsWith(github.ref, 'refs/tags/v') && vars.PROD_SITE_URL || vars.STAGING_SITE_URL }}
-          metrics_endpoint: ${{ startsWith(github.ref, 'refs/tags/v') && vars.PROD_METRICS_ENDPOINT || vars.STAGING_METRICS_ENDPOINT }}
 
       - name: Upload site artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

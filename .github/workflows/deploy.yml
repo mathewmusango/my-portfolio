@@ -72,6 +72,8 @@ jobs:
           project: ${{ vars.PROJECT }}
           env: staging
           run_id: ${{ github.event.workflow_run.id }}
+          site_url: ${{ vars.SITE_URL }}
+          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
           deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
           invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
           aws_region: ${{ vars.AWS_REGION }}
@@ -99,6 +101,8 @@ jobs:
           project: ${{ vars.PROJECT }}
           env: prod
           run_id: ${{ github.event.workflow_run.id }}
+          site_url: ${{ vars.SITE_URL }}
+          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
           deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
           invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
           aws_region: ${{ vars.AWS_REGION }}
@@ -129,6 +133,13 @@ jobs:
           path: site
           github-token: ${{ github.token }}
           run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Substitute this environment's URLs
+        uses: ./.github/actions/inject-env-urls
+        with:
+          site_url: ${{ vars.SITE_URL }}
+          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
+          directory: site
 
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
