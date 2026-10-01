@@ -81,7 +81,8 @@ separate.
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
 > manual)**. One `terraform` job serves both environments, declaring `environment:` from a
-> resolved target, so both prod runs sit behind the `prod` environment's required reviewer.
+> resolved target, so both prod runs sit behind the `prod` environment's required reviewer, and a
+> prod dispatch must itself be made on a `v*` tag ref.
 > Local dev applies against Ministack; real-AWS applies happen via the workflow (OIDC) or the
 > CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, both jobs declaring
 > `environment:` and reading their role ARN from it).

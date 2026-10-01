@@ -6,13 +6,54 @@ on:
     tags: ["v*"]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - id: check
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          build=true
+          if [ "$EVENT" = "push" ] && [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            build=false
+            if git diff --name-only "$BEFORE" "$GITHUB_SHA" >/tmp/changed.txt; then
+              SITE_PATHS='^(docs/|mkdocs\.yml$|overrides/|requirements\.txt$|scripts/(site_metrics_hook|releases_hook)\.py$|\.github/actions/build-site/)'
+              if grep -qE "$SITE_PATHS" /tmp/changed.txt; then
+                build=true
+              elif grep -qx 'CHANGELOG.md' /tmp/changed.txt; then
+                if git diff -U0 "$BEFORE" "$GITHUB_SHA" -- CHANGELOG.md | grep -qE '^[+-]## \[[0-9]'; then
+                  build=true
+                fi
+              fi
+            else
+              build=true
+            fi
+          fi
+          echo "build=$build" >> "$GITHUB_OUTPUT"
+          if [ "$build" = "true" ]; then
+            echo "building"
+          else
+            echo "no site-relevant change in $BEFORE..$GITHUB_SHA — skipping the build (and so the deploy)"
+          fi
+
   build:
     name: build
+    needs: detect
+    if: ${{ needs.detect.outputs.build == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

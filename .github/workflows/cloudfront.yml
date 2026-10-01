@@ -12,7 +12,7 @@ on:
           - invalidate
           - switch
       environment:
-        description: "Target environment"
+        description: "Target environment (prod requires a v* tag ref)"
         required: true
         default: "staging"
         type: choice
@@ -40,17 +40,42 @@ on:
           - "off"
           - "on"
 
-permissions:
-  id-token: write
-  contents: read
-
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      environment: ${{ steps.check.outputs.environment }}
+    steps:
+      - id: check
+        env:
+          TARGET: ${{ github.event.inputs.environment }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF: ${{ github.ref }}
+        run: |
+          case "$TARGET" in
+            staging | prod) ;;
+            *) echo "unknown environment '$TARGET'"; exit 1 ;;
+          esac
+          if [ "$TARGET" = "prod" ] && [ "$REF_TYPE" != "tag" ]; then
+            echo "prod runs must be dispatched on a v* tag — got $REF"
+            exit 1
+          fi
+          echo "environment=$TARGET" >> "$GITHUB_OUTPUT"
+          echo "target environment=$TARGET (ref $REF)"
+
   invalidate:
+    needs: detect
     if: ${{ github.event.inputs.operation == 'invalidate' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
-      name: ${{ github.event.inputs.environment }}
+      name: ${{ needs.detect.outputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Assume the invalidate role for the target environment (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
@@ -61,7 +86,7 @@ jobs:
       - name: Invalidate the distribution (lookup by comment convention)
         env:
           PROJECT: ${{ vars.PROJECT }}
-          TARGET_ENV: ${{ github.event.inputs.environment }}
+          TARGET_ENV: ${{ needs.detect.outputs.environment }}
           PATHS: ${{ github.event.inputs.paths }}
         run: |
           ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='$PROJECT-$TARGET_ENV-site'].Id" --output text)"
@@ -73,11 +98,15 @@ jobs:
           aws cloudfront create-invalidation --distribution-id "$ID" --paths "$PATHS"
 
   switch:
+    needs: detect
     if: ${{ github.event.inputs.operation == 'switch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
-      name: ${{ github.event.inputs.environment }}
+      name: ${{ needs.detect.outputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Assume the toggle role (OIDC)
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
@@ -88,7 +117,7 @@ jobs:
       - name: Flip Enabled on the distribution
         env:
           PROJECT: ${{ vars.PROJECT }}
-          TARGET_ENV: ${{ github.event.inputs.environment }}
+          TARGET_ENV: ${{ needs.detect.outputs.environment }}
           COMPONENT: ${{ github.event.inputs.component }}
           MODE: ${{ github.event.inputs.mode }}
         run: |

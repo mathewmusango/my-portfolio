@@ -21,6 +21,7 @@ jobs:
           HEAD: ${{ github.event.workflow_run.head_branch }}
           TRIGGER: ${{ github.event.workflow_run.event }}
           CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -31,6 +32,18 @@ jobs:
               staging=true
             elif gh api --silent "repos/$REPO/git/ref/tags/$HEAD" 2>/dev/null; then
               prod=true
+            fi
+          fi
+          if [ "$TRIGGER" = "workflow_dispatch" ] && [ "$HEAD" = "main" ]; then
+            staging=true
+          fi
+          if [ "$staging" = "true" ] || [ "$prod" = "true" ]; then
+            if gh api "repos/$REPO/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.expired == false) | .name' >/tmp/artifacts.txt 2>/dev/null; then
+              if ! grep -qx site /tmp/artifacts.txt; then
+                echo "build run $RUN_ID produced no site artifact — nothing to deploy"
+                staging=false
+                prod=false
+              fi
             fi
           fi
           echo "staging=$staging" >> "$GITHUB_OUTPUT"

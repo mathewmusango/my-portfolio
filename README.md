@@ -196,6 +196,9 @@ flowchart LR
   plans on `terraform/**` changes and auto-applies to staging on `main` (prod is a manual
   dispatch, behind the `prod` reviewer); `cloudfront.yml` — invalidate / switch, both jobs
   declaring `environment:` and reading their role ARN from it — is the manual operational extra.
+  A push that cannot change the site (`docs/**`, `mkdocs.yml`, `overrides/**`, `requirements.txt`,
+  the `mkdocs` hooks, a released `CHANGELOG` heading) skips the build and so the deploy, and every
+  prod run — `terraform.yml` or `cloudfront.yml` — must come from a `v*` tag ref.
 
 ## Infrastructure as Code (Terraform)
 
