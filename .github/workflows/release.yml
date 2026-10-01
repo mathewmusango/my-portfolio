@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Tag to create or refresh the release for (e.g., v1.0.0)
+        description: Tag to create or refresh the release for (e.g., v2026.0925.1228Z)
         required: true
 
 permissions:
@@ -52,7 +52,12 @@ jobs:
           TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
         run: |
           VERSION="${TAG#v}"
-          sed -n "/^## \[${VERSION}\]/,/^## \[/p" CHANGELOG.md | sed '1d;$d' > release-notes.md
+          SECTION="$VERSION"
+          if ! grep -q "^## \[${VERSION}\]" CHANGELOG.md; then
+            SECTION="Unreleased"
+            echo "no '## [${VERSION}]' heading yet — taking the notes from '## [Unreleased]'"
+          fi
+          sed -n "/^## \[${SECTION}\]/,/^## \[/p" CHANGELOG.md | sed '1d;$d' > release-notes.md
           if [ ! -s release-notes.md ]; then printf 'See CHANGELOG.md for details.\n' > release-notes.md; fi
 
       - name: Create or refresh GitHub Release
