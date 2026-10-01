@@ -52,6 +52,10 @@ jobs:
             staging | prod) ;;
             *) echo "unknown environment '$ENV'"; exit 1 ;;
           esac
+          if [ "$ENV" = "prod" ] && [ "$REF_TYPE" != "tag" ]; then
+            echo "prod runs must come from a v* tag — got $REF"
+            exit 1
+          fi
           APPLY=false
           if [ "$EVENT" = "workflow_dispatch" ] && [ "$ACTION" = "apply" ]; then
             APPLY=true
