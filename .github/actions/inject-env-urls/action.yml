@@ -26,8 +26,11 @@ runs:
         METRICS_ENDPOINT: ${{ inputs.metrics_endpoint }}
         SITE_DIR: ${{ inputs.directory }}
       run: |
-        PLACEHOLDER_SITE="https://site-url.invalid/"
-        PLACEHOLDER_METRICS="https://metrics-endpoint.invalid"
+        PLACEHOLDER_HOST_SITE="site-url.invalid"
+        PLACEHOLDER_HOST_METRICS="metrics-endpoint.invalid"
+        PLACEHOLDER_SITE="https://$PLACEHOLDER_HOST_SITE/"
+        PLACEHOLDER_SITE_BARE="https://$PLACEHOLDER_HOST_SITE"
+        PLACEHOLDER_METRICS="https://$PLACEHOLDER_HOST_METRICS"
         case "$SITE_URL" in
           https://*/) ;;
           *) echo "::error::site_url must be an https:// URL ending in / (got '$SITE_URL')"; exit 1 ;;
@@ -41,10 +44,11 @@ runs:
           exit 1
         fi
         grep -rlF "$PLACEHOLDER_SITE" "$SITE_DIR" | xargs -r sed -i "s|$PLACEHOLDER_SITE|$SITE_URL|g"
+        grep -rlF "$PLACEHOLDER_SITE_BARE" "$SITE_DIR" | xargs -r sed -i "s|$PLACEHOLDER_SITE_BARE|${SITE_URL%/}|g"
         grep -rlF "$PLACEHOLDER_METRICS" "$SITE_DIR" | xargs -r sed -i "s|$PLACEHOLDER_METRICS|$METRICS_ENDPOINT|g"
-        if grep -rqF ".invalid" "$SITE_DIR"; then
+        if grep -rqF "$PLACEHOLDER_HOST_SITE" "$SITE_DIR" || grep -rqF "$PLACEHOLDER_HOST_METRICS" "$SITE_DIR"; then
           echo "::error::a placeholder survived substitution under $SITE_DIR:"
-          grep -rlF ".invalid" "$SITE_DIR" || true
+          grep -rlF -e "$PLACEHOLDER_HOST_SITE" -e "$PLACEHOLDER_HOST_METRICS" "$SITE_DIR" || true
           exit 1
         fi
         echo "injected site_url=$SITE_URL metrics_endpoint=$METRICS_ENDPOINT into $SITE_DIR"
