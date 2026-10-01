@@ -1,4 +1,4 @@
-name: "Infra: Terraform"
+name: "Deploy: Infra"
 
 on:
   push:
