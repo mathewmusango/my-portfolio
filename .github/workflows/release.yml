@@ -16,6 +16,8 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment:
+      name: prod
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -26,9 +28,13 @@ jobs:
           python-version: "3.12"
 
       - uses: ./.github/actions/build-site
+
+      - name: Substitute this environment's URLs
+        uses: ./.github/actions/inject-env-urls
         with:
-          site_url: ${{ vars.PROD_SITE_URL }}
-          metrics_endpoint: ${{ vars.PROD_METRICS_ENDPOINT }}
+          site_url: ${{ vars.SITE_URL }}
+          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
+          directory: site
 
       - name: Package site
         run: |

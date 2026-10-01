@@ -1,0 +1,50 @@
+name: Inject environment URLs
+description: >-
+  Replace the build-time placeholders (site-url.invalid / metrics-endpoint.invalid)
+  in a built site with the target environment's real values, then assert that none
+  survive. One implementation for every deploy target.
+
+inputs:
+  site_url:
+    description: The target environment's site URL. Must be an https:// URL ending in /.
+    required: true
+  metrics_endpoint:
+    description: The target environment's metrics endpoint. Must be an https:// URL.
+    required: true
+  directory:
+    description: The directory holding the built site.
+    required: false
+    default: site
+
+runs:
+  using: composite
+  steps:
+    - name: Substitute the placeholders, and assert none remain
+      shell: bash
+      env:
+        SITE_URL: ${{ inputs.site_url }}
+        METRICS_ENDPOINT: ${{ inputs.metrics_endpoint }}
+        SITE_DIR: ${{ inputs.directory }}
+      run: |
+        PLACEHOLDER_SITE="https://site-url.invalid/"
+        PLACEHOLDER_METRICS="https://metrics-endpoint.invalid"
+        case "$SITE_URL" in
+          https://*/) ;;
+          *) echo "::error::site_url must be an https:// URL ending in / (got '$SITE_URL')"; exit 1 ;;
+        esac
+        case "$METRICS_ENDPOINT" in
+          https://*) ;;
+          *) echo "::error::metrics_endpoint must be an https:// URL (got '$METRICS_ENDPOINT')"; exit 1 ;;
+        esac
+        if ! grep -rqF "$PLACEHOLDER_SITE" "$SITE_DIR"; then
+          echo "::error::no '$PLACEHOLDER_SITE' placeholder under $SITE_DIR — the build did not use the expected placeholder"
+          exit 1
+        fi
+        grep -rlF "$PLACEHOLDER_SITE" "$SITE_DIR" | xargs -r sed -i "s|$PLACEHOLDER_SITE|$SITE_URL|g"
+        grep -rlF "$PLACEHOLDER_METRICS" "$SITE_DIR" | xargs -r sed -i "s|$PLACEHOLDER_METRICS|$METRICS_ENDPOINT|g"
+        if grep -rqF ".invalid" "$SITE_DIR"; then
+          echo "::error::a placeholder survived substitution under $SITE_DIR:"
+          grep -rlF ".invalid" "$SITE_DIR" || true
+          exit 1
+        fi
+        echo "injected site_url=$SITE_URL metrics_endpoint=$METRICS_ENDPOINT into $SITE_DIR"

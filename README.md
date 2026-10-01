@@ -161,21 +161,22 @@ flowchart LR
   **browser smoke check** (`scripts/checks/browser.py`): it loads the four viewer pages in headless
   Firefox and fails when one stops rendering, which is the class of runtime regression no static
   check can see.
-- **Build inputs** — every build bakes two values that must match the environment it will be served
-  from: `site_url` (canonical, OG tags, sitemap, hreflang, i18n base) and `metrics_endpoint` (the
-  `<meta name="metrics-endpoint">` tag the beacon needs — absent, and the beacon no-ops). Both come
-  from repository **variables** — `PROD_SITE_URL`, `STAGING_SITE_URL`, `PROD_METRICS_ENDPOINT`,
-  `STAGING_METRICS_ENDPOINT` — selected by ref: `v*` tags → **prod**, everything else → **staging**,
-  which means a **pull-request build bakes the staging values** (harmless: PR artifacts are never
-  deployed — the callees' `detect` jobs reject a non-`main`/non-tag ref). `build-site` refuses to run
-  without a valid `https://` `site_url`, so a missing or renamed value **fails the build** instead of
-  quietly publishing `mkdocs.yml`'s canonical. The sources differ by value: `terraform output -raw
-  api_url` gives both beacon endpoints, but `-raw site_url` is right only for **staging** — prod's
-  canonical is the gh-pages URL, because a tag publishes the artifact to gh-pages *and* the CloudFront
-  mirror and the canonical deliberately points at gh-pages to avoid duplicate content, so prod's
-  `site_url` is not the Terraform output at all. To see what an artifact targets, read its own markup —
-  `grep -oE '<link[^>]*canonical[^>]*>' site/index.html`. Locally the dev server takes the endpoint
-  from the host environment (`METRICS_ENDPOINT=… scripts/dev.sh start`).
+- **Build inputs** — the build no longer knows which environment it is for. `build-site` bakes a
+  reserved-domain **placeholder** — `site_url: https://site-url.invalid/` and
+  `metrics_endpoint: https://metrics-endpoint.invalid` (the `<meta name="metrics-endpoint">` tag the
+  beacon needs; absent, and the beacon no-ops) — and every deploy target substitutes its own
+  environment's real `SITE_URL` / `METRICS_ENDPOINT` through
+  [`actions/inject-env-urls`](.github/actions/inject-env-urls/action.yml), which then asserts that no
+  `.invalid` survived. That is what makes **one artifact valid for every environment**: the same build
+  is promoted to staging, the prod AWS plane and gh-pages. Both values are environment **variables**
+  (`SITE_URL` / `METRICS_ENDPOINT` on `staging` and `prod`). The sources differ by value:
+  `terraform output -raw api_url` gives both beacon endpoints, but `-raw site_url` is right only for
+  **staging** — prod's canonical is the gh-pages URL, because a tag publishes the artifact to gh-pages
+  *and* the CloudFront mirror and the canonical deliberately points at gh-pages to avoid duplicate
+  content, so prod's `site_url` is not the Terraform output at all. To see what a deployed page
+  targets, read its own markup — `grep -oE '<link[^>]*canonical[^>]*>' site/index.html` on the
+  downloaded artifact. Locally the dev server takes the endpoint from the host environment
+  (`METRICS_ENDPOINT=… scripts/dev.sh start`).
 - **Checks** — one workflow, `checks.yml`, calling the shared reusables in
   [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows) (pinned by SHA).
   Each reusable self-gates on changed files, so an untouched surface **skips and reports success**

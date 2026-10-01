@@ -3,12 +3,18 @@ description: Install dependencies, build strict, and run the site checks (pip-au
 
 inputs:
   site_url:
-    description: Site URL to inject before building. Required — must be an https:// URL.
-    required: true
-  metrics_endpoint:
-    description: METRICS_ENDPOINT for the beacon (CloudFront/API URL). Empty disables the beacon; when set it must be an https:// URL.
+    description: >-
+      Site URL baked into the artifact. Defaults to a reserved-domain placeholder:
+      the deploy substitutes the target environment's real value via inject-env-urls,
+      so one artifact stays valid for every environment.
     required: false
-    default: ""
+    default: "https://site-url.invalid/"
+  metrics_endpoint:
+    description: >-
+      Placeholder for the beacon's endpoint; the deploy substitutes the target
+      environment's real value. Empty disables the beacon entirely.
+    required: false
+    default: "https://metrics-endpoint.invalid"
 
 runs:
   using: composite
@@ -21,8 +27,8 @@ runs:
       run: |
         ok=1
         case "$SITE_URL" in
-          https://*) ;;
-          *) echo "::error::site_url must be a non-empty https:// URL (got '${SITE_URL:-<empty>}')"; ok=0 ;;
+          https://*/) ;;
+          *) echo "::error::site_url must be an https:// URL ending in / (got '${SITE_URL:-<empty>}')"; ok=0 ;;
         esac
         if [ -n "$METRICS" ]; then
           case "$METRICS" in
@@ -31,7 +37,7 @@ runs:
           esac
         fi
         [ "$ok" = 1 ] || exit 1
-        echo "build inputs: site_url=$SITE_URL metrics_endpoint=${METRICS:-<unset, beacon disabled>}"
+        echo "building with placeholders: site_url=$SITE_URL metrics_endpoint=${METRICS:-<unset, beacon disabled>}"
 
     - name: Inject site_url
       shell: bash
