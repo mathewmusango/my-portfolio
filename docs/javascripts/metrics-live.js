@@ -62,7 +62,7 @@
     });
   }
 
-  function renderPie(pieEl, legendEl, data) {
+  function renderPie(pieEl, legendEl, data, labelFor) {
     pieEl.innerHTML = "";
     legendEl.innerHTML = "";
     var entries = Object.keys(data)
@@ -85,7 +85,8 @@
       swatch.className = "metrics-pie-legend__swatch";
       swatch.style.background = color;
       var text = document.createElement("span");
-      text.textContent = key + " — " + entry[1] + " (" + Math.round(pct) + "%)";
+      var label = labelFor ? labelFor(key) : key;
+      text.textContent = label + " — " + entry[1] + " (" + Math.round(pct) + "%)";
       li.appendChild(swatch);
       li.appendChild(text);
       legendEl.appendChild(li);
@@ -128,7 +129,7 @@
         if (realGeo) {
           var geoPie = document.getElementById("metrics-geo-pie");
           var geoLegend = document.getElementById("metrics-geo-legend");
-          if (geoPie && geoLegend) renderPie(geoPie, geoLegend, byCountry);
+          if (geoPie && geoLegend) renderPie(geoPie, geoLegend, byCountry, window.countryName);
           var geoMap = document.getElementById("metrics-geo-map");
           if (geoMap && window.renderGeoMap) {
             renderGeoMap(geoMap, byCountry);
