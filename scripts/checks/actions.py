@@ -144,7 +144,7 @@ def case_bare_standalone():
         survivors = containing(root, HOST_SITE) + containing(root, HOST_METRICS)
         if survivors:
             problems.append(f"a placeholder host survived: {survivors}")
-        if "https://site-url.invalid" in read(root, "site/robots.txt"):
+        if SITE_URL.removesuffix("/") not in read(root, "site/robots.txt"):
             problems.append("the slash-less occurrence was not substituted")
         return problems
 
