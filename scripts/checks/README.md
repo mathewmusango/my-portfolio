@@ -41,7 +41,7 @@ It runs through podman, never host tools. Bypass it deliberately with `git commi
 > `.githooks/` holds shell scripts only. The `shell` surface matches everything under that directory, so the hook has no README of its own and is documented here instead.
 
 > [!NOTE]
-> [`actions.py`](actions.py) has no surface of its own: it executes a composite's `run:` body under the runner's `bash -e -o pipefail`, which needs no container, and it runs as a step of the `build` job — always on a pull request — so it gates merges through the required `build` check. Run it by hand with `python3 scripts/checks/actions.py`.
+> [`actions.py`](actions.py) has no surface of its own: it executes a composite's `run:` body under the runner's `bash -e -o pipefail` and checks that a job using a local action (`uses: ./…`) checks out first — neither needs a container — and it runs as a step of the `build` job, always on a pull request, so it gates merges through the required `build` check. Run it by hand with `python3 scripts/checks/actions.py`.
 
 > [!WARNING]
 > A README or any other non-shell file under `.githooks/` makes `shellcheck` fail.
@@ -49,7 +49,7 @@ It runs through podman, never host tools. Bypass it deliberately with `git commi
 ## Files
 
 - [`local.sh`](local.sh) — the driver (POSIX sh)
-- [`actions.py`](actions.py) — the composite-action body check
+- [`actions.py`](actions.py) — the action checks: composite bodies, and the checkout a local action needs
 - [`browser.py`](browser.py) — the CI browser smoke check
 - [`links.py`](links.py) — the internal link check
 - [`translations.py`](translations.py) — the translation parity and staleness check

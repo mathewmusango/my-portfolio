@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Execute composite actions' `run:` bodies the way GitHub's runner does.
+"""Check the repo's actions, and the workflow wiring that uses them.
 
-A composite action's body runs only inside a job, so a body that fails under
-`bash -e -o pipefail` — an empty match in a pipeline, a missing variable, a
-guard that aborts before it prints — passes `actionlint`, `shellcheck` and
-every required check, and surfaces only when that job finally runs.
+Both checks exist because these faults only surface in the job that owns them:
 
-Each body is read straight from its `action.yml`, executed under the runner's
-shell flags against a fixture, and asserted. Hermetic: no network, no site
-build, no AWS.
+  - a composite action's `run:` body is executed the way the runner does, so a
+    body that fails under `bash -e -o pipefail` — an empty match in a pipeline,
+    a missing variable, a guard that aborts before it prints — cannot hide
+    behind `actionlint` and `shellcheck`;
+  - a workflow job that uses a local action (`uses: ./…`) must check out first,
+    because the runner loads a local action out of the workspace.
 
-Exit code is 1 if any case fails.
+Hermetic: no network, no site build, no AWS. Exit code is 1 if any check fails.
 """
 import os
 import re
@@ -23,6 +23,7 @@ import yaml
 
 REPO = Path(__file__).resolve().parents[2]
 ACTIONS = REPO / ".github" / "actions"
+WORKFLOWS = REPO / ".github" / "workflows"
 INPUT_EXPR = re.compile(r"\$\{\{\s*inputs\.([A-Za-z0-9_-]+)\s*\}\}")
 
 SITE_URL = "https://target.example/"
@@ -191,6 +192,33 @@ def case_placeholder_missing():
     return "a missing placeholder fails loudly", build, check
 
 
+def wiring_problems():
+    """Local `uses: ./…` steps, in jobs that never check out. The runner loads
+    a local action from the workspace, so a checkout has to precede it."""
+    problems = []
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        doc = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        for job_id, job in (doc.get("jobs") or {}).items():
+            if not isinstance(job, dict) or "steps" not in job:
+                continue
+            checked_out = False
+            for step in job["steps"]:
+                uses = str(step.get("uses") or "")
+                if uses.startswith("actions/checkout"):
+                    checked_out = True
+                elif uses.startswith("./") and not checked_out:
+                    problems.append(
+                        f"{path.name}: job '{job_id}' uses {uses} "
+                        "before any actions/checkout"
+                    )
+    return problems
+
+
+STATIC_CHECKS = [
+    ("a local action is preceded by actions/checkout", wiring_problems),
+]
+
+
 CASES = [
     case_slash_only(),
     case_bare_standalone(),
@@ -201,7 +229,21 @@ CASES = [
 
 def main() -> int:
     failures = 0
+    total = 0
+
+    for description, probe in STATIC_CHECKS:
+        total += 1
+        problems = probe()
+        if not problems:
+            print(f"ok    {description}")
+            continue
+        failures += 1
+        print(f"FAIL  {description}")
+        for problem in problems:
+            print(f"        {problem}")
+
     for description, build, check in CASES:
+        total += 1
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             build(root)
@@ -225,7 +267,7 @@ def main() -> int:
                 print(indent(proc.stdout), end="")
                 print(indent(proc.stderr), end="")
 
-    print(f"\n{len(CASES) - failures} passed, {failures} failed")
+    print(f"\n{total - failures} passed, {failures} failed")
     return 1 if failures else 0
 
 

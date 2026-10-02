@@ -67,7 +67,7 @@ jobs:
 
       - uses: ./.github/actions/build-site
 
-      - name: Composite action check
+      - name: Action checks
         run: python3 scripts/checks/actions.py
 
       - name: Upload site artifact
