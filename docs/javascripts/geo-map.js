@@ -43,6 +43,24 @@
     return c;
   }
 
+  var NAMES = null;
+  try {
+    NAMES = new Intl.DisplayNames([document.documentElement.lang || "en"], { type: "region" });
+  } catch (e) {
+    NAMES = null;
+  }
+
+  function countryName(code) {
+    if (!NAMES || !/^[A-Z]{2}$/.test(code)) return code;
+    try {
+      return NAMES.of(code) || code;
+    } catch (e) {
+      return code;
+    }
+  }
+
+  window.countryName = countryName;
+
   window.renderGeoMap = function (container, byCountry) {
     var svg = document.createElementNS(NS, "svg");
     svg.setAttribute("viewBox", "0 0 " + W + " " + H);
@@ -70,7 +88,7 @@
         r: String(3 + 9 * Math.sqrt(entry[1] / max)),
       }, "metrics-geo-map__dot");
       var title = document.createElementNS(NS, "title");
-      title.textContent = entry[0] + " — " + entry[1];
+      title.textContent = countryName(entry[0]) + " — " + entry[1];
       dot.appendChild(title);
       svg.appendChild(dot);
     });
