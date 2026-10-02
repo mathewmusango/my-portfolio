@@ -66,10 +66,10 @@ jobs:
           TAG: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}
         run: |
           if gh release view "${TAG}" >/dev/null 2>&1; then
-            gh release edit "${TAG}" --notes-file release-notes.md
+            gh release edit "${TAG}" --title "${TAG}" --notes-file release-notes.md
             gh release upload "${TAG}" site.zip sbom.cdx.json --clobber
           else
             gh release create "${TAG}" site.zip sbom.cdx.json \
-              --title "Release ${TAG}" \
+              --title "${TAG}" \
               --notes-file release-notes.md
           fi
