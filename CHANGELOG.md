@@ -19,7 +19,7 @@ cycle). A release **renames** that section to its tag without the leading `v`
 (`## [<year>.<MMDD>.<HHMM>] - date`) and adds no empty successor — the next
 cycle's `## [Unreleased]` is opened by its first landed change.
 
-## [Unreleased]
+## [2026.1002.1733Z] - 2026-10-02
 
 ### Fixed
 - **The Release is now titled with its tag** — `release.yml` created every GitHub Release as `Release <tag>`, so the name duplicated what the tag already said and read as a prefix in the Releases list. It now passes `--title "${TAG}"` — and, the part that actually mattered, `gh release edit` sets the title too. The refresh path previously passed no title at all, so re-running the workflow over an existing release preserved whatever title was there, wrong ones included, which is why a first-release correction needed a second pass. The four releases already carrying the prefix are corrected through the API.
