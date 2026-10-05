@@ -33,10 +33,23 @@ means a separate root, with its own state and its own provider pin.
 
 | Axis | Where it lives |
 | --- | --- |
-| Infrastructure definition | `main.tf` (composition only) plus `modules/site/` and `modules/metrics/` |
+| Infrastructure definition | `main.tf` (composition only) plus the `modules/site` and `modules/metrics` composites over the generic service leaves |
 | Security | `ci/` — its own root, because the OIDC role and the state bucket must exist before any workflow can run |
 | Configuration | `variables.tf` / `versions.tf` / `outputs.tf`, the same shape in every root |
 | Verification | the check stack (`containers/checks/`): `fmt`, `validate`, TFLint, Checkov |
+
+### Service modules — generic, one AWS service each
+
+`modules/` holds one **generic** wrapper per AWS service — `s3`, `cloudfront`, `dynamodb`,
+`lambda`, `api-gateway`, `vpc`, `waf`. Each is secure-by-construction and carries no
+portfolio vocabulary: the `s3` module always blocks public access and keeps the bucket private,
+`cloudfront` always serves through an OAC-scoped bucket policy, `lambda` grants only the policies
+it is handed. A leaf can be lifted into any other Terraform root unchanged.
+
+All product wiring lives in the two thin composites: **`modules/site`** (S3 + CloudFront, with the
+directory-index and localized-error functions supplied as data) and **`modules/metrics`** (VPC ·
+DynamoDB · Lambda writer + reader · API Gateway · WAF, plus the metrics CloudFront edge). The
+composites are what name the portfolio; the leaves are what could be shared.
 
 ### Roots own the pin; modules declare a floor
 
@@ -59,10 +72,11 @@ distribution's policy association.
 
 ### Moving resources between a root and a module (`moved` blocks)
 
-Relocating a resource changes its state address. `moved` blocks in `main.tf` re-address it during the
-next apply, so live infrastructure is never replaced. Treat a non-empty plan after such a change as a
-bug — a no-op plan is the proof the addresses are right. The blocks added for the `modules/site`
-extraction can be deleted once **staging and prod** have both applied them, since their state is
+Relocating a resource changes its state address. `moved` blocks re-address it during the next
+apply, so live infrastructure is never replaced — the root carries the `module.site` /
+`module.metrics` blocks, and each composite carries its own blocks for its leaf extraction. Treat a
+non-empty plan after such a change as a bug — a no-op plan is the proof the addresses are right.
+Once **staging and prod** have both applied them, the blocks can be deleted, since their state is
 separate.
 
 > One trap worth keeping: `.gitignore` anchors `/site/` rather than `site/`. A bare `site/` matches a

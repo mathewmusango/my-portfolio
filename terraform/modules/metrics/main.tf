@@ -1,386 +1,155 @@
 locals {
-  name_prefix = "${var.project}-${var.environment}"
-  # Primary origin may be empty (staging: the site's own distro is auto-added via
-  # extra_allowed_origins) — filter it out so CORS/origin-gate stay clean.
+  name_prefix     = "${var.project}-${var.environment}"
   primary_origins = var.allowed_origin == "" ? [] : [var.allowed_origin]
   primary_hosts   = var.allowed_origin == "" ? [] : [replace(replace(var.allowed_origin, "https://", ""), "http://", "")]
-  # All origins this environment may send from (primary + extra, HTTPS only).
   metrics_origins = distinct(concat(local.primary_origins, var.extra_allowed_origins))
   allowed_hosts   = distinct(concat(local.primary_hosts, [for o in var.extra_allowed_origins : replace(replace(o, "https://", ""), "http://", "")]))
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-data "aws_prefix_list" "logs" {
-  count = var.enable_vpc ? 1 : 0
-  name  = "com.amazonaws.${var.aws_region}.logs"
-}
-
-# ---------------------------------------------------------------------------
-# Private VPC — the Lambdas live here with NO internet path. They reach
-# DynamoDB (Gateway endpoint) and CloudWatch Logs (Interface endpoint) only.
-# Real AWS only; gated off for Ministack (no real VPC).
-# ---------------------------------------------------------------------------
-resource "aws_vpc" "metrics" {
-  count                = var.enable_vpc ? 1 : 0
-  cidr_block           = "10.200.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-  tags                 = var.tags
-  # checkov:skip=CKV2_AWS_11:VPC flow logging costs — the VPC is count-gated OFF (enable_vpc=false, Free-Tier)
-  # checkov:skip=CKV2_AWS_12:Default SG untouched — the VPC is count-gated OFF (enable_vpc=false, Free-Tier)
-}
-
-resource "aws_subnet" "metrics" {
-  count             = var.enable_vpc ? 2 : 0
-  vpc_id            = aws_vpc.metrics[0].id
-  cidr_block        = "10.200.${count.index}.0/24"
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  tags              = var.tags
-}
-
-resource "aws_security_group" "metrics_lambda" {
-  count       = var.enable_vpc ? 1 : 0
-  vpc_id      = aws_vpc.metrics[0].id
-  name        = "${local.name_prefix}-metrics-lambda-sg"
-  description = "Lambda egress to VPC endpoints only; the logs endpoint accepts 443 from this SG"
-
-  ingress {
-    from_port = 443
-    to_port   = 443
-    protocol  = "tcp"
-    self      = true
-  }
-  egress {
-    from_port       = 443
-    to_port         = 443
-    protocol        = "tcp"
-    prefix_list_ids = [data.aws_prefix_list.logs[0].id]
-  }
-  tags = var.tags
-}
-
-resource "aws_vpc_endpoint" "metrics_dynamodb" {
-  count             = var.enable_vpc ? 1 : 0
-  vpc_id            = aws_vpc.metrics[0].id
-  service_name      = "com.amazonaws.${var.aws_region}.dynamodb"
-  vpc_endpoint_type = "Gateway"
-  route_table_ids   = [aws_vpc.metrics[0].default_route_table_id]
-  tags              = var.tags
-}
-
-resource "aws_vpc_endpoint" "metrics_logs" {
-  count               = var.enable_vpc ? 1 : 0
-  vpc_id              = aws_vpc.metrics[0].id
-  service_name        = "com.amazonaws.${var.aws_region}.logs"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = aws_subnet.metrics[*].id
-  security_group_ids  = [aws_security_group.metrics_lambda[0].id]
-  private_dns_enabled = true
-  tags                = var.tags
-}
-
-# ---------------------------------------------------------------------------
-# DynamoDB — raw metric events (PAY_PER_REQUEST: free-tier friendly at low traffic)
-# ---------------------------------------------------------------------------
-resource "aws_dynamodb_table" "metrics" {
-  name = "${local.name_prefix}-metrics"
-  # checkov:skip=CKV_AWS_119:Default AWS-managed KMS encryption suffices — raw events hold no PII (privacy-first beacon)
-  # checkov:skip=CKV_AWS_28:Point-in-time recovery not needed — raw events are ephemeral (90-day TTL by design)
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "date"
-  range_key    = "sk"
-
-  attribute {
-    name = "date"
-    type = "S"
-  }
-  attribute {
-    name = "sk"
-    type = "S"
-  }
-  # GSI: page + date for per-page read queries (used by /summary with a filter,
-  # reserved for the read-optimized follow-up).
-  attribute {
-    name = "page"
-    type = "S"
-  }
-  global_secondary_index {
-    name            = "page-date-index"
-    hash_key        = "page"
-    range_key       = "date"
-    projection_type = "ALL"
-  }
-
-  ttl {
-    enabled        = true
-    attribute_name = "ttl"
-  }
-
-  tags = var.tags
-}
-
-# ---------------------------------------------------------------------------
-# Lambda — split by responsibility with least privilege:
-#   writer (POST /event)  → dynamodb:PutItem only
-#   reader (GET /summary · GET /views · GET /health) → dynamodb:Scan + Query
-# ---------------------------------------------------------------------------
-# The lambda source lives at <root>/lambda (shared, one zip per stack).
 data "archive_file" "lambda" {
   type        = "zip"
   source_dir  = "${path.root}/lambda"
   output_path = "${path.root}/lambda.zip"
 }
 
-resource "aws_iam_role" "lambda_writer" {
-  name = "${local.name_prefix}-metrics-writer-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "lambda.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
-
-  tags = var.tags
+module "vpc" {
+  source              = "../vpc"
+  security_group_name = "${local.name_prefix}-metrics-lambda-sg"
+  tags                = var.tags
+  enable              = var.enable_vpc
+  cidr_block          = "10.200.0.0/16"
+  subnet_count        = 2
+  gateway_endpoints = {
+    dynamodb = "com.amazonaws.${var.aws_region}.dynamodb"
+  }
+  interface_endpoints = {
+    logs = {
+      service_name        = "com.amazonaws.${var.aws_region}.logs"
+      private_dns_enabled = true
+    }
+  }
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_writer_basic_execution" {
-  role       = aws_iam_role.lambda_writer.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+module "dynamodb" {
+  source        = "../dynamodb"
+  name          = "${local.name_prefix}-metrics"
+  tags          = var.tags
+  hash_key      = "date"
+  range_key     = "sk"
+  ttl_attribute = "ttl"
+  attributes = [
+    { name = "date", type = "S" },
+    { name = "sk", type = "S" },
+    { name = "page", type = "S" },
+  ]
+  global_secondary_indexes = [
+    { name = "page-date-index", hash_key = "page", range_key = "date", projection_type = "ALL" },
+  ]
 }
 
-resource "aws_iam_policy" "lambda_writer_dynamodb" {
-  name        = "${local.name_prefix}-metrics-writer-dynamodb"
-  description = "Least-privilege DynamoDB write for the metrics writer (PutItem on the metrics table only)."
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect   = "Allow"
-      Action   = ["dynamodb:PutItem"]
-      Resource = aws_dynamodb_table.metrics.arn
-    }]
-  })
-
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_writer_dynamodb" {
-  role       = aws_iam_role.lambda_writer.name
-  policy_arn = aws_iam_policy.lambda_writer_dynamodb.arn
-}
-
-resource "aws_lambda_function" "metrics_writer" {
+module "lambda_writer" {
+  source           = "../lambda"
   function_name    = "${local.name_prefix}-metrics-writer"
-  role             = aws_iam_role.lambda_writer.arn
+  role_name        = "${local.name_prefix}-metrics-writer-role"
+  tags             = var.tags
   handler          = "metrics_writer.handler"
-  runtime          = "python3.12"
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  timeout          = 10
-  memory_size      = 128
-  # checkov:skip=CKV_AWS_272:No code-signing pipeline — code ships from this repo (CI-built zip)
-  # checkov:skip=CKV_AWS_116:DLQ applies to async invocations; API Gateway invokes synchronously
-  # checkov:skip=CKV_AWS_173:Env vars encrypted at rest by Lambda's default AWS-managed key (free tier)
-  # checkov:skip=CKV_AWS_50:Observability via CloudWatch logs + the site's own metrics; X-Ray out (marginal value)
-  # checkov:skip=CKV_AWS_115:Account Lambda concurrency limit is 10 — the unreserved minimum is 10, so reserved concurrency is impossible without a quota increase; the endpoint is origin-gated (403 non-site origins)
-
-  environment {
-    variables = {
-      TABLE_NAME      = aws_dynamodb_table.metrics.name
-      EVENT_RETENTION = var.event_retention_days
-      ALLOWED_ORIGIN  = join(",", local.metrics_origins)
+  environment = {
+    TABLE_NAME      = module.dynamodb.table_name
+    EVENT_RETENTION = tostring(var.event_retention_days)
+    ALLOWED_ORIGIN  = join(",", local.metrics_origins)
+  }
+  iam_policies = {
+    dynamodb = {
+      name = "${local.name_prefix}-metrics-writer-dynamodb"
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [{
+          Effect   = "Allow"
+          Action   = ["dynamodb:PutItem"]
+          Resource = module.dynamodb.table_arn
+        }]
+      })
     }
   }
-
-  dynamic "vpc_config" {
-    for_each = var.enable_vpc ? [1] : []
-    content {
-      subnet_ids         = aws_subnet.metrics[*].id
-      security_group_ids = [aws_security_group.metrics_lambda[0].id]
-    }
-  }
-
-  tags = var.tags
+  enable_vpc        = var.enable_vpc
+  subnet_ids        = module.vpc.subnet_ids
+  security_group_id = module.vpc.security_group_id
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_writer_vpc_access" {
-  count      = var.enable_vpc ? 1 : 0
-  role       = aws_iam_role.lambda_writer.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-}
-
-resource "aws_iam_role" "lambda_reader" {
-  name = "${local.name_prefix}-metrics-reader-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect    = "Allow"
-      Principal = { Service = "lambda.amazonaws.com" }
-      Action    = "sts:AssumeRole"
-    }]
-  })
-
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_reader_basic_execution" {
-  role       = aws_iam_role.lambda_reader.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_policy" "lambda_reader_dynamodb" {
-  name        = "${local.name_prefix}-metrics-reader-dynamodb"
-  description = "Least-privilege DynamoDB read for the metrics reader (Scan + Query on the metrics table and its index)."
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = ["dynamodb:Scan", "dynamodb:Query"]
-      Resource = [
-        aws_dynamodb_table.metrics.arn,
-        "${aws_dynamodb_table.metrics.arn}/index/*",
-      ]
-    }]
-  })
-
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "lambda_reader_dynamodb" {
-  role       = aws_iam_role.lambda_reader.name
-  policy_arn = aws_iam_policy.lambda_reader_dynamodb.arn
-}
-
-resource "aws_lambda_function" "metrics_reader" {
+module "lambda_reader" {
+  source           = "../lambda"
   function_name    = "${local.name_prefix}-metrics-reader"
-  role             = aws_iam_role.lambda_reader.arn
+  role_name        = "${local.name_prefix}-metrics-reader-role"
+  tags             = var.tags
   handler          = "metrics_reader.handler"
-  runtime          = "python3.12"
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
-  timeout          = 10
-  memory_size      = 128
-  # checkov:skip=CKV_AWS_272:No code-signing pipeline — code ships from this repo (CI-built zip)
-  # checkov:skip=CKV_AWS_116:DLQ applies to async invocations; API Gateway invokes synchronously
-  # checkov:skip=CKV_AWS_173:Env vars encrypted at rest by Lambda's default AWS-managed key (free tier)
-  # checkov:skip=CKV_AWS_50:Observability via CloudWatch logs + the site's own metrics; X-Ray out (marginal value)
-  # checkov:skip=CKV_AWS_115:Account Lambda concurrency limit is 10 — the unreserved minimum is 10, so reserved concurrency is impossible without a quota increase; the endpoint is origin-gated (403 non-site origins)
-
-  environment {
-    variables = {
-      TABLE_NAME     = aws_dynamodb_table.metrics.name
-      ALLOWED_ORIGIN = join(",", local.metrics_origins)
+  environment = {
+    TABLE_NAME     = module.dynamodb.table_name
+    ALLOWED_ORIGIN = join(",", local.metrics_origins)
+  }
+  iam_policies = {
+    dynamodb = {
+      name = "${local.name_prefix}-metrics-reader-dynamodb"
+      policy = jsonencode({
+        Version = "2012-10-17"
+        Statement = [{
+          Effect = "Allow"
+          Action = ["dynamodb:Scan", "dynamodb:Query"]
+          Resource = [
+            module.dynamodb.table_arn,
+            "${module.dynamodb.table_arn}/index/*",
+          ]
+        }]
+      })
     }
   }
-
-  dynamic "vpc_config" {
-    for_each = var.enable_vpc ? [1] : []
-    content {
-      subnet_ids         = aws_subnet.metrics[*].id
-      security_group_ids = [aws_security_group.metrics_lambda[0].id]
-    }
-  }
-
-  tags = var.tags
+  enable_vpc        = var.enable_vpc
+  subnet_ids        = module.vpc.subnet_ids
+  security_group_id = module.vpc.security_group_id
 }
 
-resource "aws_iam_role_policy_attachment" "lambda_reader_vpc_access" {
-  count      = var.enable_vpc ? 1 : 0
-  role       = aws_iam_role.lambda_reader.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
-}
-
-# ---------------------------------------------------------------------------
-# API Gateway (HTTP API) — /event (POST), /summary (GET), /health (GET)
-# ---------------------------------------------------------------------------
-resource "aws_apigatewayv2_api" "metrics" {
-  name          = "${local.name_prefix}-metrics-api"
-  protocol_type = "HTTP"
-
-  cors_configuration {
+module "api_gateway" {
+  source = "../api-gateway"
+  name   = "${local.name_prefix}-metrics-api"
+  tags   = var.tags
+  cors = {
     allow_origins = local.metrics_origins
     allow_methods = ["GET", "POST", "OPTIONS"]
     allow_headers = ["Content-Type", "X-Metrics-Type"]
     max_age       = 3600
   }
-
-  tags = var.tags
+  integrations = {
+    write = {
+      lambda_invoke_arn    = module.lambda_writer.invoke_arn
+      lambda_function_name = module.lambda_writer.function_name
+    }
+    read = {
+      lambda_invoke_arn    = module.lambda_reader.invoke_arn
+      lambda_function_name = module.lambda_reader.function_name
+    }
+  }
+  routes = {
+    post_event  = { route_key = "POST /event", integration_key = "write" }
+    get_summary = { route_key = "GET /summary", integration_key = "read" }
+    get_health  = { route_key = "GET /health", integration_key = "read" }
+    get_views   = { route_key = "GET /views", integration_key = "read" }
+  }
 }
 
-resource "aws_apigatewayv2_stage" "default" {
-  api_id      = aws_apigatewayv2_api.metrics.id
-  name        = "$default"
-  auto_deploy = true
-  # checkov:skip=CKV_AWS_76:Access logging skipped — free tier, low traffic; Lambda CloudWatch logs cover the path
+module "waf" {
+  source          = "../waf"
+  name            = "${local.name_prefix}-metrics-acl"
+  tags            = var.tags
+  enable          = var.enable_waf
+  allowed_host    = try(local.allowed_hosts[0], "")
+  rate_limit      = 300
+  metric_name     = "metrics"
+  association_arn = var.enable_waf ? aws_cloudfront_distribution.metrics[0].arn : null
 }
 
-resource "aws_apigatewayv2_integration" "write" {
-  api_id                 = aws_apigatewayv2_api.metrics.id
-  integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.metrics_writer.invoke_arn
-  payload_format_version = "2.0"
-}
-
-resource "aws_apigatewayv2_integration" "read" {
-  api_id                 = aws_apigatewayv2_api.metrics.id
-  integration_type       = "AWS_PROXY"
-  integration_uri        = aws_lambda_function.metrics_reader.invoke_arn
-  payload_format_version = "2.0"
-}
-
-resource "aws_apigatewayv2_route" "post_event" {
-  api_id    = aws_apigatewayv2_api.metrics.id
-  route_key = "POST /event"
-  target    = "integrations/${aws_apigatewayv2_integration.write.id}"
-  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
-}
-
-resource "aws_apigatewayv2_route" "get_summary" {
-  api_id    = aws_apigatewayv2_api.metrics.id
-  route_key = "GET /summary"
-  target    = "integrations/${aws_apigatewayv2_integration.read.id}"
-  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
-}
-
-resource "aws_apigatewayv2_route" "get_health" {
-  api_id    = aws_apigatewayv2_api.metrics.id
-  route_key = "GET /health"
-  target    = "integrations/${aws_apigatewayv2_integration.read.id}"
-  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
-}
-
-resource "aws_apigatewayv2_route" "get_views" {
-  api_id    = aws_apigatewayv2_api.metrics.id
-  route_key = "GET /views"
-  target    = "integrations/${aws_apigatewayv2_integration.read.id}"
-  # checkov:skip=CKV_AWS_309:Public beacon by design — auth is the edge origin-gate (403 non-site origins) + Lambda origin gate
-}
-
-resource "aws_lambda_permission" "apigw_writer" {
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.metrics_writer.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.metrics.execution_arn}/*"
-}
-
-resource "aws_lambda_permission" "apigw_reader" {
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.metrics_reader.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.metrics.execution_arn}/*"
-}
-
-# ---------------------------------------------------------------------------
-# CloudFront — geo headers (country/city) + stable HTTPS edge in front of the API
-# ---------------------------------------------------------------------------
 resource "aws_cloudfront_origin_request_policy" "geo" {
   count   = var.enable_cloudfront ? 1 : 0
   name    = "${local.name_prefix}-metrics-geo"
@@ -427,7 +196,7 @@ resource "aws_cloudfront_distribution" "metrics" {
   # checkov:skip=CKV2_AWS_47:WAF excluded — outside the Free Tier (user constraint)
 
   origin {
-    domain_name = replace(aws_apigatewayv2_api.metrics.api_endpoint, "https://", "")
+    domain_name = replace(module.api_gateway.api_endpoint, "https://", "")
     origin_id   = "metrics-api"
     custom_origin_config {
       http_port              = 80
@@ -438,12 +207,11 @@ resource "aws_cloudfront_distribution" "metrics" {
   }
 
   default_cache_behavior {
-    target_origin_id       = "metrics-api"
-    viewer_protocol_policy = "redirect-to-https"
-    compress               = true
-    allowed_methods        = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
-    cached_methods         = ["GET", "HEAD"]
-    # Managed policy: CachingDisabled (dynamic API — never cache)
+    target_origin_id           = "metrics-api"
+    viewer_protocol_policy     = "redirect-to-https"
+    compress                   = true
+    allowed_methods            = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
+    cached_methods             = ["GET", "HEAD"]
     cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.geo[0].id
     response_headers_policy_id = var.response_headers_policy_id
@@ -465,12 +233,6 @@ resource "aws_cloudfront_distribution" "metrics" {
   }
 }
 
-# Localized 500 error pages
-# ---------------------------------------------------------------------------
-# Edge origin gate — FREE WAF-equivalent (CloudFront Function, $0): only
-# requests whose Origin/Referer host matches the site pass; /health is exempt
-# for uptime probes. Replaces the paid WAF ACL's main rule at the edge.
-# ---------------------------------------------------------------------------
 resource "aws_cloudfront_function" "origin_gate" {
   count   = var.enable_cloudfront ? 1 : 0
   name    = "${local.name_prefix}-origin-gate"
@@ -520,92 +282,152 @@ function hostname(value) {
 EOT
 }
 
-# ---------------------------------------------------------------------------
-# WAF — only the site's Origin/Referer may reach the edge; everything else is
-# blocked, plus an IP rate-limit rule. Real AWS only (Ministack has no WAF).
-# ---------------------------------------------------------------------------
-resource "aws_wafv2_web_acl" "metrics" {
-  count = var.enable_waf ? 1 : 0
-  name  = "${local.name_prefix}-metrics-acl"
-  scope = "CLOUDFRONT"
-  # checkov:skip=CKV2_AWS_31:WAF excluded from the Free-Tier constraint — resource is count-gated off (not deployed)
-
-  default_action {
-    block {}
-  }
-
-  rule {
-    name     = "allow-site-origin"
-    priority = 1
-    action {
-      allow {}
-    }
-    statement {
-      or_statement {
-        statement {
-          byte_match_statement {
-            field_to_match {
-              single_header { name = "origin" }
-            }
-            positional_constraint = "CONTAINS"
-            search_string         = try(local.allowed_hosts[0], "")
-            text_transformation {
-              priority = 0
-              type     = "LOWERCASE"
-            }
-          }
-        }
-        statement {
-          byte_match_statement {
-            field_to_match {
-              single_header { name = "referer" }
-            }
-            positional_constraint = "CONTAINS"
-            search_string         = try(local.allowed_hosts[0], "")
-            text_transformation {
-              priority = 0
-              type     = "LOWERCASE"
-            }
-          }
-        }
-      }
-    }
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "allow-site-origin"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  rule {
-    name     = "rate-limit"
-    priority = 2
-    action {
-      block {}
-    }
-    statement {
-      rate_based_statement {
-        limit              = 300
-        aggregate_key_type = "IP"
-      }
-    }
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                = "rate-limit"
-      sampled_requests_enabled   = true
-    }
-  }
-
-  tags = var.tags
-  visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "metrics"
-    sampled_requests_enabled   = true
-  }
+moved {
+  from = aws_vpc.metrics[0]
+  to   = module.vpc.aws_vpc.this[0]
 }
 
-resource "aws_wafv2_web_acl_association" "metrics" {
-  count        = var.enable_waf ? 1 : 0
-  resource_arn = aws_cloudfront_distribution.metrics[0].arn
-  web_acl_arn  = aws_wafv2_web_acl.metrics[0].arn
+moved {
+  from = aws_subnet.metrics
+  to   = module.vpc.aws_subnet.this
+}
+
+moved {
+  from = aws_security_group.metrics_lambda[0]
+  to   = module.vpc.aws_security_group.this[0]
+}
+
+moved {
+  from = aws_vpc_endpoint.metrics_dynamodb[0]
+  to   = module.vpc.aws_vpc_endpoint.gateway["dynamodb"]
+}
+
+moved {
+  from = aws_vpc_endpoint.metrics_logs[0]
+  to   = module.vpc.aws_vpc_endpoint.interface["logs"]
+}
+
+moved {
+  from = aws_dynamodb_table.metrics
+  to   = module.dynamodb.aws_dynamodb_table.this
+}
+
+moved {
+  from = aws_iam_role.lambda_writer
+  to   = module.lambda_writer.aws_iam_role.this
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.lambda_writer_basic_execution
+  to   = module.lambda_writer.aws_iam_role_policy_attachment.basic_execution
+}
+
+moved {
+  from = aws_iam_policy.lambda_writer_dynamodb
+  to   = module.lambda_writer.aws_iam_policy.this["dynamodb"]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.lambda_writer_dynamodb
+  to   = module.lambda_writer.aws_iam_role_policy_attachment.this["dynamodb"]
+}
+
+moved {
+  from = aws_lambda_function.metrics_writer
+  to   = module.lambda_writer.aws_lambda_function.this
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.lambda_writer_vpc_access
+  to   = module.lambda_writer.aws_iam_role_policy_attachment.vpc_access
+}
+
+moved {
+  from = aws_iam_role.lambda_reader
+  to   = module.lambda_reader.aws_iam_role.this
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.lambda_reader_basic_execution
+  to   = module.lambda_reader.aws_iam_role_policy_attachment.basic_execution
+}
+
+moved {
+  from = aws_iam_policy.lambda_reader_dynamodb
+  to   = module.lambda_reader.aws_iam_policy.this["dynamodb"]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.lambda_reader_dynamodb
+  to   = module.lambda_reader.aws_iam_role_policy_attachment.this["dynamodb"]
+}
+
+moved {
+  from = aws_lambda_function.metrics_reader
+  to   = module.lambda_reader.aws_lambda_function.this
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.lambda_reader_vpc_access
+  to   = module.lambda_reader.aws_iam_role_policy_attachment.vpc_access
+}
+
+moved {
+  from = aws_apigatewayv2_api.metrics
+  to   = module.api_gateway.aws_apigatewayv2_api.this
+}
+
+moved {
+  from = aws_apigatewayv2_stage.default
+  to   = module.api_gateway.aws_apigatewayv2_stage.default
+}
+
+moved {
+  from = aws_apigatewayv2_integration.write
+  to   = module.api_gateway.aws_apigatewayv2_integration.this["write"]
+}
+
+moved {
+  from = aws_apigatewayv2_integration.read
+  to   = module.api_gateway.aws_apigatewayv2_integration.this["read"]
+}
+
+moved {
+  from = aws_apigatewayv2_route.post_event
+  to   = module.api_gateway.aws_apigatewayv2_route.this["post_event"]
+}
+
+moved {
+  from = aws_apigatewayv2_route.get_summary
+  to   = module.api_gateway.aws_apigatewayv2_route.this["get_summary"]
+}
+
+moved {
+  from = aws_apigatewayv2_route.get_health
+  to   = module.api_gateway.aws_apigatewayv2_route.this["get_health"]
+}
+
+moved {
+  from = aws_apigatewayv2_route.get_views
+  to   = module.api_gateway.aws_apigatewayv2_route.this["get_views"]
+}
+
+moved {
+  from = aws_lambda_permission.apigw_writer
+  to   = module.api_gateway.aws_lambda_permission.this["write"]
+}
+
+moved {
+  from = aws_lambda_permission.apigw_reader
+  to   = module.api_gateway.aws_lambda_permission.this["read"]
+}
+
+moved {
+  from = aws_wafv2_web_acl.metrics[0]
+  to   = module.waf.aws_wafv2_web_acl.this[0]
+}
+
+moved {
+  from = aws_wafv2_web_acl_association.metrics[0]
+  to   = module.waf.aws_wafv2_web_acl_association.this[0]
 }
