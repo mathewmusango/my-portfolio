@@ -35,6 +35,9 @@
     },
     {
       "type": "update"
+    },
+    {
+      "type": "required_signatures"
     }
   ],
   "bypass_actors": []
