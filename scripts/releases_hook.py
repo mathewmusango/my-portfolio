@@ -31,7 +31,7 @@ RELEASE_RE = re.compile(r"^## \[([^\]]+)\] - (\d{4}-\d{2}-\d{2})$", re.MULTILINE
 
 RECENT_LIMIT = 10
 CHANGELOG_NAME = "CHANGELOG.md"
-TAG_RE = re.compile(r"^v\d+\.\d+\.\d+$")
+TAG_RE = re.compile(r"^v\d+\.\d+\.\d+Z?$")
 
 
 def _git_commit_date(repo_root):

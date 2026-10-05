@@ -19,6 +19,11 @@ cycle). A release **renames** that section to its tag without the leading `v`
 (`## [<year>.<MMDD>.<HHMM>] - date`) and adds no empty successor — the next
 cycle's `## [Unreleased]` is opened by its first landed change.
 
+## [Unreleased]
+
+### Fixed
+- **The release hook now recognises a timestamp tag, so the tag-promotion row renders again** — `scripts/releases_hook.py` guarded its tag promotion with `TAG_RE = ^v\d+\.\d+\.\d+$`, which accepts only the legacy SemVer form; the current scheme's trailing `Z` (`v2026.1002.1733Z`) was refused, so `_current_tag()` returned `""` on every tag build and the just-released version stayed out of the generated release timeline and the Site Atlas rows until the separate manual promotion landed. The guard is now `^v\d+\.\d+\.\d+Z?$` — the timestamp form matches, and historical `v3.x.y` tags still do (#182).
+
 ## [2026.1002.1733Z] - 2026-10-02
 
 ### Fixed
