@@ -24,6 +24,9 @@ cycle's `## [Unreleased]` is opened by its first landed change.
 ### Added
 - **The `aws-s3` deploy action's body is executed before merge** — `scripts/checks/actions.py` ran `inject-env-urls`' body under the runner's flags but skipped the deploy action, whose bash steps carry `if:` conditions on step outputs and call the `aws` CLI. The harness now evaluates those `if:` conditions, substitutes `${{ }}` from inputs and step outputs, captures `$GITHUB_OUTPUT`, and runs the body with a stub `aws` on `PATH` that records each call. Three cases cover the branches: a release (`hash_skip=false`) always syncs with `--delete`, invalidates, and plants no marker; a first `hash_skip` deploy syncs and plants `.deploy-hash/<hash>`; an unchanged artifact (`changed=false`) syncs and invalidates nothing. It runs in `build`, so it gates merges (#184).
 
+### Changed
+- **The `tag: v*` ruleset requires signed commits** — every release path now verifies commit signatures: `branch: main` already carried `required_signatures`, and the tag ruleset (id `22227856`) gated only on `build` plus deletion, force-push and update. The rule checks the tagged commit's verified signature, not the tag object's, so a tag cut at a `main` tip changes nothing (already signed); it closes the gap for any tag that is not (#186).
+
 ### Fixed
 - **The release hook now recognises a timestamp tag, so the tag-promotion row renders again** — `scripts/releases_hook.py` guarded its tag promotion with `TAG_RE = ^v\d+\.\d+\.\d+$`, which accepts only the legacy SemVer form; the current scheme's trailing `Z` (`v2026.1002.1733Z`) was refused, so `_current_tag()` returned `""` on every tag build and the just-released version stayed out of the generated release timeline and the Site Atlas rows until the separate manual promotion landed. The guard is now `^v\d+\.\d+\.\d+Z?$` — the timestamp form matches, and historical `v3.x.y` tags still do (#182).
 
