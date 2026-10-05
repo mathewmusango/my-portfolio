@@ -9,6 +9,10 @@ resource "aws_s3_bucket" "this" {
   # checkov:skip=CKV_AWS_18:Access logging skipped — low-traffic personal site (deliberate)
   # checkov:skip=CKV2_AWS_61:No lifecycle needed — sync --delete self-manages content; no expiry/transition use case
   # checkov:skip=CKV2_AWS_6:Public access block exists (aws_s3_bucket_public_access_block.site) — graph check can't resolve the count-gated resource
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {

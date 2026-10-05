@@ -49,5 +49,5 @@ crash.*.log
 # Site and project artefacts
 /site/
 certs/
-terraform/lambda.zip
+terraform/infra/metrics/lambda.zip
 .debug-shots/

@@ -1,3 +1,7 @@
+provider "aws" {
+  region = var.aws_region
+}
+
 locals {
   name_prefix = "${var.project}-${var.environment}"
   tags        = merge(var.tags, { environment = var.environment })
@@ -58,15 +62,40 @@ EOT
   ]
 }
 
+resource "aws_cloudfront_response_headers_policy" "site_headers" {
+  name    = "${local.name_prefix}-site-headers"
+  comment = "Security headers (nosniff, frame DENY, referrer, HSTS) — no CSP (inline scripts)"
+
+  security_headers_config {
+    content_type_options {
+      override = true
+    }
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      preload                    = true
+      override                   = true
+    }
+  }
+}
+
 module "s3" {
-  source = "../s3"
+  source = "../../modules/s3"
   name   = "${local.name_prefix}-site"
   tags   = local.tags
   enable = var.enable_site
 }
 
 module "cloudfront" {
-  source                             = "../cloudfront"
+  source                             = "../../modules/cloudfront"
   name                               = "${local.name_prefix}-site"
   oac_name                           = "${local.name_prefix}-site-oac"
   tags                               = local.tags
@@ -77,49 +106,9 @@ module "cloudfront" {
   origin_bucket_regional_domain_name = module.s3.bucket_regional_domain_name
   default_root_object                = "index.html"
   cache_policy_id                    = "658327ea-f89d-4fab-a63d-7e88639e58f6"
-  response_headers_policy_id         = var.response_headers_policy_id
+  response_headers_policy_id         = aws_cloudfront_response_headers_policy.site_headers.id
   allowed_methods                    = ["GET", "HEAD", "OPTIONS"]
   cached_methods                     = ["GET", "HEAD"]
   functions                          = local.functions
   error_responses                    = local.error_responses
-}
-
-moved {
-  from = aws_s3_bucket.site[0]
-  to   = module.s3.aws_s3_bucket.this[0]
-}
-
-moved {
-  from = aws_s3_bucket_server_side_encryption_configuration.site[0]
-  to   = module.s3.aws_s3_bucket_server_side_encryption_configuration.this[0]
-}
-
-moved {
-  from = aws_s3_bucket_public_access_block.site[0]
-  to   = module.s3.aws_s3_bucket_public_access_block.this[0]
-}
-
-moved {
-  from = aws_cloudfront_origin_access_control.site[0]
-  to   = module.cloudfront.aws_cloudfront_origin_access_control.this[0]
-}
-
-moved {
-  from = aws_s3_bucket_policy.site[0]
-  to   = module.cloudfront.aws_s3_bucket_policy.this[0]
-}
-
-moved {
-  from = aws_cloudfront_distribution.site[0]
-  to   = module.cloudfront.aws_cloudfront_distribution.this[0]
-}
-
-moved {
-  from = aws_cloudfront_function.site_index[0]
-  to   = module.cloudfront.aws_cloudfront_function.this["index"]
-}
-
-moved {
-  from = aws_cloudfront_function.site_error_pages[0]
-  to   = module.cloudfront.aws_cloudfront_function.this["error_pages"]
 }

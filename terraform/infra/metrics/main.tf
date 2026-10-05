@@ -1,9 +1,39 @@
+provider "aws" {
+  region = var.aws_region
+}
+
 locals {
   name_prefix     = "${var.project}-${var.environment}"
   primary_origins = var.allowed_origin == "" ? [] : [var.allowed_origin]
   primary_hosts   = var.allowed_origin == "" ? [] : [replace(replace(var.allowed_origin, "https://", ""), "http://", "")]
   metrics_origins = distinct(concat(local.primary_origins, var.extra_allowed_origins))
   allowed_hosts   = distinct(concat(local.primary_hosts, [for o in var.extra_allowed_origins : replace(replace(o, "https://", ""), "http://", "")]))
+  tags            = merge(var.tags, { environment = var.environment })
+}
+
+resource "aws_cloudfront_response_headers_policy" "metrics_headers" {
+  name    = "${local.name_prefix}-metrics-headers"
+  comment = "Security headers (nosniff, frame DENY, referrer, HSTS) — no CSP (inline scripts)"
+
+  security_headers_config {
+    content_type_options {
+      override = true
+    }
+    frame_options {
+      frame_option = "DENY"
+      override     = true
+    }
+    referrer_policy {
+      referrer_policy = "strict-origin-when-cross-origin"
+      override        = true
+    }
+    strict_transport_security {
+      access_control_max_age_sec = 31536000
+      include_subdomains         = true
+      preload                    = true
+      override                   = true
+    }
+  }
 }
 
 data "archive_file" "lambda" {
@@ -13,9 +43,9 @@ data "archive_file" "lambda" {
 }
 
 module "vpc" {
-  source              = "../vpc"
+  source              = "../../modules/vpc"
   security_group_name = "${local.name_prefix}-metrics-lambda-sg"
-  tags                = var.tags
+  tags                = local.tags
   enable              = var.enable_vpc
   cidr_block          = "10.200.0.0/16"
   subnet_count        = 2
@@ -31,9 +61,9 @@ module "vpc" {
 }
 
 module "dynamodb" {
-  source        = "../dynamodb"
+  source        = "../../modules/dynamodb"
   name          = "${local.name_prefix}-metrics"
-  tags          = var.tags
+  tags          = local.tags
   hash_key      = "date"
   range_key     = "sk"
   ttl_attribute = "ttl"
@@ -45,13 +75,14 @@ module "dynamodb" {
   global_secondary_indexes = [
     { name = "page-date-index", hash_key = "page", range_key = "date", projection_type = "ALL" },
   ]
+  deletion_protection = var.deletion_protection
 }
 
 module "lambda_writer" {
-  source           = "../lambda"
+  source           = "../../modules/lambda"
   function_name    = "${local.name_prefix}-metrics-writer"
   role_name        = "${local.name_prefix}-metrics-writer-role"
-  tags             = var.tags
+  tags             = local.tags
   handler          = "metrics_writer.handler"
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
@@ -79,10 +110,10 @@ module "lambda_writer" {
 }
 
 module "lambda_reader" {
-  source           = "../lambda"
+  source           = "../../modules/lambda"
   function_name    = "${local.name_prefix}-metrics-reader"
   role_name        = "${local.name_prefix}-metrics-reader-role"
-  tags             = var.tags
+  tags             = local.tags
   handler          = "metrics_reader.handler"
   filename         = data.archive_file.lambda.output_path
   source_code_hash = data.archive_file.lambda.output_base64sha256
@@ -112,9 +143,9 @@ module "lambda_reader" {
 }
 
 module "api_gateway" {
-  source = "../api-gateway"
+  source = "../../modules/api-gateway"
   name   = "${local.name_prefix}-metrics-api"
-  tags   = var.tags
+  tags   = local.tags
   cors = {
     allow_origins = local.metrics_origins
     allow_methods = ["GET", "POST", "OPTIONS"]
@@ -140,9 +171,9 @@ module "api_gateway" {
 }
 
 module "waf" {
-  source          = "../waf"
+  source          = "../../modules/waf"
   name            = "${local.name_prefix}-metrics-acl"
-  tags            = var.tags
+  tags            = local.tags
   enable          = var.enable_waf
   allowed_host    = try(local.allowed_hosts[0], "")
   rate_limit      = 300
@@ -184,7 +215,7 @@ resource "aws_cloudfront_distribution" "metrics" {
   enabled         = true
   comment         = "${local.name_prefix}-metrics"
   price_class     = var.price_class
-  tags            = var.tags
+  tags            = local.tags
   is_ipv6_enabled = true
   # checkov:skip=CKV_AWS_86:Access logging skipped for a low-traffic personal site (deliberate)
   # checkov:skip=CKV_AWS_374:Geo restriction deliberately none — the metrics edge is public by design
@@ -214,7 +245,7 @@ resource "aws_cloudfront_distribution" "metrics" {
     cached_methods             = ["GET", "HEAD"]
     cache_policy_id            = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad"
     origin_request_policy_id   = aws_cloudfront_origin_request_policy.geo[0].id
-    response_headers_policy_id = var.response_headers_policy_id
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.metrics_headers.id
     function_association {
       event_type   = "viewer-request"
       function_arn = aws_cloudfront_function.origin_gate[0].arn
@@ -230,6 +261,10 @@ resource "aws_cloudfront_distribution" "metrics" {
   viewer_certificate {
     cloudfront_default_certificate = true
     minimum_protocol_version       = "TLSv1.2_2021"
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
@@ -280,154 +315,4 @@ function hostname(value) {
   return value.toLowerCase();
 }
 EOT
-}
-
-moved {
-  from = aws_vpc.metrics[0]
-  to   = module.vpc.aws_vpc.this[0]
-}
-
-moved {
-  from = aws_subnet.metrics
-  to   = module.vpc.aws_subnet.this
-}
-
-moved {
-  from = aws_security_group.metrics_lambda[0]
-  to   = module.vpc.aws_security_group.this[0]
-}
-
-moved {
-  from = aws_vpc_endpoint.metrics_dynamodb[0]
-  to   = module.vpc.aws_vpc_endpoint.gateway["dynamodb"]
-}
-
-moved {
-  from = aws_vpc_endpoint.metrics_logs[0]
-  to   = module.vpc.aws_vpc_endpoint.interface["logs"]
-}
-
-moved {
-  from = aws_dynamodb_table.metrics
-  to   = module.dynamodb.aws_dynamodb_table.this
-}
-
-moved {
-  from = aws_iam_role.lambda_writer
-  to   = module.lambda_writer.aws_iam_role.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.lambda_writer_basic_execution
-  to   = module.lambda_writer.aws_iam_role_policy_attachment.basic_execution
-}
-
-moved {
-  from = aws_iam_policy.lambda_writer_dynamodb
-  to   = module.lambda_writer.aws_iam_policy.this["dynamodb"]
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.lambda_writer_dynamodb
-  to   = module.lambda_writer.aws_iam_role_policy_attachment.this["dynamodb"]
-}
-
-moved {
-  from = aws_lambda_function.metrics_writer
-  to   = module.lambda_writer.aws_lambda_function.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.lambda_writer_vpc_access
-  to   = module.lambda_writer.aws_iam_role_policy_attachment.vpc_access
-}
-
-moved {
-  from = aws_iam_role.lambda_reader
-  to   = module.lambda_reader.aws_iam_role.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.lambda_reader_basic_execution
-  to   = module.lambda_reader.aws_iam_role_policy_attachment.basic_execution
-}
-
-moved {
-  from = aws_iam_policy.lambda_reader_dynamodb
-  to   = module.lambda_reader.aws_iam_policy.this["dynamodb"]
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.lambda_reader_dynamodb
-  to   = module.lambda_reader.aws_iam_role_policy_attachment.this["dynamodb"]
-}
-
-moved {
-  from = aws_lambda_function.metrics_reader
-  to   = module.lambda_reader.aws_lambda_function.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.lambda_reader_vpc_access
-  to   = module.lambda_reader.aws_iam_role_policy_attachment.vpc_access
-}
-
-moved {
-  from = aws_apigatewayv2_api.metrics
-  to   = module.api_gateway.aws_apigatewayv2_api.this
-}
-
-moved {
-  from = aws_apigatewayv2_stage.default
-  to   = module.api_gateway.aws_apigatewayv2_stage.default
-}
-
-moved {
-  from = aws_apigatewayv2_integration.write
-  to   = module.api_gateway.aws_apigatewayv2_integration.this["write"]
-}
-
-moved {
-  from = aws_apigatewayv2_integration.read
-  to   = module.api_gateway.aws_apigatewayv2_integration.this["read"]
-}
-
-moved {
-  from = aws_apigatewayv2_route.post_event
-  to   = module.api_gateway.aws_apigatewayv2_route.this["post_event"]
-}
-
-moved {
-  from = aws_apigatewayv2_route.get_summary
-  to   = module.api_gateway.aws_apigatewayv2_route.this["get_summary"]
-}
-
-moved {
-  from = aws_apigatewayv2_route.get_health
-  to   = module.api_gateway.aws_apigatewayv2_route.this["get_health"]
-}
-
-moved {
-  from = aws_apigatewayv2_route.get_views
-  to   = module.api_gateway.aws_apigatewayv2_route.this["get_views"]
-}
-
-moved {
-  from = aws_lambda_permission.apigw_writer
-  to   = module.api_gateway.aws_lambda_permission.this["write"]
-}
-
-moved {
-  from = aws_lambda_permission.apigw_reader
-  to   = module.api_gateway.aws_lambda_permission.this["read"]
-}
-
-moved {
-  from = aws_wafv2_web_acl.metrics[0]
-  to   = module.waf.aws_wafv2_web_acl.this[0]
-}
-
-moved {
-  from = aws_wafv2_web_acl_association.metrics[0]
-  to   = module.waf.aws_wafv2_web_acl_association.this[0]
 }
