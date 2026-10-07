@@ -458,8 +458,9 @@ resource "aws_dynamodb_table" "tfstate_lock" {
   name = var.state_lock_table
   # checkov:skip=CKV_AWS_119:Default AWS-managed KMS encryption is sufficient (lock table holds only lock tokens)
   # checkov:skip=CKV_AWS_28:Point-in-time recovery not needed for the state lock table (recreatable)
-  billing_mode = "PAY_PER_REQUEST"
-  hash_key     = "LockID"
+  billing_mode                = "PAY_PER_REQUEST"
+  hash_key                    = "LockID"
+  deletion_protection_enabled = true
 
   attribute {
     name = "LockID"

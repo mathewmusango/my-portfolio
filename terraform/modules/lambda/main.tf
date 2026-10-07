@@ -1,6 +1,16 @@
-resource "aws_iam_role" "this" {
-  name = var.role_name
+locals {
+  managed_policies = concat(
+    ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"],
+    var.enable_vpc ? ["arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"] : [],
+  )
+}
 
+module "iam" {
+  source              = "../iam"
+  role_name           = var.role_name
+  tags                = var.tags
+  inline_policies     = var.iam_policies
+  managed_policy_arns = local.managed_policies
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -9,33 +19,11 @@ resource "aws_iam_role" "this" {
       Action    = "sts:AssumeRole"
     }]
   })
-
-  tags = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "basic_execution" {
-  role       = aws_iam_role.this.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
-}
-
-resource "aws_iam_policy" "this" {
-  for_each = var.iam_policies
-
-  name   = each.value.name
-  policy = each.value.policy
-  tags   = var.tags
-}
-
-resource "aws_iam_role_policy_attachment" "this" {
-  for_each = var.iam_policies
-
-  role       = aws_iam_role.this.name
-  policy_arn = aws_iam_policy.this[each.key].arn
 }
 
 resource "aws_lambda_function" "this" {
   function_name    = var.function_name
-  role             = aws_iam_role.this.arn
+  role             = module.iam.role_arn
   handler          = var.handler
   runtime          = var.runtime
   filename         = var.filename
@@ -66,8 +54,27 @@ resource "aws_lambda_function" "this" {
   tags = var.tags
 }
 
-resource "aws_iam_role_policy_attachment" "vpc_access" {
-  count      = var.enable_vpc ? 1 : 0
-  role       = aws_iam_role.this.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+moved {
+  from = aws_iam_role.this
+  to   = module.iam.aws_iam_role.this
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.basic_execution
+  to   = module.iam.aws_iam_role_policy_attachment.managed["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.vpc_access[0]
+  to   = module.iam.aws_iam_role_policy_attachment.managed["arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"]
+}
+
+moved {
+  from = aws_iam_policy.this
+  to   = module.iam.aws_iam_policy.this
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.this
+  to   = module.iam.aws_iam_role_policy_attachment.inline
 }

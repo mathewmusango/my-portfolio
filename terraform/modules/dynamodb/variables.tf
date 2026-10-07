@@ -55,3 +55,9 @@ variable "point_in_time_recovery" {
   type        = bool
   default     = false
 }
+
+variable "deletion_protection" {
+  description = "Refuse table deletion at the AWS API (independent of Terraform's prevent_destroy)."
+  type        = bool
+  default     = true
+}

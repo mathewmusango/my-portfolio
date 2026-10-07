@@ -2,8 +2,9 @@
 
 Terraform defines the AWS infrastructure behind the portfolio product: **static-site delivery**
 (private S3 bucket + CloudFront via OAC, serving at `/`) and **privacy-first visitor analytics**
-(geo CloudFront edge → API Gateway → Lambda → DynamoDB) — `terraform/modules/metrics/`. Both
-staging and prod run the full stack.
+(geo CloudFront edge → API Gateway → Lambda → DynamoDB) — `terraform/infra/metrics/`. It is split into
+three roots — `bootstrap` and `infra/{site,metrics}` — over a library of generic service modules.
+Both staging and prod run the full stack.
 
 It does **not** build the MkDocs application: GitHub Actions builds the site artifact; Terraform
 provisions and manages the infrastructure that serves it and collects telemetry.
@@ -33,55 +34,61 @@ means a separate root, with its own state and its own provider pin.
 
 | Axis | Where it lives |
 | --- | --- |
-| Infrastructure definition | `main.tf` (composition only) plus the `modules/site` and `modules/metrics` composites over the generic service leaves |
-| Security | `ci/` — its own root, because the OIDC role and the state bucket must exist before any workflow can run |
+| Infrastructure definition | the `infra/site` and `infra/metrics` roots (composition only) over the generic service leaves in `modules/` |
+| Security | `bootstrap/` — its own root, applied out-of-band, because the OIDC role and the state bucket must exist before any workflow can run |
 | Configuration | `variables.tf` / `versions.tf` / `outputs.tf`, the same shape in every root |
 | Verification | the check stack (`containers/checks/`): `fmt`, `validate`, TFLint, Checkov |
 
 ### Service modules — generic, one AWS service each
 
-`modules/` holds one **generic** wrapper per AWS service — `s3`, `cloudfront`, `dynamodb`,
-`lambda`, `api-gateway`, `vpc`, `waf`. Each is secure-by-construction and carries no
-portfolio vocabulary: the `s3` module always blocks public access and keeps the bucket private,
-`cloudfront` always serves through an OAC-scoped bucket policy, `lambda` grants only the policies
-it is handed. A leaf can be lifted into any other Terraform root unchanged.
+`modules/` holds one **generic** wrapper per AWS service — `iam`, `s3`, `cloudfront`, `dynamodb`,
+`lambda`, `api-gateway`, `vpc`, `waf`. Each is secure-by-construction and carries no portfolio
+vocabulary: the `s3` module always blocks public access and keeps the bucket private, `cloudfront`
+always serves through an OAC-scoped bucket policy, and `lambda` builds a function whose role and
+policies all come from the `iam` module. A leaf can be lifted into any other Terraform root
+unchanged.
 
-All product wiring lives in the two thin composites: **`modules/site`** (S3 + CloudFront, with the
-directory-index and localized-error functions supplied as data) and **`modules/metrics`** (VPC ·
-DynamoDB · Lambda writer + reader · API Gateway · WAF, plus the metrics CloudFront edge). The
-composites are what name the portfolio; the leaves are what could be shared.
+All product wiring lives in the two **roots**: **`infra/site`** (S3 + CloudFront, with the
+directory-index and localized-error functions supplied to `cloudfront` as data) and
+**`infra/metrics`** (VPC · DynamoDB · Lambda writer + reader · API Gateway · WAF, plus the metrics
+CloudFront edge). The roots are what name the portfolio; the leaves are what could be shared.
 
 ### Roots own the pin; modules declare a floor
 
-- `terraform/` and `terraform/bootstrap/` are the **roots**. They are the only directories Dependabot
-  tracks, and they own the provider **pin** (`aws ~> 6.65`).
-- The bootstrap root's state key is **still `ci/terraform.tfstate`** — the directory was renamed from
-  `terraform/ci`, but the key is where the live state lives, so it deliberately did not move.
-- `modules/*` are **child modules**. Each declares a **floor** (`aws >= 5.0`) and never a ceiling: a
+- The **roots** are `terraform/bootstrap/`, `terraform/infra/site/` and `terraform/infra/metrics/`.
+  They are the only directories Dependabot tracks, and they own the provider **pin** (`aws ~> 6.65`;
+  `metrics` also pins `archive ~> 2.0`).
+- Each root has its **own state**: `site/terraform.tfstate`, `metrics/terraform.tfstate`, and
+  bootstrap's `ci/terraform.tfstate` (kept despite the rename from `terraform/ci` — the key is where
+  the live state lives).
+- `modules/*` are **child modules**. Each declares a **floor** (`aws >= 6.0`) and never a ceiling: a
   module pinning the same major as its caller makes the per-directory Dependabot PRs mutually
   unsatisfiable, so neither can land (see the CHANGELOG).
 - A child module is **not** a root — no `validate` stage of its own, no lockfile, no Dependabot
   entry. The root that calls it compiles it during `validate`, so there is nothing to keep in step.
 
-### A resource two modules share stays in the root
+### The security-headers policy is per root
 
-The security-headers policy the site and metrics distributions both attach lives in `main.tf`, not in
-either module, and is passed down as a variable. Besides matching the ownership, this keeps it
-resolvable to checkov's graph — moving it into one module made `CKV2_AWS_32` fail on the *other*
-distribution's policy association.
+Each root creates its own `aws_cloudfront_response_headers_policy` (`-site-headers`,
+`-metrics-headers`) and passes it to its distribution. The two roots no longer share one policy —
+with separate states they cannot, and checkov resolves a root-local policy cleanly (`CKV2_AWS_32`).
 
 ### Moving resources between a root and a module (`moved` blocks)
 
 Relocating a resource changes its state address. `moved` blocks re-address it during the next
-apply, so live infrastructure is never replaced — the root carries the `module.site` /
-`module.metrics` blocks, and each composite carries its own blocks for its leaf extraction. Treat a
-non-empty plan after such a change as a bug — a no-op plan is the proof the addresses are right.
-Once **staging and prod** have both applied them, the blocks can be deleted, since their state is
-separate.
+apply, so live infrastructure is never replaced — a module carries the blocks for the resources it
+extracted (e.g. `lambda`'s role/policies into `modules/iam`). Treat a non-empty plan after such a
+change as a bug — a no-op plan is the proof the addresses are right. Once **staging and prod** have
+both applied a root's moves, its blocks can be deleted, since their state is separate.
+
+Critical resources — the site bucket, the DynamoDB table and both CloudFront distributions — carry a
+literal `prevent_destroy` in their module, so an accidental destroy fails the plan instead of
+deleting them. `prevent_destroy` cannot be driven by a variable, so it is hard-coded; remove the
+`lifecycle` block in the module to allow a deliberate teardown.
 
 > One trap worth keeping: `.gitignore` anchors `/site/` rather than `site/`. A bare `site/` matches a
-> directory of that name at **any** depth, so it silently ignored `modules/site/` — the module would
-> simply never have been committed.
+> directory of that name at **any** depth, so it would silently ignore `terraform/infra/site/` — the
+> root would simply never have been committed.
 
 ## Design principles
 
@@ -93,10 +100,11 @@ separate.
 5. **Low operating overhead** — free-tier-leaning defaults; hardening (WAF / VPC) is opt-in.
 
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
-> `terraform/**`: **main → staging (auto-apply), `v*` tags → prod (plan only — apply stays
-> manual)**. One `terraform` job serves both environments, declaring `environment:` from a
-> resolved target, so both prod runs sit behind the `prod` environment's required reviewer, and a
-> prod dispatch must itself be made on a `v*` tag ref.
+> `terraform/**`. It runs two jobs (`site`, `metrics`), each on the environment resolved by a
+> `detect` job that declares `environment:` from it, so a prod apply would sit behind the required
+> reviewer and a prod run must itself come from a `v*` tag ref. **Apply is currently manual**
+> (`workflow_dispatch`) pending the one-time state migration; enabling auto-apply (main→staging,
+> `v*` tag→prod) is a one-line follow-up in `detect`.
 > Local dev applies against Ministack; real-AWS applies happen via the workflow (OIDC) or the
 > CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, both jobs declaring
 > `environment:` and reading their role ARN from it).
@@ -186,10 +194,11 @@ is needed. The provider is stock and reads the standard AWS chain:
 - **Real AWS** — your normal chain (`~/.aws/credentials` / SSO / CI secrets);
   no endpoint set. The same code targets real AWS unchanged.
 
-The per-environment values the AWS config can't carry live in `local.tfvars`
-(`environment`, `allowed_origin`, plus the required `project` / `aws_region` /
-`tags`) — passed explicitly with `-var-file`, never auto-loaded. Real AWS gets
-the same values from CI secrets at plan time; nothing is hardcoded in `*.tf`.
+The per-environment values the AWS config can't carry live in each root's
+`local.tfvars` (`environment`, `allowed_origin` for metrics, plus the required
+`project` / `aws_region` / `tags`) — passed explicitly with `-var-file`, never
+auto-loaded. Real AWS gets the same values from CI secrets at plan time; nothing
+is hardcoded in `*.tf`.
 
 **Credentials never live in the repo.** And **the site itself needs no
 credentials at all** — CloudFront is a public HTTPS edge; the browser beacon
@@ -197,10 +206,11 @@ just `POST`s to it, allowed by CORS from the site origin.
 
 ### Applying to real AWS
 
-Real-AWS applies run through GitHub Actions (`terraform.yml`): staging auto-applies on `main`;
-prod applies are manual dispatches — both via OIDC, no keys in workflows. Manual CLI applies exist
-only for rare out-of-band work (e.g., a catch-up) and are documented in the project's **private
-runbook** — intentionally not in this public repo.
+Real-AWS applies run through GitHub Actions (`terraform.yml`), via OIDC — no keys in workflows.
+**Apply is currently manual** (`workflow_dispatch` with `action: apply`) while the split into two
+roots is migrated; a follow-up flips `detect` to auto-apply (main→staging, `v*` tag→prod behind the
+`prod` reviewer). Manual CLI applies exist only for rare out-of-band work (e.g., a catch-up) and are
+documented in the project's **private runbook** — intentionally not in this public repo.
 
 CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the geo headers.
 
@@ -211,18 +221,25 @@ Everything AWS comes from `~/.aws/config` + `~/.aws/credentials` (endpoint,
 region, `test` keys) — no env file to source:
 
 ```sh
-cd terraform
+# Two roots, two states. Metrics first — the site's beacon points at its API:
+cd terraform/infra/metrics
 # Point state at Ministack S3 (recreate the bucket after a reset: aws s3 mb s3://my-portfolio-tfstate)
 AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
   -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=metrics/terraform.tfstate" \
   -backend-config="region=us-east-1" -backend-config="encrypt=true"
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 export METRICS_ENDPOINT=$(terraform output -raw api_gateway_url)  # for the site beacon
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform plan -var-file=local.tfvars
+# Then the site:
+cd ../site
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
+  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=site/terraform.tfstate" \
+  -backend-config="region=us-east-1" -backend-config="encrypt=true"
 AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 ```
 
-`local.tfvars` mirrors staging/prod (same flags the `terraform.yml` plan step
-passes): `enable_cloudfront`/`enable_metrics`/`enable_site` ON, VPC/WAF OFF.
+Each root has its own `local.tfvars`, mirroring staging/prod (the same flags the
+`terraform.yml` plan step passes): `site` sets `enable_site` ON; `metrics` sets
+`enable_cloudfront` ON with VPC/WAF OFF.
 
 CloudFront is created here too (Ministack implements the management plane), but
 it has **no real edge locally** — `https://<dist>.cloudfront.net` only resolves
@@ -249,7 +266,8 @@ curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://port
 bucket, key, region and the DynamoDB lock table are supplied at init via
 `-backend-config`, so the module works for any project/region. Per-environment
 buckets (`<project>-<env>-tfstate` + `<project>-<env>-tfstate-lock`) are created
-by the `terraform/bootstrap` module (`scripts/bootstrap_aws.sh`). Example init:
+by the `terraform/bootstrap` module (`scripts/bootstrap_aws.sh`). Each root picks its own key
+(`site/` or `metrics/`). Example init:
 
 ```sh
 # Bucket/lock names derive from <project>-<env> — set the shared values once:
@@ -257,7 +275,7 @@ export PROJECT=my-portfolio
 export ENVIRONMENT=prod        # main → staging · v* tags → prod
 terraform init \
   -backend-config="bucket=${PROJECT}-${ENVIRONMENT}-tfstate" \
-  -backend-config="key=metrics/terraform.tfstate" \
+  -backend-config="key=site/terraform.tfstate" \
   -backend-config="region=us-east-1" \
   -backend-config="dynamodb_table=${PROJECT}-${ENVIRONMENT}-tfstate-lock" \
   -backend-config="encrypt=true"
@@ -332,11 +350,12 @@ still applies.
   and size-capped, and the origin gate (plus WAF when enabled) restrict who can call it.
 - **No secrets** in this directory; AWS access comes from the machine's credential
   chain.
-- **Test vs prod**: local dev applies with `environment = "test"` (see
-  `local.tfvars`) — resource names and the table are prefixed, so both can
+- **Test vs prod**: local dev applies with `environment = "test"` (see each
+  root's `local.tfvars`) — resource names and the table are prefixed, so both can
   coexist. **Terraform runs via GitHub Actions** — `terraform.yml` plans on
-  `terraform/**` changes; staging auto-applies on `main`, prod applies manually
-  (see the map above for roles/secrets).
+  `terraform/**` changes; **apply is manual** (`workflow_dispatch`) until the two-root
+  state migration lands, after which `detect` flips to auto-apply (see the map above for
+  roles/secrets).
 
 ## TFLint
 

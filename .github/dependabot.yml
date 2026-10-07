@@ -29,7 +29,21 @@ updates:
       prefix: "deps"
 
   - package-ecosystem: "terraform"
-    directory: "/terraform"
+    directory: "/terraform/infra/site"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      terraform-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: "terraform"
+    directory: "/terraform/infra/metrics"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

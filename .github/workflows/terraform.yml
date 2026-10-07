@@ -6,6 +6,7 @@ on:
     tags: ["v*"]
     paths:
       - "terraform/**"
+      - ".github/workflows/terraform.yml"
   workflow_dispatch:
     inputs:
       action:
@@ -33,7 +34,7 @@ jobs:
     permissions:
       contents: read
     outputs:
-      environment: ${{ steps.classify.outputs.environment }}
+      environments: ${{ steps.classify.outputs.environments }}
       apply: ${{ steps.classify.outputs.apply }}
     steps:
       - id: classify
@@ -57,32 +58,29 @@ jobs:
             exit 1
           fi
           APPLY=false
-          if [ "$EVENT" = "workflow_dispatch" ] && [ "$ACTION" = "apply" ]; then
-            APPLY=true
-          elif [ "$EVENT" = "push" ] && [ "$REF" = "refs/heads/main" ]; then
-            APPLY=true
-          fi
-          echo "environment=$ENV" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT" = "workflow_dispatch" ] && [ "$ACTION" = "apply" ]; then APPLY=true; fi
+          printf 'environments=["%s"]\n' "$ENV" >> "$GITHUB_OUTPUT"
           echo "apply=$APPLY" >> "$GITHUB_OUTPUT"
           echo "resolved environment=$ENV apply=$APPLY"
 
-  terraform:
+  site:
     needs: detect
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.detect.outputs.environments) }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     environment:
-      name: ${{ needs.detect.outputs.environment }}
+      name: ${{ matrix.environment }}
     concurrency:
-      group: terraform-${{ needs.detect.outputs.environment }}
+      group: terraform-site-${{ matrix.environment }}
       cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
-    env:
-      TARGET_ENV: ${{ needs.detect.outputs.environment }}
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform/infra/site
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -99,25 +97,75 @@ jobs:
       - name: Init (S3 backend — bucket derived from the env; S3-native locking)
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ vars.PROJECT }}-$TARGET_ENV-tfstate" \
+            -backend-config="bucket=${{ vars.PROJECT }}-${{ matrix.environment }}-tfstate" \
+            -backend-config="key=site/terraform.tfstate" \
+            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="use_lockfile=true" \
+            -backend-config="encrypt=true"
+
+      - name: Plan (${{ matrix.environment }})
+        run: |
+          terraform plan -input=false -no-color -out=tf.plan \
+            -var "environment=${{ matrix.environment }}" \
+            -var "project=${{ vars.PROJECT }}" \
+            -var "aws_region=${{ vars.AWS_REGION }}" \
+            -var 'tags={"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}'
+
+      - name: Apply
+        if: ${{ needs.detect.outputs.apply == 'true' }}
+        run: terraform apply -input=false -no-color tf.plan
+
+  metrics:
+    needs: detect
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.detect.outputs.environments) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment:
+      name: ${{ matrix.environment }}
+    concurrency:
+      group: terraform-metrics-${{ matrix.environment }}
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      TF_VAR_extra_allowed_origins: ${{ vars.SITE_ORIGIN != '' && format('["{0}"]', vars.SITE_ORIGIN) || '[]' }}
+    defaults:
+      run:
+        working-directory: terraform/infra/metrics
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
+        with:
+          terraform_version: "1.15.9"
+
+      - name: Assume the terraform role for the target environment (OIDC)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
+        with:
+          role-to-assume: ${{ secrets.TERRAFORM_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Init (S3 backend — bucket derived from the env; S3-native locking)
+        run: |
+          terraform init -input=false \
+            -backend-config="bucket=${{ vars.PROJECT }}-${{ matrix.environment }}-tfstate" \
             -backend-config="key=metrics/terraform.tfstate" \
             -backend-config="region=${{ vars.AWS_REGION }}" \
             -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
-      - name: Plan (${{ env.TARGET_ENV }})
+      - name: Plan (${{ matrix.environment }})
         run: |
           terraform plan -input=false -no-color -out=tf.plan \
-            -var "environment=$TARGET_ENV" \
+            -var "environment=${{ matrix.environment }}" \
             -var "project=${{ vars.PROJECT }}" \
             -var "aws_region=${{ vars.AWS_REGION }}" \
             -var "allowed_origin=${{ vars.ALLOWED_ORIGIN }}" \
-            -var 'tags={"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}' \
-            -var enable_vpc=false \
-            -var enable_waf=false \
-            -var enable_cloudfront=true \
-            -var enable_metrics=true
+            -var 'tags={"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}'
 
-      - name: Apply (staging auto on main; prod only via manual dispatch)
+      - name: Apply
         if: ${{ needs.detect.outputs.apply == 'true' }}
         run: terraform apply -input=false -no-color tf.plan
