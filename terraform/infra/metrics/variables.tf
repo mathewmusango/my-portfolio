@@ -19,9 +19,15 @@ variable "allowed_origin" {
 }
 
 variable "extra_allowed_origins" {
-  description = "Additional allowed origins (e.g. the site's own CloudFront domain). HTTPS only."
+  description = "Additional allowed origins beyond the site's own CloudFront domain (read from the site root's state). HTTPS only."
   type        = list(string)
   default     = []
+}
+
+variable "site_state_bucket" {
+  description = "Bucket holding the site root's Terraform state (read to derive the site origin). Empty = <project>-<environment>-tfstate."
+  type        = string
+  default     = ""
 }
 
 variable "event_retention_days" {

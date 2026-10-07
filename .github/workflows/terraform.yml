@@ -116,7 +116,7 @@ jobs:
         run: terraform apply -input=false -no-color tf.plan
 
   metrics:
-    needs: detect
+    needs: [detect, site]
     strategy:
       matrix:
         environment: ${{ fromJSON(needs.detect.outputs.environments) }}
@@ -130,8 +130,6 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    env:
-      TF_VAR_extra_allowed_origins: ${{ vars.SITE_ORIGIN != '' && format('["{0}"]', vars.SITE_ORIGIN) || '[]' }}
     defaults:
       run:
         working-directory: terraform/infra/metrics
