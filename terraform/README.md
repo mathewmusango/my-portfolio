@@ -221,20 +221,20 @@ Everything AWS comes from `~/.aws/config` + `~/.aws/credentials` (endpoint,
 region, `test` keys) — no env file to source:
 
 ```sh
-# Two roots, two states. Metrics first — the site's beacon points at its API:
-cd terraform/infra/metrics
+# Two roots, two states. Site first — the metrics root reads its state for the site origin:
+cd terraform/infra/site
 # Point state at Ministack S3 (recreate the bucket after a reset: aws s3 mb s3://my-portfolio-tfstate)
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
+  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=site/terraform.tfstate" \
+  -backend-config="region=us-east-1" -backend-config="encrypt=true"
+AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
+# Then metrics (reads the site state above via site_state_bucket in its local.tfvars):
+cd ../metrics
 AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
   -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=metrics/terraform.tfstate" \
   -backend-config="region=us-east-1" -backend-config="encrypt=true"
 AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 export METRICS_ENDPOINT=$(terraform output -raw api_gateway_url)  # for the site beacon
-# Then the site:
-cd ../site
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
-  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=site/terraform.tfstate" \
-  -backend-config="region=us-east-1" -backend-config="encrypt=true"
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 ```
 
 Each root has its own `local.tfvars`, mirroring staging/prod (the same flags the

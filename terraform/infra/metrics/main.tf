@@ -6,9 +6,21 @@ locals {
   name_prefix     = "${var.project}-${var.environment}"
   primary_origins = var.allowed_origin == "" ? [] : [var.allowed_origin]
   primary_hosts   = var.allowed_origin == "" ? [] : [replace(replace(var.allowed_origin, "https://", ""), "http://", "")]
-  metrics_origins = distinct(concat(local.primary_origins, var.extra_allowed_origins))
-  allowed_hosts   = distinct(concat(local.primary_hosts, [for o in var.extra_allowed_origins : replace(replace(o, "https://", ""), "http://", "")]))
+  site_origin     = try("https://${data.terraform_remote_state.site.outputs.distribution_domain_name}", "")
+  extra_origins   = compact(concat(var.extra_allowed_origins, [local.site_origin]))
+  metrics_origins = distinct(concat(local.primary_origins, local.extra_origins))
+  allowed_hosts   = distinct(concat(local.primary_hosts, [for o in local.extra_origins : replace(replace(o, "https://", ""), "http://", "")]))
   tags            = merge(var.tags, { environment = var.environment })
+}
+
+data "terraform_remote_state" "site" {
+  backend = "s3"
+  config = {
+    bucket  = var.site_state_bucket != "" ? var.site_state_bucket : "${var.project}-${var.environment}-tfstate"
+    key     = "site/terraform.tfstate"
+    region  = var.aws_region
+    encrypt = true
+  }
 }
 
 resource "aws_cloudfront_response_headers_policy" "metrics_headers" {

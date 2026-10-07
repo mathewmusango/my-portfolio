@@ -12,3 +12,4 @@ enable_waf        = false
 enable_cloudfront = true
 
 deletion_protection = false
+site_state_bucket   = "my-portfolio-tfstate"
