@@ -3,23 +3,40 @@ provider "aws" {
 }
 
 locals {
-  name_prefix     = "${var.project}-${var.environment}"
-  primary_origins = var.allowed_origin == "" ? [] : [var.allowed_origin]
-  primary_hosts   = var.allowed_origin == "" ? [] : [replace(replace(var.allowed_origin, "https://", ""), "http://", "")]
-  site_origin     = try("https://${data.terraform_remote_state.site.outputs.distribution_domain_name}", "")
-  extra_origins   = compact(concat(var.extra_allowed_origins, [local.site_origin]))
-  metrics_origins = distinct(concat(local.primary_origins, local.extra_origins))
-  allowed_hosts   = distinct(concat(local.primary_hosts, [for o in local.extra_origins : replace(replace(o, "https://", ""), "http://", "")]))
-  tags            = merge(var.tags, { environment = var.environment })
+  name_prefix       = "${var.project}-${var.environment}"
+  primary_origins   = var.allowed_origin == "" ? [] : [var.allowed_origin]
+  primary_hosts     = var.allowed_origin == "" ? [] : [replace(replace(var.allowed_origin, "https://", ""), "http://", "")]
+  site_state_bucket = var.site_state_bucket != "" ? var.site_state_bucket : "${var.project}-${var.environment}-tfstate"
+  site_state_key    = "site/terraform.tfstate"
+  site_state_exists = contains(data.aws_s3_objects.site_state.keys, local.site_state_key)
+  site_domain       = local.site_state_exists ? data.terraform_remote_state.site[0].outputs.distribution_domain_name : ""
+  site_origin       = local.site_domain == "" ? "" : "https://${local.site_domain}"
+  extra_origins     = compact(concat(var.extra_allowed_origins, [local.site_origin]))
+  metrics_origins   = distinct(concat(local.primary_origins, local.extra_origins))
+  allowed_hosts     = distinct(concat(local.primary_hosts, [for o in local.extra_origins : replace(replace(o, "https://", ""), "http://", "")]))
+  tags              = merge(var.tags, { environment = var.environment })
+}
+
+data "aws_s3_objects" "site_state" {
+  bucket = local.site_state_bucket
+  prefix = local.site_state_key
 }
 
 data "terraform_remote_state" "site" {
+  count   = local.site_state_exists ? 1 : 0
   backend = "s3"
   config = {
-    bucket  = var.site_state_bucket != "" ? var.site_state_bucket : "${var.project}-${var.environment}-tfstate"
-    key     = "site/terraform.tfstate"
+    bucket  = local.site_state_bucket
+    key     = local.site_state_key
     region  = var.aws_region
     encrypt = true
+  }
+}
+
+check "site_origin_available" {
+  assert {
+    condition     = local.site_origin != ""
+    error_message = "No site root state at ${local.site_state_bucket}/${local.site_state_key} — apply terraform/infra/site (same environment) first; until then the metrics stack omits the site's CloudFront origin from its allow-list."
   }
 }
 

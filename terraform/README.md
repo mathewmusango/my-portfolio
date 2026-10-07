@@ -237,6 +237,11 @@ AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
 export METRICS_ENDPOINT=$(terraform output -raw api_gateway_url)  # for the site beacon
 ```
 
+Ordering is a convenience, not a hard requirement: the metrics root reads the site state
+only when the state object exists (`data "aws_s3_objects"`), so planning it before the site
+root has been applied does not fail — it warns, through a `check` block naming the missing
+key, and omits the site origin until the site root is applied.
+
 Each root has its own `local.tfvars`, mirroring staging/prod (the same flags the
 `terraform.yml` plan step passes): `site` sets `enable_site` ON; `metrics` sets
 `enable_cloudfront` ON with VPC/WAF OFF.
