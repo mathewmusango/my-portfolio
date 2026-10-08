@@ -19,7 +19,7 @@ cycle). A release **renames** that section to its tag without the leading `v`
 (`## [<year>.<MMDD>.<HHMM>] - date`) and adds no empty successor — the next
 cycle's `## [Unreleased]` is opened by its first landed change.
 
-## [Unreleased]
+## [2026.1008.1548Z] - 2026-10-08
 
 ### Added
 - **The `aws-s3` deploy action's body is executed before merge** — `scripts/checks/actions.py` ran `inject-env-urls`' body under the runner's flags but skipped the deploy action, whose bash steps carry `if:` conditions on step outputs and call the `aws` CLI. The harness now evaluates those `if:` conditions, substitutes `${{ }}` from inputs and step outputs, captures `$GITHUB_OUTPUT`, and runs the body with a stub `aws` on `PATH` that records each call. Three cases cover the branches: a release (`hash_skip=false`) always syncs with `--delete`, invalidates, and plants no marker; a first `hash_skip` deploy syncs and plants `.deploy-hash/<hash>`; an unchanged artifact (`changed=false`) syncs and invalidates nothing. It runs in `build`, so it gates merges (#184).
