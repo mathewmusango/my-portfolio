@@ -79,7 +79,8 @@ Relocating a resource changes its state address. `moved` blocks re-address it du
 apply, so live infrastructure is never replaced — a module carries the blocks for the resources it
 extracted (e.g. `lambda`'s role/policies into `modules/iam`). Treat a non-empty plan after such a
 change as a bug — a no-op plan is the proof the addresses are right. Once **staging and prod** have
-both applied a root's moves, its blocks can be deleted, since their state is separate.
+both applied a root's moves, its blocks can be deleted, since their state is separate — the
+`modules/iam` extraction's blocks were removed on 2026-10-08, once both environments had applied.
 
 Critical resources — the site bucket, the DynamoDB table and both CloudFront distributions — carry a
 literal `prevent_destroy` in their module, so an accidental destroy fails the plan instead of
