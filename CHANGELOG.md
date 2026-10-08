@@ -19,6 +19,14 @@ cycle). A release **renames** that section to its tag without the leading `v`
 (`## [<year>.<MMDD>.<HHMM>] - date`) and adds no empty successor — the next
 cycle's `## [Unreleased]` is opened by its first landed change.
 
+## [Unreleased]
+
+### Changed
+- **`Deploy: Infra` applies automatically** — `detect` no longer needs a manual dispatch: a `terraform/**` push to `main` applies staging, and a `v*` tag applies prod behind the `prod` reviewer. A `workflow_dispatch` still plans or applies on demand, and can target one root via `stack` (#212, #194).
+
+### Removed
+- **`modules/lambda`'s temporary `moved` blocks are gone** — no-ops once both environments had applied the `iam` extraction (#211, #210).
+
 ## [2026.1008.1548Z] - 2026-10-08
 
 ### Added

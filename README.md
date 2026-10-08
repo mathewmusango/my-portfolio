@@ -59,7 +59,7 @@ flowchart LR
 CloudFront) and GitHub Pages (the canonical site) — and **both** wait on the required reviewer in
 the `prod` GitHub environment, so nothing reaches prod unreviewed. Two delivery planes, each with
 its own gate: **content** — `main` → staging · `v*` → prod (reviewed); **infrastructure** — `main`
-→ staging auto-applies · `v*` → prod plan-only.
+→ staging auto-applies · `v*` → prod applies (reviewed).
 
 ### Metrics — visitor analytics
 
@@ -152,7 +152,8 @@ flowchart LR
     A -->|workflow_run · main| S[deploy → staging]
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
-    T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
+    T[tf change] -->|main| TS[auto-apply · staging]
+    T -->|v* tag| TP[auto-apply · prod · reviewed]
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
 
@@ -194,9 +195,10 @@ flowchart LR
   Pages runs `prod` only, behind that environment's required reviewer. Staging **skips** when the
   artifact is byte-identical to the last deploy (content-hash marker); prod always deploys.
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
-  plans on `terraform/**` changes and auto-applies to staging on `main` (prod is a manual
-  dispatch, behind the `prod` reviewer, and any dispatch can target one root via its `stack`
-  input); `cloudfront.yml` — invalidate / switch, both jobs
+  runs the two roots on `terraform/**` changes and no longer needs a manual dispatch to apply — a
+  push to `main` **auto-applies staging** and a `v*` tag **auto-applies prod** behind the `prod`
+  reviewer (the tag gate stands, so the only automatic prod path is a tag); a `workflow_dispatch`
+  still plans or applies on demand and can target one root via `stack`; `cloudfront.yml` — invalidate / switch, both jobs
   declaring `environment:` and reading their role ARN from it — is the manual operational extra.
   A push that cannot change the site (`docs/**`, `mkdocs.yml`, `overrides/**`, `requirements.txt`,
   the `mkdocs` hooks, a released `CHANGELOG` heading) skips the build and so the deploy, and every
@@ -214,7 +216,8 @@ owes the full implementation (resources, event schema, security, local dev):
   WAF / private VPC are opt-in.
 - **Control plane** — `terraform/bootstrap` bootstraps the per-environment state backends (S3 +
   DynamoDB lock) and the per-job OIDC roles (see [Architecture](#architecture)). Staging
-  applies automatically on `main`; prod applies stay manual. State/secrets are never committed.
+  applies automatically on `main`; prod applies automatically on `v*` tags, behind the `prod`
+  reviewer. State/secrets are never committed.
 
 ## Security
 
