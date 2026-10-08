@@ -53,28 +53,3 @@ resource "aws_lambda_function" "this" {
 
   tags = var.tags
 }
-
-moved {
-  from = aws_iam_role.this
-  to   = module.iam.aws_iam_role.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.basic_execution
-  to   = module.iam.aws_iam_role_policy_attachment.managed["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"]
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.vpc_access[0]
-  to   = module.iam.aws_iam_role_policy_attachment.managed["arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"]
-}
-
-moved {
-  from = aws_iam_policy.this
-  to   = module.iam.aws_iam_policy.this
-}
-
-moved {
-  from = aws_iam_role_policy_attachment.this
-  to   = module.iam.aws_iam_role_policy_attachment.inline
-}
