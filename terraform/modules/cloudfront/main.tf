@@ -5,6 +5,10 @@ resource "aws_cloudfront_origin_access_control" "this" {
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
+
+  lifecycle {
+    ignore_changes = [description]
+  }
 }
 
 data "aws_iam_policy_document" "oac" {
