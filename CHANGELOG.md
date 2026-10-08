@@ -23,6 +23,7 @@ cycle's `## [Unreleased]` is opened by its first landed change.
 
 ### Changed
 - **`Deploy: Infra` applies automatically** — `detect` no longer needs a manual dispatch: a `terraform/**` push to `main` applies staging, and a `v*` tag applies prod behind the `prod` reviewer. A `workflow_dispatch` still plans or applies on demand, and can target one root via `stack` (#212, #194).
+- **Each deploy workflow gates one job per environment, so a tag needs two approvals, not four** — GitHub requires one approval per job that declares a protected environment, and both deploy workflows ran two: `Deploy: Infra` split `site` and `metrics` into separate jobs and `Deploy: Code` had `aws-s3 / prod` and `github-pages / prod`. Each now runs a single `deploy` job per environment — a `detect`-built matrix — with the roots/planes as steps inside it: `Deploy: Infra` runs site then metrics (still honouring `stack`), and `Deploy: Code` runs the S3 plane always and gh-pages for `prod` only, so the run graph shows just the environment that was affected rather than three jobs with skips. A matrix over roots or planes would not help — each leg is its own gated job (#219).
 
 ### Removed
 - **`modules/lambda`'s temporary `moved` blocks are gone** — no-ops once both environments had applied the `iam` extraction (#211, #210).
