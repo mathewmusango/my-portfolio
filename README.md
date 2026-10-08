@@ -195,7 +195,8 @@ flowchart LR
   artifact is byte-identical to the last deploy (content-hash marker); prod always deploys.
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
   plans on `terraform/**` changes and auto-applies to staging on `main` (prod is a manual
-  dispatch, behind the `prod` reviewer); `cloudfront.yml` — invalidate / switch, both jobs
+  dispatch, behind the `prod` reviewer, and any dispatch can target one root via its `stack`
+  input); `cloudfront.yml` — invalidate / switch, both jobs
   declaring `environment:` and reading their role ARN from it — is the manual operational extra.
   A push that cannot change the site (`docs/**`, `mkdocs.yml`, `overrides/**`, `requirements.txt`,
   the `mkdocs` hooks, a released `CHANGELOG` heading) skips the build and so the deploy, and every
