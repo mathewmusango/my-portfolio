@@ -17,6 +17,10 @@ resource "aws_iam_policy" "this" {
   name   = each.value.name
   policy = each.value.policy
   tags   = var.tags
+
+  lifecycle {
+    ignore_changes = [description]
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "inline" {
