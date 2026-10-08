@@ -26,6 +26,15 @@ on:
           - auto
           - staging
           - prod
+      stack:
+        description: "Which root(s) to run"
+        required: false
+        default: "both"
+        type: choice
+        options:
+          - both
+          - site
+          - metrics
 
 jobs:
   detect:
@@ -35,11 +44,13 @@ jobs:
       contents: read
     outputs:
       environments: ${{ steps.classify.outputs.environments }}
+      stack: ${{ steps.classify.outputs.stack }}
       apply: ${{ steps.classify.outputs.apply }}
     steps:
       - id: classify
         env:
           INPUT_ENV: ${{ github.event.inputs.environment }}
+          INPUT_STACK: ${{ github.event.inputs.stack }}
           ACTION: ${{ github.event.inputs.action }}
           EVENT: ${{ github.event_name }}
           REF_TYPE: ${{ github.ref_type }}
@@ -57,14 +68,23 @@ jobs:
             echo "prod runs must come from a v* tag — got $REF"
             exit 1
           fi
+          STACK="${INPUT_STACK:-both}"
+          case "$STACK" in
+            both | site | metrics) ;;
+            *) echo "unknown stack '$STACK'"; exit 1 ;;
+          esac
           APPLY=false
           if [ "$EVENT" = "workflow_dispatch" ] && [ "$ACTION" = "apply" ]; then APPLY=true; fi
-          printf 'environments=["%s"]\n' "$ENV" >> "$GITHUB_OUTPUT"
-          echo "apply=$APPLY" >> "$GITHUB_OUTPUT"
-          echo "resolved environment=$ENV apply=$APPLY"
+          {
+            printf 'environments=["%s"]\n' "$ENV"
+            echo "apply=$APPLY"
+            echo "stack=$STACK"
+          } >> "$GITHUB_OUTPUT"
+          echo "resolved environment=$ENV stack=$STACK apply=$APPLY"
 
   site:
     needs: detect
+    if: ${{ needs.detect.outputs.stack != 'metrics' }}
     strategy:
       matrix:
         environment: ${{ fromJSON(needs.detect.outputs.environments) }}
@@ -117,6 +137,7 @@ jobs:
 
   metrics:
     needs: [detect, site]
+    if: ${{ !cancelled() && needs.detect.outputs.stack != 'site' && (needs.site.result == 'success' || needs.site.result == 'skipped') }}
     strategy:
       matrix:
         environment: ${{ fromJSON(needs.detect.outputs.environments) }}

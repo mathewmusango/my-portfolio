@@ -102,7 +102,9 @@ deleting them. `prevent_destroy` cannot be driven by a variable, so it is hard-c
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`. It runs two jobs (`site`, `metrics`), each on the environment resolved by a
 > `detect` job that declares `environment:` from it, so a prod apply would sit behind the required
-> reviewer and a prod run must itself come from a `v*` tag ref. **Apply is currently manual**
+> reviewer and a prod run must itself come from a `v*` tag ref. A manual dispatch may also target a
+> single root (`stack`: `both` · `site` · `metrics`, default `both`), so one stack can be re-applied
+> without the other. **Apply is currently manual**
 > (`workflow_dispatch`) pending the one-time state migration; enabling auto-apply (main→staging,
 > `v*` tag→prod) is a one-line follow-up in `detect`.
 > Local dev applies against Ministack; real-AWS applies happen via the workflow (OIDC) or the
