@@ -185,24 +185,23 @@ flowchart LR
   (`scripts/checks/local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
   workflows exactly).
 - **Deploy** — `workflow_run` on `build` success, all of it in `deploy.yml`: a **`detect`** job reads
-  the run payload and resolves the target once — a push to `main` → **staging**, a real `v*` tag
-  (resolved against the API) → **prod** — and one **`deploy`** job per environment (a `detect`-built
-  matrix) runs the planes as steps: the S3 plane always, gh-pages for `prod` only. It is a **plain
-  job**, so it declares its own literal `environment:` and reads `DEPLOY_ROLE_ARN` /
-  `INVALIDATE_ROLE_ARN` **from that environment** — one name per environment, no `secrets:` mapping
-  anywhere, and staging cannot see prod's role. The S3 plane stays one implementation
-  ([`.github/actions/aws-s3`](.github/actions/aws-s3/action.yml), shared through its `env` token).
-  One gated job means one approval for the whole prod deploy, and the run graph shows only the
-  environment that was affected. Staging **skips** when the artifact is byte-identical to the last
-  deploy (content-hash marker); prod always deploys.
+  the run payload and answers both questions once — a push to `main` → **staging**, a real `v*` tag
+  (resolved against the API) → **prod** — and two plain jobs gate on its outputs: **`aws-s3`** and
+  **`github-pages`**, each matrixed over the environment `detect` resolved. They are **plain jobs**,
+  so each declares its own `environment:` and reads `DEPLOY_ROLE_ARN` / `INVALIDATE_ROLE_ARN`
+  **from that environment** — one name per environment, no `secrets:` mapping anywhere, and staging
+  cannot see prod's role. The S3 plane stays one implementation
+  ([`.github/actions/aws-s3`](.github/actions/aws-s3/action.yml), shared through its `env` token);
+  Pages runs `prod` only. The run graph shows `aws-s3 (staging)` on a `main` push and
+  `aws-s3 (prod)` + `github-pages (prod)` on a tag, so only the affected environment appears.
+  Staging **skips** when the artifact is byte-identical to the last deploy (content-hash marker);
+  prod always deploys.
 - **Release & infra** — `v*` tags build a GitHub Release with a CycloneDX SBOM; `terraform.yml`
-  runs both roots as steps in one job per environment on `terraform/**` changes and no longer needs
-  a manual dispatch to apply — a push to `main` **auto-applies staging** and a `v*` tag
-  **auto-applies prod** behind the `prod` reviewer (the tag gate stands, so the only automatic prod
-  path is a tag, and both roots sit behind the one approval); a `workflow_dispatch` still plans or
-  applies on demand and can target one root via `stack`; `cloudfront.yml` — invalidate / switch,
-  both jobs declaring `environment:` and reading their role ARN from it — is the manual operational
-  extra.
+  runs the two roots on `terraform/**` changes and no longer needs a manual dispatch to apply — a
+  push to `main` **auto-applies staging** and a `v*` tag **auto-applies prod** behind the `prod`
+  reviewer (the tag gate stands, so the only automatic prod path is a tag); a `workflow_dispatch`
+  still plans or applies on demand and can target one root via `stack`; `cloudfront.yml` — invalidate / switch, both jobs
+  declaring `environment:` and reading their role ARN from it — is the manual operational extra.
   A push that cannot change the site (`docs/**`, `mkdocs.yml`, `overrides/**`, `requirements.txt`,
   the `mkdocs` hooks, a released `CHANGELOG` heading) skips the build and so the deploy, and every
   prod run — `terraform.yml` or `cloudfront.yml` — must come from a `v*` tag ref.
