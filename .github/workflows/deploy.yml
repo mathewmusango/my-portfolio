@@ -13,8 +13,8 @@ jobs:
     permissions:
       contents: read
     outputs:
-      staging: ${{ steps.classify.outputs.staging }}
-      prod: ${{ steps.classify.outputs.prod }}
+      any: ${{ steps.classify.outputs.any }}
+      environments: ${{ steps.classify.outputs.environments }}
     steps:
       - id: classify
         env:
@@ -46,79 +46,34 @@ jobs:
               fi
             fi
           fi
-          echo "staging=$staging" >> "$GITHUB_OUTPUT"
-          echo "prod=$prod" >> "$GITHUB_OUTPUT"
-          echo "build on '$HEAD' ($TRIGGER) concluded '$CONCLUSION' -> staging=$staging prod=$prod"
+          ANY=false
+          ENVS='["staging"]'
+          if [ "$prod" = "true" ]; then
+            ANY=true
+            ENVS='["prod"]'
+          elif [ "$staging" = "true" ]; then
+            ANY=true
+            ENVS='["staging"]'
+          fi
+          {
+            echo "any=$ANY"
+            echo "environments=$ENVS"
+          } >> "$GITHUB_OUTPUT"
+          echo "build on '$HEAD' ($TRIGGER) concluded '$CONCLUSION' -> environments=$ENVS"
 
-  aws-s3-staging:
-    name: aws-s3 / staging
+  deploy:
     needs: detect
-    if: ${{ needs.detect.outputs.staging == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    environment:
-      name: staging
-    concurrency:
-      group: deploy-staging-aws-s3
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/aws-s3
-        with:
-          project: ${{ vars.PROJECT }}
-          env: staging
-          run_id: ${{ github.event.workflow_run.id }}
-          site_url: ${{ vars.SITE_URL }}
-          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
-          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
-          invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
-          aws_region: ${{ vars.AWS_REGION }}
-          hash_skip: "true"
-
-  aws-s3-prod:
-    name: aws-s3 / prod
-    needs: detect
-    if: ${{ needs.detect.outputs.prod == 'true' }}
+    if: ${{ needs.detect.outputs.any == 'true' }}
+    strategy:
+      matrix:
+        environment: ${{ fromJSON(needs.detect.outputs.environments) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment:
-      name: prod
+      name: ${{ matrix.environment }}
+      url: ${{ matrix.environment == 'prod' && steps.deploy.outputs.page_url || '' }}
     concurrency:
-      group: deploy-prod-aws-s3
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - uses: ./.github/actions/aws-s3
-        with:
-          project: ${{ vars.PROJECT }}
-          env: prod
-          run_id: ${{ github.event.workflow_run.id }}
-          site_url: ${{ vars.SITE_URL }}
-          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
-          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
-          invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
-          aws_region: ${{ vars.AWS_REGION }}
-          hash_skip: "false"
-
-  github-pages-prod:
-    name: github-pages / prod
-    needs: detect
-    if: ${{ needs.detect.outputs.prod == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    environment:
-      name: prod
-      url: ${{ steps.deploy.outputs.page_url }}
-    concurrency:
-      group: "pages"
+      group: ${{ matrix.environment == 'prod' && 'pages' || 'deploy-staging' }}
       cancel-in-progress: false
     permissions:
       contents: read
@@ -128,7 +83,21 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: S3 + CloudFront
+        uses: ./.github/actions/aws-s3
+        with:
+          project: ${{ vars.PROJECT }}
+          env: ${{ matrix.environment }}
+          run_id: ${{ github.event.workflow_run.id }}
+          site_url: ${{ vars.SITE_URL }}
+          metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
+          deploy_role_arn: ${{ secrets.DEPLOY_ROLE_ARN }}
+          invalidate_role_arn: ${{ secrets.INVALIDATE_ROLE_ARN }}
+          aws_region: ${{ vars.AWS_REGION }}
+          hash_skip: ${{ matrix.environment == 'staging' && 'true' || 'false' }}
+
       - name: Download site artifact
+        if: ${{ matrix.environment == 'prod' }}
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: site
@@ -137,6 +106,7 @@ jobs:
           run-id: ${{ github.event.workflow_run.id }}
 
       - name: Substitute this environment's URLs
+        if: ${{ matrix.environment == 'prod' }}
         uses: ./.github/actions/inject-env-urls
         with:
           site_url: ${{ vars.SITE_URL }}
@@ -144,13 +114,16 @@ jobs:
           directory: site
 
       - name: Configure Pages
+        if: ${{ matrix.environment == 'prod' }}
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
       - name: Upload Pages artifact
+        if: ${{ matrix.environment == 'prod' }}
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: site
 
       - name: Deploy to GitHub Pages
+        if: ${{ matrix.environment == 'prod' }}
         id: deploy
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
