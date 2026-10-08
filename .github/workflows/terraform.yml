@@ -74,7 +74,11 @@ jobs:
             *) echo "unknown stack '$STACK'"; exit 1 ;;
           esac
           APPLY=false
-          if [ "$EVENT" = "workflow_dispatch" ] && [ "$ACTION" = "apply" ]; then APPLY=true; fi
+          if [ "$EVENT" = "push" ]; then
+            APPLY=true
+          elif [ "$EVENT" = "workflow_dispatch" ] && [ "$ACTION" = "apply" ]; then
+            APPLY=true
+          fi
           {
             printf 'environments=["%s"]\n' "$ENV"
             echo "apply=$APPLY"
