@@ -200,7 +200,8 @@ flowchart LR
   runs the two roots on `terraform/**` changes and no longer needs a manual dispatch to apply — a
   push to `main` **auto-applies staging** and a `v*` tag **auto-applies prod** behind the `prod`
   reviewer (the tag gate stands, so the only automatic prod path is a tag); a `workflow_dispatch`
-  still plans or applies on demand and can target one root via `stack`; `cloudfront.yml` — invalidate / switch, both jobs
+  still plans or applies on demand and can target one root via `stack`, and both jobs reuse a
+  Terraform provider cache (the plugin cache, keyed on the lockfiles); `cloudfront.yml` — invalidate / switch, both jobs
   declaring `environment:` and reading their role ARN from it — is the manual operational extra.
   A push that cannot change the site (`docs/**`, `mkdocs.yml`, `overrides/**`, `requirements.txt`,
   the `mkdocs` hooks, a released `CHANGELOG` heading) skips the build and so the deploy, and every
