@@ -183,7 +183,9 @@ flowchart LR
   Each reusable self-gates on changed files, so an untouched surface **skips and reports success**
   and the required checks never block unrelated PRs. The checks run locally too
   (`scripts/checks/local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
-  workflows exactly).
+  workflows exactly). The Terraform leaves cache their providers and tflint plugins, and a
+  **`Cache: Warm`** workflow (`warm-caches.yml`) seeds those caches from `main` — `terraform init`
+  across the module dirs under `TF_PLUGIN_CACHE_DIR`, and `tflint --init` — so every PR restores them.
 - **Deploy** — `workflow_run` on `build` success, all of it in `deploy.yml`: a **`detect`** job reads
   the run payload and answers both questions once — a push to `main` → **staging**, a real `v*` tag
   (resolved against the API) → **prod** — and two plain jobs gate on its outputs: **`aws-s3`** and
