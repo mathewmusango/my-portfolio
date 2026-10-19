@@ -88,6 +88,10 @@
           {
             "context": "deps / dependency-review",
             "integration_id": 15368
+          },
+          {
+            "context": "vendored JS",
+            "integration_id": 15368
           }
         ]
       }
