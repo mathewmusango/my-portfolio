@@ -25,7 +25,7 @@ def _locale_of(src_path):
 
 
 def _fmt_month(ts, locale):
-    dt = datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc)
+    dt = datetime.datetime.fromtimestamp(ts, tz=datetime.UTC)
     if locale == "zh":
         return f"{dt.year}年{dt.month}月"
     if locale == "es":

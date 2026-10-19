@@ -1,0 +1,40 @@
+{
+  "source": "https://cdn.jsdelivr.net/npm",
+  "assets": [
+    {
+      "package": "mermaid",
+      "version": "12.2.0",
+      "source_path": "dist/mermaid.min.js",
+      "destination": "docs/assets/javascripts/mermaid.min.js",
+      "sha256": "a8a6a6f805b074a8261a2825c86f99c8054acb3b35f50bb7e24a4f9f2c3c3b9f"
+    },
+    {
+      "package": "pdfjs-dist",
+      "version": "6.4.299",
+      "source_path": "build/pdf.min.mjs",
+      "destination": "docs/assets/js/pdf.min.js",
+      "sha256": "57456c8e0c81e46be31174b499ef77f2b9f5ee46d04412ba627320a36755d4c2"
+    },
+    {
+      "package": "pdfjs-dist",
+      "version": "6.4.299",
+      "source_path": "build/pdf.worker.min.mjs",
+      "destination": "docs/assets/js/pdf.worker.min.js",
+      "sha256": "9536359f1b8367850d485731ca1d5e45c159a7b7a0912325e539937aa21ceb18"
+    },
+    {
+      "package": "tablesort",
+      "version": "5.7.1",
+      "source_path": "dist/tablesort.min.js",
+      "destination": "docs/assets/js/tablesort.min.js",
+      "sha256": "ee99f17ebc985170899a004e9f6bf09e7f60eb4b459b6bfe6683cf0140352c63"
+    },
+    {
+      "package": "tablesort",
+      "version": "5.7.1",
+      "source_path": "dist/sorts/tablesort.dotsep.min.js",
+      "destination": "docs/assets/js/tablesort.dotsep.min.js",
+      "sha256": "9d1a84372c115b2d2c280b96b6c3f75dfd99d207a3b49a8b0a96bed9f4cf8900"
+    }
+  ]
+}

@@ -8,7 +8,7 @@ The writer function (metrics_writer.py) owns all writes.
 import os
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import boto3
@@ -60,7 +60,7 @@ def _summary():
     for item in items:
         ts = item.get("ts")
         if isinstance(ts, (int, float, Decimal)):
-            dt = datetime.fromtimestamp(float(ts), tz=timezone.utc)
+            dt = datetime.fromtimestamp(float(ts), tz=UTC)
             by_hour[dt.hour] = by_hour.get(dt.hour, 0) + 1
             by_day[dt.strftime("%a")] = by_day.get(dt.strftime("%a"), 0) + 1
     by_hour = {str(h): by_hour[h] for h in sorted(by_hour)}

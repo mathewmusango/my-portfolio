@@ -21,6 +21,9 @@ cycle's `## [Unreleased]` is opened by its first landed change.
 
 ## [Unreleased]
 
+### Added
+- **The vendored JavaScript is checked against its pins, and was re-vendored to them** — `scripts/vendor_js.py` reads the pins in `package.json` and the file map in `scripts/vendor.json`; `--check` (run in `checks.yml` on every pull request) verifies each destination's SHA-256 and pin/version agreement, and `--update` downloads the pinned bundles atomically. Applying it exposed drift the pins had hidden: pdf.js was 6.3.289 against a 6.4.299 pin, Tablesort 5.2.1 against 5.7.1, and Mermaid's bundle predated its 12.2.0 pin, because a Dependabot bump moves the manifest and never the vendored file. All five assets are now re-vendored at their pins (#246).
+
 ### Changed
 - **`Deploy: Infra` applies automatically** — `detect` no longer needs a manual dispatch: a `terraform/**` push to `main` applies staging, and a `v*` tag applies prod behind the `prod` reviewer. A `workflow_dispatch` still plans or applies on demand, and can target one root via `stack` (#212, #194).
 - **`Deploy: Code` is one job per plane, matrixed over the environment — mirroring `Deploy: Infra`** — `aws-s3 / staging` and `aws-s3 / prod` were two jobs and `github-pages / prod` a third, so a `main` push showed three jobs with two `if:` skips. It is now a `detect` job plus `aws-s3` and `github-pages`, each matrixed over the environment `detect` resolved, so the run graph shows `aws-s3 (staging)` on a `main` push and `aws-s3 (prod)` + `github-pages (prod)` on a tag — only the environment that was affected. `Deploy: Infra` is unchanged: `site` and `metrics` stay separate jobs, each matrixed over the environment (#219).
