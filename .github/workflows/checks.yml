@@ -9,14 +9,6 @@ permissions:
   contents: read
 
 jobs:
-  vendor:
-    name: vendored JS
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Verify vendored JS matches package.json
-        run: python3 scripts/vendor_js.py --check
   js:
     uses: mathewmusango/my-workflows/.github/workflows/checks-js.yml@5a9c6ac6ab5285996efab6bef73a1b9c4978198d # v2026.1009.1321Z
   python:
@@ -28,4 +20,4 @@ jobs:
   yaml:
     uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@5a9c6ac6ab5285996efab6bef73a1b9c4978198d # v2026.1009.1321Z
   docker:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-docker.yml@5a9c6ac6ab5285996efab6bef73a1b9c4978198d # v2026.1009.1321Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-docker.yml@9e3134ce58ba072fedef442e19d1355001659172 # v2026.1020.2007Z

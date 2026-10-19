@@ -60,6 +60,16 @@ runs:
       shell: bash
       run: pip install -r requirements.txt
 
+    - name: Set up Node
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+      with:
+        node-version: "22"
+        cache: npm
+
+    - name: Install JavaScript dependencies
+      shell: bash
+      run: npm ci
+
     - name: Build site (strict)
       shell: bash
       env:

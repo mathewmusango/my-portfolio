@@ -90,7 +90,7 @@
             "integration_id": 15368
           },
           {
-            "context": "vendored JS",
+            "context": "docker / hadolint",
             "integration_id": 15368
           }
         ]

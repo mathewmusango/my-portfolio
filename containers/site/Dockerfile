@@ -1,3 +1,11 @@
+FROM node:22-slim AS js
+
+WORKDIR /js
+
+COPY package.json package-lock.json ./
+
+RUN npm ci
+
 FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -5,6 +13,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+COPY --from=js /js/node_modules ./node_modules
+
+# hadolint ignore=DL3008
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git && \
     rm -rf /var/lib/apt/lists/*
