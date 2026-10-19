@@ -55,7 +55,7 @@ def fmt_ts(ts: int) -> str:
     import datetime
 
     return (
-        datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).strftime("%Y-%m-%d")
+        datetime.datetime.fromtimestamp(ts, tz=datetime.UTC).strftime("%Y-%m-%d")
         if ts
         else "never"
     )
