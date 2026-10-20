@@ -48,7 +48,7 @@ services:
       - sh
       - -c
       - |
-        find . -path './site' -prune -o -path './.git' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do
+        find . -path './site' -prune -o -path './.git' -prune -o -path './node_modules' -prune -o -type f -name '*.js' -print0 2>/dev/null | while IFS= read -r -d '' f; do
           node --check "$$f" || { echo "FAILED: $$f"; exit 1; }
         done
         echo 'js: all files syntax-checked'

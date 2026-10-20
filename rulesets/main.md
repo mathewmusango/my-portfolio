@@ -29,9 +29,9 @@
 | `yaml / syntax` | the `yaml` caller job |
 | `secrets / gitleaks` | the `secrets` caller job |
 | `deps / dependency-review` | the `deps` caller job — reports on pull requests only |
-| `vendored JS` | `checks.yml` — this repository's own job, not a shared leaf |
+| `docker / hadolint` | the `docker` caller job — hadolint over every Dockerfile |
 
-**Why these thirteen.** `build` is this repository's own gate, and `vendored JS` is its own pin check; the rest are what [`checks.yml`](../.github/workflows/checks.yml) reports for its file types — shell, js, python, terraform, yaml, secrets and dependency review. Each shared leaf self-gates on changed files, so a surface with nothing to check skips and still reports success, which is what lets all thirteen be required at once.
+**Why these thirteen.** `build` is this repository's own gate; the rest are what [`checks.yml`](../.github/workflows/checks.yml) reports for its file types — shell, js, python, docker, terraform, yaml, secrets and dependency review. Each shared leaf self-gates on changed files, so a surface with nothing to check skips and still reports success, which is what lets all thirteen be required at once.
 
 ## Applying
 

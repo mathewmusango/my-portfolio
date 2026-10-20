@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Version pins for the JavaScript vendored under docs/assets/. Dependabot visibility only; nothing is built from this manifest.",
+  "description": "JavaScript dependencies for the site; npm ci installs the bundles the MkDocs hook copies from node_modules.",
   "devDependencies": {
     "mermaid": "12.2.0",
     "pdfjs-dist": "6.4.299",

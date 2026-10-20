@@ -120,6 +120,7 @@ exclude_docs: |
 hooks:
   - scripts/site_metrics_hook.py
   - scripts/releases_hook.py
+  - scripts/mkdocs_vendor.py
 
 # Custom error pages + the full release archive are built but intentionally
 # not in the nav (the archive is reached from the Site Atlas landing page).

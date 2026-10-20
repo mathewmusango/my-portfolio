@@ -29,7 +29,7 @@ engineering behind it ([Architecture](#architecture)).
 | Theme      | Material — dark slate (default), light toggle, teal `#00897b` accent   |
 | Plugins    | Search (suggest/highlight), git revision dates + contributors, minify |
 | PDF viewer | pdf.js 6.4.299 (self-hosted, ESM) with clickable, new-tab links overlays |
-| Vendored JS | pdf.js · Mermaid · Tablesort pinned in `package.json`; `scripts/vendor_js.py --check` keeps `docs/assets/` in sync |
+| Vendored JS | pdf.js · Mermaid · Tablesort installed by `npm ci` and copied from `node_modules` at build time (no committed bundles) |
 | Analytics  | Privacy-first visitor metrics — CloudFront geo headers → API Gateway → Lambda → DynamoDB (no IPs stored, 90-day TTL) |
 
 ## Architecture
