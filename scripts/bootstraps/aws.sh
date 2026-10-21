@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# scripts/bootstrap_aws.sh <staging|prod>
+# scripts/bootstraps/aws.sh <staging|prod>
 #
 # One-command bootstrap of the per-environment terraform plumbing:
 #   - OIDC assume-role  github-actions-<project>-<env> (ref-scoped trust)
@@ -18,14 +18,14 @@
 
 set -eu
 
-ENV="${1:?usage: scripts/bootstrap_aws.sh <staging|prod>}"
+ENV="${1:?usage: scripts/bootstraps/aws.sh <staging|prod>}"
 case "$ENV" in
   staging | prod) ;;
-  *) echo "usage: scripts/bootstrap_aws.sh <staging|prod>"; exit 1 ;;
+  *) echo "usage: scripts/bootstraps/aws.sh <staging|prod>"; exit 1 ;;
 esac
 
 # shellcheck disable=SC1007  # CDPATH= cd is the intentional empty-CD cd idiom
-ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)"
 if [ -f "$ROOT/.env" ]; then
   set -a
   . "$ROOT/.env"

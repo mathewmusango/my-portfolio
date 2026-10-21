@@ -9,7 +9,7 @@ VENDOR = json.loads(Path(__file__).with_name("vendor.json").read_text(encoding="
 
 
 def on_files(files, config):
-    root = Path(__file__).resolve().parents[1]
+    root = Path(__file__).resolve().parents[2]
     for source, destination in VENDOR.items():
         path = root / source
         if not path.is_file():

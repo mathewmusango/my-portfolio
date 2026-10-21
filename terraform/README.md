@@ -12,7 +12,7 @@ provisions and manages the infrastructure that serves it and collects telemetry.
 ```mermaid
 flowchart TB
     subgraph OOB[Out-of-band — once per environment, as an AWS user]
-        U[AWS user] -->|scripts/bootstrap_aws.sh| CI[terraform/bootstrap<br/>OIDC provider · state backends · roles]
+        U[AWS user] -->|scripts/bootstraps/aws.sh| CI[terraform/bootstrap<br/>OIDC provider · state backends · roles]
     end
     CI --> STATE[(state backends — S3 + DynamoDB lock<br/>staging · prod · local Ministack)]
     CI --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
@@ -274,7 +274,7 @@ curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://port
 bucket, key, region and the DynamoDB lock table are supplied at init via
 `-backend-config`, so the module works for any project/region. Per-environment
 buckets (`<project>-<env>-tfstate` + `<project>-<env>-tfstate-lock`) are created
-by the `terraform/bootstrap` module (`scripts/bootstrap_aws.sh`). Each root picks its own key
+by the `terraform/bootstrap` module (`scripts/bootstraps/aws.sh`). Each root picks its own key
 (`site/` or `metrics/`). Example init:
 
 ```sh
