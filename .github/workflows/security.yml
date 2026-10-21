@@ -9,13 +9,11 @@ permissions:
   contents: read
 
 jobs:
-  secrets:
-    uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
   deps:
-    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@bbd8872398c1b646afb9f05e1ab25a2398a0821c # v2026.1021.2041Z
   terraform:
-    uses: mathewmusango/my-workflows/.github/workflows/security-terraform.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-terraform.yml@bbd8872398c1b646afb9f05e1ab25a2398a0821c # v2026.1021.2041Z
   pip-audit:
-    uses: mathewmusango/my-workflows/.github/workflows/security-pip-audit.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-pip-audit.yml@bbd8872398c1b646afb9f05e1ab25a2398a0821c # v2026.1021.2041Z
   npm-audit:
-    uses: mathewmusango/my-workflows/.github/workflows/security-npm-audit.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-npm-audit.yml@bbd8872398c1b646afb9f05e1ab25a2398a0821c # v2026.1021.2041Z

@@ -30,7 +30,7 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 | `pip-audit` | `python:3.12-slim` | `pip-audit -r requirements.txt` — the leaf's pinned `pip-audit==2.10.1`, the same command CI runs |
 | `npm-audit` | `node:22-slim` | `npm audit --package-lock-only --audit-level=high` — the leaf's command, dev dependencies deliberately included |
 
-`secrets` and `deps` have no service on purpose: `gitleaks` and `dependency-review` are CI-only surfaces, the second because it reads a pull-request diff. `gitleaks` could not be mirrored faithfully either — the leaf scans commit ranges, and this checkout's `.git` is a *file* pointing at the umbrella's gitdir, which the mount does not include, so a tree-only scan would be a weaker check wearing the same name.
+`deps` has no service on purpose: `dependency-review` reads a pull-request diff and has no local form.
 
 ## Notes
 
