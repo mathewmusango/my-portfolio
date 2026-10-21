@@ -92,6 +92,14 @@
           {
             "context": "docker / hadolint",
             "integration_id": 15368
+          },
+          {
+            "context": "pip-audit / audit",
+            "integration_id": 15368
+          },
+          {
+            "context": "npm-audit / audit",
+            "integration_id": 15368
           }
         ]
       }
