@@ -33,7 +33,9 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 
 `deps` has no service on purpose: `dependency-review` reads a pull-request diff and has no local form.
 
-`gitleaks` is now the mirror image — **local only**. The CI leaf was dropped in favour of GitHub's secret scanning (with push protection, which blocks before a commit lands) and GitGuardian, so this service is a pre-commit net rather than a CI parity check. It scans the **working tree** (`gitleaks dir`), not history: this checkout's `.git` is a *file* pointing at the umbrella's gitdir, which the mount does not include. That is also why [`gitleaks.toml`](gitleaks.toml) allowlists two gitignored artifact classes — mkcert keys under `certs/` and local `backup-*.tfstate.json` — which are not part of the repository and would otherwise block every commit. The server-side scanners are unaffected: they see pushed content.
+`gitleaks` is now the mirror image — **local only**. The CI leaf was dropped in favour of GitHub's secret scanning (with push protection, which blocks before a commit lands) and GitGuardian, so this service is a pre-commit net rather than a CI parity check. It covers the **whole repository** in whichever mode the layout allows: in a plain clone `.git` is a directory, so it scans every commit (`git --log-opts=--all`, where `.gitignore` is honoured implicitly because an ignored file was never committed); in this checkout `.git` is a *file* pointing at the umbrella's gitdir, which the mount does not include, so history is unreachable and it scans the whole working tree instead.
+
+That second mode is why [`gitleaks.toml`](gitleaks.toml) exists: `gitleaks dir` has **no `.gitignore` support** — the CLI offers only `--baseline-path`, `--gitleaks-ignore-path` (finding fingerprints) and config allowlists — so `.gitignore` cannot simply be handed to it. The two path patterns there mirror `.gitignore` lines 45 and 51 (mkcert keys under `certs/`, local `backup-*.tfstate.json`), which are not part of the repository and would otherwise block every commit. The server-side scanners are unaffected: they see only pushed content.
 
 ## Notes
 

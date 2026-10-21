@@ -106,16 +106,37 @@ services:
       - ../..:/repo:ro
     command: ["-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]
 
-  # Tree scan, not history: `.git` is a file here (umbrella gitdir), so a history walk
-  # has nothing to read. The allowlist in gitleaks.toml covers the gitignored local
-  # artifacts. Commits are gated server-side by GitHub + GitGuardian, not by CI.
+  # Whole repository, two modes. In a plain clone `.git` is a directory, so this scans
+  # every commit (`git --log-opts=--all`) and .gitignore is honoured implicitly: an
+  # ignored file was never committed, so it cannot appear in history. This checkout's
+  # `.git` is a *file* pointing at the umbrella's gitdir, which the mount does not
+  # include, so history is unreachable — it scans the whole working tree instead, and
+  # gitleaks.toml covers the two gitignored artifact classes.
+  #
+  # WHY THE CONFIG, NOT .gitignore: `gitleaks dir` has no ignore-file support. The CLI
+  # exposes only `--baseline-path`, `--gitleaks-ignore-path` (fingerprints) and config
+  # allowlists, so .gitignore cannot be handed to it — hence gitleaks.toml, whose two
+  # path patterns mirror .gitignore lines 45 and 51.
+  #
+  # WHY THE ENTRYPOINT OVERRIDE: the image's ENTRYPOINT is `gitleaks`, so a plain
+  # `command: [sh, -c, ...]` is parsed as gitleaks subcommands and dies with
+  # `unknown command "sh"`. The image does ship /bin/sh.
   gitleaks:
     image: ghcr.io/gitleaks/gitleaks:latest
     working_dir: /repo
     volumes:
       - ../..:/repo:ro
       - ./gitleaks.toml:/etc/gitleaks/gitleaks.toml:ro
-    command: ["dir", ".", "--config", "/etc/gitleaks/gitleaks.toml", "--no-banner", "-v", "--redact"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -d .git ]; then
+          echo "gitleaks: scanning all commits"
+          exec gitleaks git . --log-opts=--all --config /etc/gitleaks/gitleaks.toml --no-banner -v --redact
+        else
+          echo "gitleaks: .git is a file (umbrella gitdir) — scanning the whole working tree"
+          exec gitleaks dir . --config /etc/gitleaks/gitleaks.toml --no-banner -v --redact
+        fi
 
 volumes:
   tf-plugins:
