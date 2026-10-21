@@ -157,11 +157,13 @@ flowchart LR
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```
 
-- **build** (`build.yml`) — strict `mkdocs build` + audits (pip-audit, link check) on every push/PR
-  to `main` and `v*` tags; uploads the built `site/` as an artifact. The `build` job ends with a
-  **browser smoke check** (`scripts/checks/browser.py`): it loads the four viewer pages in headless
-  Firefox and fails when one stops rendering, which is the class of runtime regression no static
-  check can see.
+- **build** (`CI: Build`, `build.yml`) — strict `mkdocs build` with the link, translation and CSS
+  checks, then the composite-body check (`scripts/checks/actions.py`), on every push/PR to `main` and
+  `v*` tags; uploads the built `site/` as an artifact. The dependency audits are **not** here — they
+  belong to `CI: Security` below, so a dependency change resolves the manifests once. The `build` job
+  ends with a **browser smoke check** (`scripts/checks/browser.py`): it loads the four viewer pages in
+  headless Firefox and fails when one stops rendering, which is the class of runtime regression no
+  static check can see.
 - **Build inputs** — the build no longer knows which environment it is for. `build-site` bakes a
   reserved-domain **placeholder** — `site_url: https://site-url.invalid/` and
   `metrics_endpoint: https://metrics-endpoint.invalid` (the `<meta name="metrics-endpoint">` tag the
@@ -178,12 +180,19 @@ flowchart LR
   targets, read its own markup — `grep -oE '<link[^>]*canonical[^>]*>' site/index.html` on the
   downloaded artifact. Locally the dev server takes the endpoint from the host environment
   (`METRICS_ENDPOINT=… scripts/dev.sh start`).
-- **Checks** — one workflow, `checks.yml`, calling the shared reusables in
-  [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows) (pinned by SHA).
-  Each reusable self-gates on changed files, so an untouched surface **skips and reports success**
-  and the required checks never block unrelated PRs. The checks run locally too
-  (`scripts/checks/local.sh` — changed-files by default, `--full` for whole-repo, mirroring the
-  workflows exactly). The Terraform leaves cache their providers and tflint plugins, and a
+- **Checks** — three workflows, each named for the group it reports, all calling the shared
+  reusables in [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows)
+  (pinned by SHA): `CI: Checks` (`checks.yml` — js, python, shell, terraform, yaml, docker),
+  `CI: Security` (`security.yml` — gitleaks, dependency review, checkov, and the two required
+  dependency audits) and `CI: CodeQL` (`codeql.yml`, which keeps its own `push` trigger because
+  code-scanning results are ref-scoped). Each reusable self-gates on changed files, so an untouched
+  surface **skips and reports success** and the required checks never block unrelated PRs.
+  `CI: Security` is a pure gate — `pull_request` plus a manual dispatch, no `push` and no schedule,
+  because a squash merge re-judges the same tree and Dependabot already covers the moving advisory
+  corpus. The required set and the audit thresholds are written down in
+  [`rulesets/main.md`](rulesets/main.md). The checks run locally too (`scripts/checks/local.sh` —
+  changed-files by default, `--full` for whole-repo, mirroring the workflows exactly, dependency
+  audits included). The Terraform leaves cache their providers and tflint plugins, and a
   **`Cache: Warm`** workflow (`warm-caches.yml`) seeds those caches from `main` — `terraform init`
   across the module dirs under `TF_PLUGIN_CACHE_DIR`, and `tflint --init` — so every PR restores them.
 - **Deploy** — `workflow_run` on `build` success, all of it in `deploy.yml`: a **`detect`** job reads
@@ -228,7 +237,9 @@ owes the full implementation (resources, event schema, security, local dev):
 
 - See [SECURITY.md](SECURITY.md) for the vulnerability reporting policy.
 - **Dependabot** keeps `requirements.txt` (weekly) and GitHub Actions (monthly) up to date.
-- Every release ships a CycloneDX SBOM, and `pip-audit` runs on every CI build.
+- Every release ships a CycloneDX SBOM, and the dependency audits run in the `CI: Security` gate —
+  `pip-audit` against `requirements.txt` and `npm audit --audit-level=high` against the lockfile,
+  dev dependencies deliberately included because their bundles are what the browser runs.
 - No long-lived keys anywhere — deploys and Terraform assume AWS roles via OIDC; buckets are
   never public (OAC only) and the metrics API is origin-gated (details in
   [`terraform/README.md`](terraform/README.md)).
