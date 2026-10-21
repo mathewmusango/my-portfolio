@@ -12,7 +12,7 @@ else
   BOLD=""; GREEN=""; YELLOW=""; RED=""; NC=""
 fi
 
-ALL="shell python yaml yaml-syntax js terraform-fmt terraform-validate terraform-lint terraform-security"
+ALL="shell python pip-audit yaml yaml-syntax js npm-audit terraform-fmt terraform-validate terraform-lint terraform-security"
 MODE="diff"
 VERBOSE=0
 SURFACES=""
@@ -57,6 +57,8 @@ surface_glob() {
     js)               printf '%s' '\.js$' ;;
     yaml|yaml-syntax) printf '%s' '\.ya?ml$' ;;
     terraform-*)      printf '%s' '(^|/)terraform/|\.tflint\.hcl$|\.tf$' ;;
+    pip-audit)        printf '%s' '(^|/)requirements[^/]*\.txt$|(^|/)pyproject\.toml$' ;;
+    npm-audit)        printf '%s' '(^|/)package(-lock)?\.json$' ;;
   esac
 }
 
@@ -67,6 +69,8 @@ surface_touched() {
     js)               grep -q '\.js$' || return 1 ;;
     yaml|yaml-syntax) grep -qE '\.ya?ml$' || return 1 ;;
     terraform-*)      grep -qE '(^|/)terraform/|\.tflint\.hcl$|\.tf$' || return 1 ;;
+    pip-audit)        grep -qE '(^|/)requirements[^/]*\.txt$|(^|/)pyproject\.toml$' || return 1 ;;
+    npm-audit)        grep -qE '(^|/)package(-lock)?\.json$' || return 1 ;;
   esac
 }
 

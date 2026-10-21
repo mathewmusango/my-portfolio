@@ -24,6 +24,8 @@ Diff-gated by default: changed files come from `origin/main...HEAD` plus the sta
 | `terraform-validate` | `init -backend=false` then `validate`, all three roots | same, per root |
 | `terraform-lint` | `tflint` against the root `.tflint.hcl` | `tflint --init && tflint --recursive` |
 | `terraform-security` | `checkov` over `terraform/` — informational | `checkov -d terraform --quiet --soft-fail` |
+| `pip-audit` | `pip-audit -r requirements.txt` — the gate behind `pip-audit / audit` | `pip-audit -r requirements.txt` |
+| `npm-audit` | `npm audit --package-lock-only --audit-level=high` — the gate behind `npm-audit / audit` | same |
 
 The third column is a convenience, not a proof: it uses the host's tool versions rather than the container's, so a pass there says nothing about CI.
 

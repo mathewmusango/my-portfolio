@@ -53,6 +53,25 @@ services:
         done
         echo 'js: all files syntax-checked'
 
+  pip-audit:
+    image: docker.io/library/python:3.12-slim
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command:
+      - sh
+      - -c
+      - |
+        pip install --disable-pip-version-check -q pip-audit==2.10.1
+        pip-audit -r requirements.txt
+
+  npm-audit:
+    image: docker.io/library/node:22-slim
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+    command: ["npm", "audit", "--package-lock-only", "--audit-level=high"]
+
   terraform-fmt:
     image: docker.io/hashicorp/terraform:1.15.9
     working_dir: /repo

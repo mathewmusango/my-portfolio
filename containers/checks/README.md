@@ -27,8 +27,10 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 | `terraform-validate` | `hashicorp/terraform` 1.15.9 | `init -backend=false -lockfile=readonly` then `validate`, on both roots |
 | `terraform-lint` | `terraform-linters/tflint` | `tflint --init`, then recursive on `terraform/` and `terraform/bootstrap`, both against the root `.tflint.hcl` |
 | `terraform-security` | `bridgecrewio/checkov` 3.3.15 | `checkov -d terraform --framework terraform --quiet --soft-fail` |
+| `pip-audit` | `python:3.12-slim` | `pip-audit -r requirements.txt` — the leaf's pinned `pip-audit==2.10.1`, the same command CI runs |
+| `npm-audit` | `node:22-slim` | `npm audit --package-lock-only --audit-level=high` — the leaf's command, dev dependencies deliberately included |
 
-`secrets` and `deps` have no service on purpose: `gitleaks` and `dependency-review` are CI-only surfaces, the second because it reads a pull-request diff.
+`secrets` and `deps` have no service on purpose: `gitleaks` and `dependency-review` are CI-only surfaces, the second because it reads a pull-request diff. `gitleaks` could not be mirrored faithfully either — the leaf scans commit ranges, and this checkout's `.git` is a *file* pointing at the umbrella's gitdir, which the mount does not include, so a tree-only scan would be a weaker check wearing the same name.
 
 ## Notes
 
@@ -38,6 +40,7 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 - `python` passes `--no-cache` because the mount is read-only and ruff would otherwise try to write `.ruff_cache/` into it.
 - `terraform-validate` sets `TF_DATA_DIR` per root, so `init` writes its working directory outside the read-only mount, and `-lockfile=readonly` uses the committed lockfiles. Provider and lint-plugin downloads persist in named volumes (`tf-plugins`, `tflint-plugins`), so only the first run pays for them — the repo mount stays read-only and the caches never touch the tree. Child modules are validated **through the root that calls them** — `init` resolves and compiles them — so there is no per-module pass and no module lockfile to keep in step. `terraform-lint` runs `--init` at the repo root, where `.tflint.hcl` auto-loads, and its plugin cache lands under `$HOME` inside the container.
 - `terraform-security` runs `--quiet --soft-fail`, so Checkov findings are **informational** until the audit backlog is cleared.
+- `pip-audit` and `npm-audit` are the only surfaces that need the **network**: they resolve the manifest against PyPI / the npm registry and read the advisory API. The `pip-audit` image is `python:3.12-slim` and the `npm-audit` one is `node:22-slim`, matching `setup-python` / `setup-node` in CI. Both are diff-gated like everything else, so only a commit touching `requirements*.txt` / `pyproject.toml` or `package*.json` pays for them.
 - Needs podman and `podman-compose` on the host. The GitHub workflows stay the authoritative gate.
 
 > [!WARNING]
