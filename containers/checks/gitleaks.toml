@@ -1,25 +1,3 @@
-# Local-only config for the `gitleaks` compose service.
-#
-# WHY A CONFIG AT ALL, AND WHY NOT .gitignore: `gitleaks dir` has no ignore-file
-# support — the CLI exposes only `--baseline-path`, `--gitleaks-ignore-path`
-# (fingerprints) and config allowlists — so .gitignore cannot be handed to it. In the
-# checkout this service usually runs in, `.git` is a *file* pointing at the umbrella's
-# gitdir, which the compose mount does not include, so `gitleaks git` has nothing to
-# walk and the scanner reads the whole working tree instead. That tree contains two
-# gitignored artifact classes that legitimately look like secrets:
-#
-#   certs/                 per-project mkcert TLS keys (gitignored, never committed)
-#   backup-*.tfstate.json  local Terraform state backups (gitignored, never committed)
-#
-# The two patterns below mirror .gitignore lines 45 and 51. Neither file is part of the
-# repository, so both are allowlisted rather than blocking every commit.
-#
-# This does NOT weaken the real gate: commits are covered server-side by GitHub secret
-# scanning (with push protection) and by GitGuardian, and both see only pushed content
-# — a force-added state file still trips them.
-#
-# Everything else keeps gitleaks' default rule set.
-
 [extend]
 useDefault = true
 
