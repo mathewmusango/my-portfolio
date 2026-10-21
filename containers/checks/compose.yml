@@ -106,6 +106,17 @@ services:
       - ../..:/repo:ro
     command: ["-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]
 
+  # Tree scan, not history: `.git` is a file here (umbrella gitdir), so a history walk
+  # has nothing to read. The allowlist in gitleaks.toml covers the gitignored local
+  # artifacts. Commits are gated server-side by GitHub + GitGuardian, not by CI.
+  gitleaks:
+    image: ghcr.io/gitleaks/gitleaks:latest
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+      - ./gitleaks.toml:/etc/gitleaks/gitleaks.toml:ro
+    command: ["dir", ".", "--config", "/etc/gitleaks/gitleaks.toml", "--no-banner", "-v", "--redact"]
+
 volumes:
   tf-plugins:
   tflint-plugins:

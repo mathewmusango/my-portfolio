@@ -1,0 +1,26 @@
+# Local-only config for the `gitleaks` compose service.
+#
+# The driver scans the working tree (`gitleaks dir`) rather than git history: in this
+# checkout `.git` is a *file* pointing at the umbrella's gitdir, which the compose
+# mount does not include, so `gitleaks git` has nothing to walk. A tree scan also sees
+# gitignored local artifacts, and two of them legitimately look like secrets:
+#
+#   certs/                 per-project mkcert TLS keys (gitignored, never committed)
+#   backup-*.tfstate.json  local Terraform state backups (gitignored, never committed)
+#
+# Neither is part of the repository, so both are allowlisted here rather than blocking
+# every commit. This does NOT weaken the real gate: commits are covered server-side by
+# GitHub secret scanning (with push protection) and by GitGuardian, and both see only
+# pushed content — a force-added state file still trips them.
+#
+# Everything else keeps gitleaks' default rule set.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "local, gitignored artifacts that are not part of the repository"
+paths = [
+  '''certs/''',
+  '''backup-.*\.tfstate\.json$''',
+]

@@ -9,7 +9,7 @@ scripts/checks/local.sh --full -v              # …and list the files each surf
 scripts/checks/local.sh shell terraform-fmt    # selected surfaces only
 ```
 
-Diff-gated by default: changed files come from `origin/main...HEAD` plus the staged and unstaged working tree, and a surface with no matching files **skips** rather than runs — the same skip-model CI uses, so an irrelevant surface never blocks a commit. Each selected surface runs as a service from [`containers/checks/`](../../containers/checks/README.md), where the images and commands are declared. The exit code is 0 only if every surface that ran passed.
+Diff-gated by default: changed files come from `origin/main...HEAD` plus the staged and unstaged working tree, and a surface with no matching files **skips** rather than runs — the same skip-model CI uses, so an irrelevant surface never blocks a commit. **`gitleaks` is the one exception** — a secret has no changed-file set, so it runs on every invocation. Each selected surface runs as a service from [`containers/checks/`](../../containers/checks/README.md), where the images and commands are declared. The exit code is 0 only if every surface that ran passed.
 
 ## Surfaces
 
@@ -26,6 +26,7 @@ Diff-gated by default: changed files come from `origin/main...HEAD` plus the sta
 | `terraform-security` | `checkov` over `terraform/` — informational | `checkov -d terraform --quiet --soft-fail` |
 | `pip-audit` | `pip-audit -r requirements.txt` — the gate behind `pip-audit / audit` | `pip-audit -r requirements.txt` |
 | `npm-audit` | `npm audit --package-lock-only --audit-level=high` — the gate behind `npm-audit / audit` | same |
+| `gitleaks` | `gitleaks dir .` over the working tree, default rules plus a local allowlist — **ungated**, and local only (CI uses GitHub secret scanning + GitGuardian) | `gitleaks dir .` |
 
 The third column is a convenience, not a proof: it uses the host's tool versions rather than the container's, so a pass there says nothing about CI.
 

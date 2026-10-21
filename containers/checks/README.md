@@ -29,8 +29,11 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 | `terraform-security` | `bridgecrewio/checkov` 3.3.15 | `checkov -d terraform --framework terraform --quiet --soft-fail` |
 | `pip-audit` | `python:3.12-slim` | `pip-audit -r requirements.txt` — the leaf's pinned `pip-audit==2.10.1`, the same command CI runs |
 | `npm-audit` | `node:22-slim` | `npm audit --package-lock-only --audit-level=high` — the leaf's command, dev dependencies deliberately included |
+| `gitleaks` | `ghcr.io/gitleaks/gitleaks` | `gitleaks dir .` against the default rules plus [`gitleaks.toml`](gitleaks.toml)'s local allowlist |
 
 `deps` has no service on purpose: `dependency-review` reads a pull-request diff and has no local form.
+
+`gitleaks` is now the mirror image — **local only**. The CI leaf was dropped in favour of GitHub's secret scanning (with push protection, which blocks before a commit lands) and GitGuardian, so this service is a pre-commit net rather than a CI parity check. It scans the **working tree** (`gitleaks dir`), not history: this checkout's `.git` is a *file* pointing at the umbrella's gitdir, which the mount does not include. That is also why [`gitleaks.toml`](gitleaks.toml) allowlists two gitignored artifact classes — mkcert keys under `certs/` and local `backup-*.tfstate.json` — which are not part of the repository and would otherwise block every commit. The server-side scanners are unaffected: they see pushed content.
 
 ## Notes
 
@@ -41,6 +44,7 @@ podman-compose -f containers/checks/compose.yml run --rm shell
 - `terraform-validate` sets `TF_DATA_DIR` per root, so `init` writes its working directory outside the read-only mount, and `-lockfile=readonly` uses the committed lockfiles. Provider and lint-plugin downloads persist in named volumes (`tf-plugins`, `tflint-plugins`), so only the first run pays for them — the repo mount stays read-only and the caches never touch the tree. Child modules are validated **through the root that calls them** — `init` resolves and compiles them — so there is no per-module pass and no module lockfile to keep in step. `terraform-lint` runs `--init` at the repo root, where `.tflint.hcl` auto-loads, and its plugin cache lands under `$HOME` inside the container.
 - `terraform-security` runs `--quiet --soft-fail`, so Checkov findings are **informational** until the audit backlog is cleared.
 - `pip-audit` and `npm-audit` are the only surfaces that need the **network**: they resolve the manifest against PyPI / the npm registry and read the advisory API. The `pip-audit` image is `python:3.12-slim` and the `npm-audit` one is `node:22-slim`, matching `setup-python` / `setup-node` in CI. Both are diff-gated like everything else, so only a commit touching `requirements*.txt` / `pyproject.toml` or `package*.json` pays for them.
+- `gitleaks` is the only **ungated** surface: a leaked secret has no changed-file set, and the rule set moves independently of the tree. It runs on every invocation and takes under a second.
 - Needs podman and `podman-compose` on the host. The GitHub workflows stay the authoritative gate.
 
 > [!WARNING]
