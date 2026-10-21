@@ -31,7 +31,7 @@ jobs:
           if [ "$EVENT" = "push" ] && [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
             build=false
             if git diff --name-only "$BEFORE" "$GITHUB_SHA" >/tmp/changed.txt; then
-              SITE_PATHS='^(docs/|mkdocs\.yml$|overrides/|requirements\.txt$|package(-lock)?\.json$|scripts/(site_metrics_hook|releases_hook|mkdocs_vendor)\.py$|\.github/actions/build-site/)'
+              SITE_PATHS='^(docs/|mkdocs\.yml$|overrides/|requirements\.txt$|package(-lock)?\.json$|scripts/(site_metrics_hook|releases_hook|mkdocs_vendor)\.py$|scripts/vendor\.json$|\.github/actions/build-site/)'
               if grep -qE "$SITE_PATHS" /tmp/changed.txt; then
                 build=true
               elif grep -qx 'CHANGELOG.md' /tmp/changed.txt; then

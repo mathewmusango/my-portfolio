@@ -24,5 +24,5 @@ scripts/dev.sh stop       # stop the container
 - [`bootstrap_aws.sh`](bootstrap_aws.sh) — one-command AWS bootstrap per environment: OIDC role, state bucket, lock table, deploy policies
 - [`site_metrics_hook.py`](site_metrics_hook.py) — MkDocs build hook filling the Site Metrics facts
 - [`releases_hook.py`](releases_hook.py) — MkDocs build hook generating the release rows from `CHANGELOG.md`
-- [`mkdocs_vendor.py`](mkdocs_vendor.py) — MkDocs build hook copying the minified JavaScript bundles from `node_modules` into the site
+- [`mkdocs_vendor.py`](mkdocs_vendor.py) — MkDocs build hook copying the minified JavaScript bundles from `node_modules` into the site; the source→destination map it reads is [`vendor.json`](vendor.json), which the dev image also uses to copy just those bundles out of `node_modules`
 - [`checks/`](checks/README.md) — the local check driver, mirroring CI
