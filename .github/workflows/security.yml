@@ -1,4 +1,4 @@
-name: security
+name: "CI: Security"
 
 on:
   pull_request:
@@ -10,8 +10,12 @@ permissions:
 
 jobs:
   secrets:
-    uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@5a9c6ac6ab5285996efab6bef73a1b9c4978198d # v2026.1009.1321Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-gitleaks.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
   deps:
-    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@5a9c6ac6ab5285996efab6bef73a1b9c4978198d # v2026.1009.1321Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-deps.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
   terraform:
-    uses: mathewmusango/my-workflows/.github/workflows/security-terraform.yml@5a9c6ac6ab5285996efab6bef73a1b9c4978198d # v2026.1009.1321Z
+    uses: mathewmusango/my-workflows/.github/workflows/security-terraform.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
+  pip-audit:
+    uses: mathewmusango/my-workflows/.github/workflows/security-pip-audit.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
+  npm-audit:
+    uses: mathewmusango/my-workflows/.github/workflows/security-npm-audit.yml@263cd61e90a8f53f310f25e81d070b8f0a39b0ea # v2026.1021.1432Z
