@@ -12,7 +12,11 @@ else
   BOLD=""; GREEN=""; YELLOW=""; RED=""; NC=""
 fi
 
-ALL="shell python pip-audit yaml yaml-syntax js npm-audit terraform-fmt terraform-validate terraform-lint terraform-security"
+# `gitleaks` is deliberately ungated: a leaked secret has no "changed file set", and its
+# verdict comes from a rule set that moves independently of the tree. It is also the one
+# surface CI no longer runs — commits are covered server-side by GitHub's secret scanning
+# (with push protection) and GitGuardian, so this is a local pre-commit net only.
+ALL="shell python pip-audit yaml yaml-syntax js npm-audit terraform-fmt terraform-validate terraform-lint terraform-security gitleaks"
 MODE="diff"
 VERBOSE=0
 SURFACES=""
@@ -76,6 +80,7 @@ surface_touched() {
 
 surface_files() {
   re="$(surface_glob "$1")"
+  [ -n "$re" ] || return 0
   if [ "$MODE" = "full" ]; then
     find . -path './site' -prune -o -path './.git' -prune -o -type f -print 2>/dev/null | sed 's#^./##' | grep -E "$re" | sort
   else

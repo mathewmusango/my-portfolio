@@ -106,6 +106,23 @@ services:
       - ../..:/repo:ro
     command: ["-d", "terraform", "--framework", "terraform", "--quiet", "--soft-fail"]
 
+  gitleaks:
+    image: ghcr.io/gitleaks/gitleaks:latest
+    working_dir: /repo
+    volumes:
+      - ../..:/repo:ro
+      - ./gitleaks.toml:/etc/gitleaks/gitleaks.toml:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        if [ -d .git ]; then
+          echo "gitleaks: scanning all commits"
+          exec gitleaks git . --log-opts=--all --config /etc/gitleaks/gitleaks.toml --no-banner -v --redact
+        else
+          echo "gitleaks: .git is a file (umbrella gitdir) — scanning the whole working tree"
+          exec gitleaks dir . --config /etc/gitleaks/gitleaks.toml --no-banner -v --redact
+        fi
+
 volumes:
   tf-plugins:
   tflint-plugins:
