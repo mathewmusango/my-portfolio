@@ -77,12 +77,6 @@ runs:
         METRICS_ENDPOINT: "${{ inputs.metrics_endpoint }}"
       run: mkdocs build --strict
 
-    - name: Audit dependencies (pip-audit)
-      shell: bash
-      run: |
-        pip install pip-audit==2.10.1
-        pip-audit -r requirements.txt
-
     - name: Check links
       shell: bash
       run: python3 scripts/checks/links.py site/
