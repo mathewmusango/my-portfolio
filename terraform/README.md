@@ -102,12 +102,11 @@ deleting them. `prevent_destroy` cannot be driven by a variable, so it is hard-c
 
 > Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
 > `terraform/**`. It runs two jobs (`site`, `metrics`), each on the environment resolved by a
-> `detect` job that declares `environment:` from it, so a prod apply would sit behind the required
+> `detect` job that declares `environment:` from it, so a prod apply sits behind the required
 > reviewer and a prod run must itself come from a `v*` tag ref. A manual dispatch may also target a
 > single root (`stack`: `both` · `site` · `metrics`, default `both`), so one stack can be re-applied
-> without the other. **Apply is currently manual**
-> (`workflow_dispatch`) pending the one-time state migration; enabling auto-apply (main→staging,
-> `v*` tag→prod) is a one-line follow-up in `detect`.
+> without the other. **Apply is automatic**: a push to `main` applies staging, a `v*` tag applies
+> prod behind the reviewer, and `workflow_dispatch` remains for a plan-only run or a targeted apply.
 > Local dev applies against Ministack; real-AWS applies happen via the workflow (OIDC) or the
 > CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, both jobs declaring
 > `environment:` and reading their role ARN from it).
@@ -210,10 +209,11 @@ just `POST`s to it, allowed by CORS from the site origin.
 ### Applying to real AWS
 
 Real-AWS applies run through GitHub Actions (`terraform.yml`), via OIDC — no keys in workflows.
-**Apply is currently manual** (`workflow_dispatch` with `action: apply`) while the split into two
-roots is migrated; a follow-up flips `detect` to auto-apply (main→staging, `v*` tag→prod behind the
-`prod` reviewer). Manual CLI applies exist only for rare out-of-band work (e.g., a catch-up) and are
-documented in the project's **private runbook** — intentionally not in this public repo.
+**Apply is automatic** — a push to `main` applies staging and a `v*` tag applies prod behind the
+`prod` reviewer; the two-root split and its state migration are **done**, and both environments
+re-plan clean. `workflow_dispatch` remains for a plan-only run or a single-root apply. Manual CLI
+applies exist only for rare out-of-band work (e.g., a catch-up) and are documented in the project's
+**private runbook** — intentionally not in this public repo.
 
 CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the geo headers.
 
@@ -361,9 +361,9 @@ still applies.
 - **Test vs prod**: local dev applies with `environment = "test"` (see each
   root's `local.tfvars`) — resource names and the table are prefixed, so both can
   coexist. **Terraform runs via GitHub Actions** — `terraform.yml` plans on
-  `terraform/**` changes; **apply is manual** (`workflow_dispatch`) until the two-root
-  state migration lands, after which `detect` flips to auto-apply (see the map above for
-  roles/secrets).
+  `terraform/**` changes; **apply is automatic** (a push to `main` applies staging, a
+  `v*` tag applies prod behind the `prod` reviewer), and a dispatch can plan only or
+  target one root (see the map above for roles/secrets).
 
 ## TFLint
 
