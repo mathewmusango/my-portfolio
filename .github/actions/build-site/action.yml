@@ -1,5 +1,5 @@
 name: Build site
-description: Install dependencies, build strict, and run the site checks (pip-audit, links, CSS).
+description: Install dependencies, build strict, and run the site checks (links, translations, CSS).
 
 inputs:
   site_url:
