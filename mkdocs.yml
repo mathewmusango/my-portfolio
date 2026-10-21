@@ -115,12 +115,12 @@ extra_css:
 exclude_docs: |
   includes/*
 
-# Build hook — keeps the Site Metrics page counts computed at build time
-# (scripts/site_metrics_hook.py replaces {{pages_*}}/{{pct_*}} tokens).
+# Build hooks — compute the Site Metrics counts and the release rows, and copy
+# the vendored JavaScript out of node_modules.
 hooks:
-  - scripts/site_metrics_hook.py
-  - scripts/releases_hook.py
-  - scripts/mkdocs_vendor.py
+  - scripts/hooks/site_metrics.py
+  - scripts/hooks/releases.py
+  - scripts/hooks/vendor.py
 
 # Custom error pages + the full release archive are built but intentionally
 # not in the nav (the archive is reached from the Site Atlas landing page).

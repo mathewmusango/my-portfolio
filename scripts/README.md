@@ -21,8 +21,6 @@ scripts/dev.sh stop       # stop the container
 
 - [`dev.sh`](dev.sh) — the dev container lifecycle driver
 - [`serve.py`](serve.py) — the HTTPS-capable MkDocs dev server the container runs, with `/health`
-- [`bootstrap_aws.sh`](bootstrap_aws.sh) — one-command AWS bootstrap per environment: OIDC role, state bucket, lock table, deploy policies
-- [`site_metrics_hook.py`](site_metrics_hook.py) — MkDocs build hook filling the Site Metrics facts
-- [`releases_hook.py`](releases_hook.py) — MkDocs build hook generating the release rows from `CHANGELOG.md`
-- [`mkdocs_vendor.py`](mkdocs_vendor.py) — MkDocs build hook copying the minified JavaScript bundles from `node_modules` into the site; the source→destination map it reads is [`vendor.json`](vendor.json), which the dev image also uses to copy just those bundles out of `node_modules`
+- [`bootstraps/aws.sh`](bootstraps/aws.sh) — one-command AWS bootstrap per environment: OIDC role, state bucket, lock table, deploy policies
+- [`hooks/`](hooks/) — the MkDocs build hooks `mkdocs.yml` loads: [`site_metrics.py`](hooks/site_metrics.py) fills the Site Metrics facts, [`releases.py`](hooks/releases.py) generates the release rows from `CHANGELOG.md`, and [`vendor.py`](hooks/vendor.py) copies the minified JavaScript bundles from `node_modules` into the site. `vendor.py` reads [`vendor.json`](hooks/vendor.json), the source→destination map the dev image also uses to copy just those bundles out of `node_modules`
 - [`checks/`](checks/README.md) — the local check driver, mirroring CI

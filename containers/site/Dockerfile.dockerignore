@@ -3,7 +3,7 @@
 containers/
 terraform/
 scripts/*
-!scripts/vendor.json
+!scripts/hooks/
 site/
 certs/
 **/__pycache__/
