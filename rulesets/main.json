@@ -82,10 +82,6 @@
             "integration_id": 15368
           },
           {
-            "context": "secrets / gitleaks",
-            "integration_id": 15368
-          },
-          {
             "context": "deps / dependency-review",
             "integration_id": 15368
           },

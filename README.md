@@ -183,7 +183,7 @@ flowchart LR
 - **Checks** — three workflows, each named for the group it reports, all calling the shared
   reusables in [`mathewmusango/my-workflows`](https://github.com/mathewmusango/my-workflows)
   (pinned by SHA): `CI: Checks` (`checks.yml` — js, python, shell, terraform, yaml, docker),
-  `CI: Security` (`security.yml` — gitleaks, dependency review, checkov, and the two required
+  `CI: Security` (`security.yml` — dependency review, checkov, and the two required
   dependency audits) and `CI: CodeQL` (`codeql.yml`, which keeps its own `push` trigger because
   code-scanning results are ref-scoped). Each reusable self-gates on changed files, so an untouched
   surface **skips and reports success** and the required checks never block unrelated PRs.
