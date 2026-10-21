@@ -1,14 +1,11 @@
+import json
 from pathlib import Path
 
 from mkdocs.structure.files import File
 
-VENDOR = {
-    "node_modules/mermaid/dist/mermaid.min.js": "assets/javascripts/mermaid.min.js",
-    "node_modules/pdfjs-dist/build/pdf.min.mjs": "assets/js/pdf.min.js",
-    "node_modules/pdfjs-dist/build/pdf.worker.min.mjs": "assets/js/pdf.worker.min.js",
-    "node_modules/tablesort/dist/tablesort.min.js": "assets/js/tablesort.min.js",
-    "node_modules/tablesort/dist/sorts/tablesort.dotsep.min.js": "assets/js/tablesort.dotsep.min.js",
-}
+# Source -> destination, shared with the dev image's Dockerfile, which copies
+# only these files out of node_modules.
+VENDOR = json.loads(Path(__file__).with_name("vendor.json").read_text(encoding="utf-8"))
 
 
 def on_files(files, config):
