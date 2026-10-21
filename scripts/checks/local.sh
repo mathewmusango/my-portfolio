@@ -12,10 +12,6 @@ else
   BOLD=""; GREEN=""; YELLOW=""; RED=""; NC=""
 fi
 
-# `gitleaks` is deliberately ungated: a leaked secret has no "changed file set", and its
-# verdict comes from a rule set that moves independently of the tree. It is also the one
-# surface CI no longer runs — commits are covered server-side by GitHub's secret scanning
-# (with push protection) and GitGuardian, so this is a local pre-commit net only.
 ALL="shell python pip-audit yaml yaml-syntax js npm-audit terraform-fmt terraform-validate terraform-lint terraform-security gitleaks"
 MODE="diff"
 VERBOSE=0
