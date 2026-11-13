@@ -5,7 +5,6 @@
 [![codeql](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/codeql.yml?branch=main&label=codeql)](https://github.com/mathewmusango/my-portfolio/actions/workflows/codeql.yml)
 [![dependabot](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/dependabot%2Fdependabot-updates?branch=main&label=dependabot)](https://github.com/mathewmusango/my-portfolio/actions/workflows/dependabot/dependabot-updates)
 [![web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
-[![release](https://img.shields.io/github/v/release/mathewmusango/my-portfolio?label=release)](https://github.com/mathewmusango/my-portfolio/releases)
 [![tag](https://img.shields.io/github/v/tag/mathewmusango/my-portfolio?label=tag)](https://github.com/mathewmusango/my-portfolio/tags)
 [![license](https://img.shields.io/github/license/mathewmusango/my-portfolio?label=license)](https://github.com/mathewmusango/my-portfolio/blob/main/LICENSE)
 
