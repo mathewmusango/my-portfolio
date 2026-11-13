@@ -1,5 +1,6 @@
 # My Portfolio
 
+[![Semgrep](https://github.com/mathewmusango/my-portfolio/actions/workflows/semgrep.yml/badge.svg?branch=main)](https://github.com/mathewmusango/my-portfolio/actions/workflows/semgrep.yml)
 [![Email](https://img.shields.io/badge/email-join-blue.svg)](mailto:musangomathew@gmail.com)
 [![Web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
 [![My Portfolio](https://img.shields.io/github/v/release/mathewmusango/my-portfolio)](https://github.com/mathewmusango/my-portfolio/releases)
