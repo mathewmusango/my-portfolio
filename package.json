@@ -5,8 +5,8 @@
   "type": "module",
   "description": "JavaScript dependencies for the site; npm ci installs the bundles the MkDocs hook copies from node_modules.",
   "devDependencies": {
-    "mermaid": "12.2.0",
-    "pdfjs-dist": "6.4.299",
+    "mermaid": "12.3.0",
+    "pdfjs-dist": "6.5.438",
     "tablesort": "5.7.1"
   },
   "overrides": {
