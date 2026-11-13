@@ -11,14 +11,14 @@ permissions:
 
 jobs:
   js:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-js.yml@b3e68febda512c508d6cf7fd934f32a9d1cb35c9 # v2026.1113.0738Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-js.yml@d00fec710bc056ae055e10782eae126b7a1d0b61 # v2026.1113.1341Z
   python:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-python.yml@b3e68febda512c508d6cf7fd934f32a9d1cb35c9 # v2026.1113.0738Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-python.yml@d00fec710bc056ae055e10782eae126b7a1d0b61 # v2026.1113.1341Z
   shell:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@b3e68febda512c508d6cf7fd934f32a9d1cb35c9 # v2026.1113.0738Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-shell.yml@d00fec710bc056ae055e10782eae126b7a1d0b61 # v2026.1113.1341Z
   terraform:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@b3e68febda512c508d6cf7fd934f32a9d1cb35c9 # v2026.1113.0738Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-terraform.yml@d00fec710bc056ae055e10782eae126b7a1d0b61 # v2026.1113.1341Z
   yaml:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@b3e68febda512c508d6cf7fd934f32a9d1cb35c9 # v2026.1113.0738Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-yaml.yml@d00fec710bc056ae055e10782eae126b7a1d0b61 # v2026.1113.1341Z
   docker:
-    uses: mathewmusango/my-workflows/.github/workflows/checks-docker.yml@b3e68febda512c508d6cf7fd934f32a9d1cb35c9 # v2026.1113.0738Z
+    uses: mathewmusango/my-workflows/.github/workflows/checks-docker.yml@d00fec710bc056ae055e10782eae126b7a1d0b61 # v2026.1113.1341Z
