@@ -250,7 +250,7 @@ owes the full implementation (resources, event schema, security, local dev):
 
 - [`README.md`](README.md) — this file: the system view (what the repo is, architecture, running it locally).
 - [`terraform/README.md`](terraform/README.md) — infrastructure implementation (site + metrics stacks, event model, security, local AWS emulation).
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — the short contribution note (one-person project).
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how a change becomes a merge (one-person project).
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting.
 - [`CHANGELOG.md`](CHANGELOG.md) — release history.
 - [`rulesets/`](rulesets/) — branch/tag rulesets: [`README`](rulesets/README.md) (what they do) · `main.json`/`tags.json` (as-code configs) · `main.md`/`tags.md` (verification records).
