@@ -31,7 +31,7 @@ tags:
 作品集站点很小；但围绕它的流程不必小。这个项目刻意把生产软件应有的实践用在一个
 公开仓库、作品集规模之上 — 在这里每一项权衡都清晰可见：
 
-- **一切按真实软件发布** — PR、必需检查、审批、发布。
+- **一切按真实软件发布** — PR、必需检查、签名提交、发布。
 - **每个环境都是真实环境** — dev、staging、prod。
 - **安全是设计出来的** — 没有长期凭证、私有存储、最小权限。
 - **隐私是架构属性** — 访客分析只采集地理信息，绝不采集 IP。
@@ -122,13 +122,14 @@ Ruleset 即代码，保护两个关键的 ref
 
 | Ref | 保护 |
 |---|---|
-| `main` | 仅 PR：1 个审批、squash/rebase、过期评审作废、全部 10 项必需检查、禁止 force-push、**无绕过 — 包括所有者** |
+| `main` | 仅 PR：仅 squash、全部十四项必需检查且分支为最新、签名提交、禁止 force-push、**无绕过 — 包括所有者** |
 | `v*` 标签 | 仅维护者创建；要求 `build` 通过；创建后不可变 |
 
 执行发生在 push 时且经过验证 — 拒绝记录与配置存放在 `rulesets/main.md` 和
 `rulesets/tags.md` 中。PR 携带映射到精选集合的标签（`ci` · `infra` ·
-`security` · `governance` · `dependencies`），并由第二个 GitHub 账户以普通协作者
-身份评审 — 所有者不会合入任何未经批准的内容。Issue 模板强制七部分结构
+`security` · `governance` · `dependencies`），检查本身就是评审：ruleset 不收取任何
+审批 — 单人维护者无法批准自己的 PR — 因此十四项检查加上最新的分支，才是提交进入
+`main` 之前的屏障。Issue 模板强制七部分结构
 （[#15](https://github.com/mathewmusango/my-portfolio/pull/15){ target="_blank" rel="noopener" }、
 [#18](https://github.com/mathewmusango/my-portfolio/pull/18){ target="_blank" rel="noopener" }）。
 
