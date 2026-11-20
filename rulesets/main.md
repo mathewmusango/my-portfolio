@@ -2,13 +2,13 @@
 
 **Status:** 🟢 applied — live on `refs/heads/main` · **Config:** [`main.json`](main.json)
 
-**Purpose.** `main` binds every actor: pull requests only, one approval, squash or rebase, fourteen shared-check contexts, no bypass.
+**Purpose.** `main` binds every actor: pull requests only, squash only, fourteen shared-check contexts, no bypass — the checks are the review.
 
 | Field | Value |
 | --- | --- |
 | Enforcement | `active` |
-| Merge methods | `squash` · `rebase` |
-| Approvals | 1 · stale reviews dismissed on push · review threads resolved |
+| Merge methods | `squash` |
+| Approvals | none — the required contexts are the review · review threads still resolve |
 | Bypass actors | none |
 | Required checks | the fourteen contexts below, strict |
 | Also | `creation` · `deletion` · `non_fast_forward` · `required_signatures` · `code_scanning` |
@@ -33,6 +33,8 @@
 | `npm-audit / audit` | the `npm-audit` caller job — CVEs in `package-lock.json`, `--audit-level=high`, dev dependencies included on purpose |
 
 **Why these fourteen.** `build` is this repository's own gate; the rest are what [`checks.yml`](../.github/workflows/checks.yml) and [`security.yml`](../.github/workflows/security.yml) report — shell, js, python, docker, terraform, yaml, dependency review and the two dependency audits. Each shared leaf self-gates on changed files, so a surface with nothing to check skips and still reports success, which is what lets all fourteen be required at once.
+
+**No approval count, and why that is not the weaker gate (2026-11-20).** A solo maintainer cannot approve their own pull request, so `required_approving_review_count: 1` did not add a second opinion — it added a second account, and every merge waited on it. Nothing that judges a change moved: fourteen contexts, an up-to-date branch, signed commits, code scanning, squash-only history, and still an empty bypass list, so a pull request remains the only way onto `main`. `dismiss_stale_reviews_on_push` went with the approval, because at zero there is no review to dismiss. The shape now matches `my-workflows`, the other public repository here.
 
 **Secrets are not a CI context here (2026-10-21).** The library dropped its gitleaks leaf (`my-workflows#24`): GitHub secret scanning with push protection already blocks a credential before the commit lands, and GitGuardian reports on every push, so a third scanner added a required context without adding detection. The local pre-commit `gitleaks` service ([`containers/checks`](../containers/checks/README.md)) remains the earlier net — it warns while you work, which the server-side scanners cannot.
 

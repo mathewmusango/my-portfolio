@@ -36,7 +36,7 @@ serlo. Este proyecto aplica deliberadamente las prácticas que se esperan del
 software de producción — en un repositorio público, a escala de portafolio,
 donde cada decisión es visible:
 
-- **Todo se publica como software real** — PRs, verificaciones obligatorias, aprobaciones, releases.
+- **Todo se publica como software real** — PRs, verificaciones obligatorias, commits firmados, releases.
 - **Cada entorno es un entorno real** — dev, staging, prod.
 - **La seguridad está diseñada desde el inicio** — sin credenciales de larga duración, almacenamiento privado, mínimo privilegio.
 - **La privacidad es una propiedad arquitectónica** — la analítica de visitas recoge solo geo, nunca IPs.
@@ -141,15 +141,17 @@ Rulesets-como-código protegen las dos refs que importan
 
 | Ref | Protección |
 |---|---|
-| `main` | Solo PR: 1 aprobación, squash/rebase, revisiones obsoletas descartadas, las 10 verificaciones obligatorias, sin force-push, **sin bypass — el propietario incluido** |
+| `main` | Solo PR: solo squash, las catorce verificaciones obligatorias sobre una rama al día, commits firmados, sin force-push, **sin bypass — el propietario incluido** |
 | etiquetas `v*` | Creadas solo por el mantenedor; `build` en verde requerido; inmutables una vez creadas |
 
 La aplicación es en el momento del push y está verificada — los registros de
 rechazo viven junto a las configuraciones en `rulesets/main.md` y
 `rulesets/tags.md`. Los PRs llevan etiquetas de un conjunto curado (`ci` ·
-`infra` · `security` · `governance` · `dependencies`), y una segunda cuenta de
-GitHub revisa como colaboradora normal — el propietario no fusiona nada sin
-aprobar. Las plantillas de issues imponen una estructura de siete partes
+`infra` · `security` · `governance` · `dependencies`), y las verificaciones son
+la revisión: el ruleset no recoge ninguna aprobación, porque un mantenedor en
+solitario no puede aprobar su propio PR, así que las catorce verificaciones y una
+rama al día son lo que separa un commit de `main`. Las plantillas de issues imponen
+una estructura de siete partes
 ([#15](https://github.com/mathewmusango/my-portfolio/pull/15){ target="_blank" rel="noopener" },
 [#18](https://github.com/mathewmusango/my-portfolio/pull/18){ target="_blank" rel="noopener" }).
 

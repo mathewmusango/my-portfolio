@@ -34,7 +34,7 @@ A portfolio site is small; the process around it does not have to be. This
 project deliberately applies the practices expected of production software — on
 a public repository, at portfolio scale, where every trade-off is visible:
 
-- **Everything ships like real software** — PRs, required checks, approvals, releases.
+- **Everything ships like real software** — PRs, required checks, signed commits, releases.
 - **Every environment is a real environment** — dev, staging, prod.
 - **Security is designed in** — no long-lived credentials, private storage, least privilege.
 - **Privacy is an architectural property** — visitor analytics collect geo only, never IPs.
@@ -135,14 +135,16 @@ Rulesets-as-code protect the two refs that matter
 
 | Ref | Protection |
 |---|---|
-| `main` | PR-only: 1 approval, squash/rebase, stale reviews dismissed, all 10 required checks, no force-push, **no bypass — owner included** |
+| `main` | PR-only: squash-only, all fourteen required checks on an up-to-date branch, signed commits, no force-push, **no bypass — owner included** |
 | `v*` tags | Minted only by the maintainer; green `build` required; immutable once created |
 
 Enforcement is push-time and verified — rejection records sit beside the
 configs in `rulesets/main.md` and `rulesets/tags.md`. PRs carry labels mapped to
 a curated set (`ci` · `infra` · `security` · `governance` · `dependencies`), and
-a second GitHub account reviews as a normal collaborator — the owner merges
-nothing unapproved. Issue templates enforce a seven-part structure
+the checks are the review: the ruleset collects no approval, because a solo
+maintainer cannot approve their own pull request, so the fourteen contexts and
+an up-to-date branch are what stand between a commit and `main`. Issue templates
+enforce a seven-part structure
 ([#15](https://github.com/mathewmusango/my-portfolio/pull/15){ target="_blank" rel="noopener" },
 [#18](https://github.com/mathewmusango/my-portfolio/pull/18){ target="_blank" rel="noopener" }).
 
