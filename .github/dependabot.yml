@@ -104,6 +104,9 @@ updates:
     open-pull-requests-limit: 5
     cooldown:
       default-days: 7
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
     labels:
       - "dependencies"
     commit-message:
