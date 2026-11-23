@@ -30,6 +30,9 @@ sean reales, y compartidos.
 - **La imagen:** [`ghcr.io/mathewmusango/emuplane`](https://github.com/mathewmusango/emuplane/pkgs/container/emuplane)
 - **La licencia:** [MIT](https://github.com/mathewmusango/emuplane/blob/main/LICENSE)
 
+![La consola de Emuplane](../../assets/img/emuplane-console.png){ loading=lazy }
+*La consola de Emuplane tras iniciar sesión — el menú de servicios, construido sobre AWS Cloudscape.*
+
 ## ¿Por qué un emulador necesita un plano de control?
 
 Los emuladores locales son genuinamente útiles: ponen S3, IAM o DynamoDB en el

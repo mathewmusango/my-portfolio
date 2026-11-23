@@ -39,6 +39,16 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--md-default-fg-color);
 }
 
+.hero-current {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--md-default-fg-color--light);
+}
+
+.hero-current a {
+  font-weight: 600;
+}
+
 /* Light-gray page background, like the reference template */
 [data-md-color-scheme="default"] {
   --md-default-bg-color: #f8f9fa;
