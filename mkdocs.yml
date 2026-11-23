@@ -259,6 +259,7 @@ extra_javascript:
   - javascripts/tablesort.js
   - assets/javascripts/mermaid.min.js
   - javascripts/diagram-zoom.js
+  - javascripts/mermaid-render.js
   - javascripts/metrics-beacon.js
   - javascripts/geo-map.js
   - javascripts/tags-grid.js

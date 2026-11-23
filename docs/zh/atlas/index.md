@@ -22,8 +22,3 @@ hide:
 - [**平台架构**](platform-architecture.md) — 交付、指标与 Terraform 控制平面图表。
 - [**站点结构**](structure.md) — 站点页面及其背后分析栈的交互式地图。
 - [**标签**](tags.md) — 按主题浏览本站。
-
-## 仓库 {#the-repository}
-
-本站以开放方式开发，从公开仓库
-[`mathewmusango/my-portfolio`](https://github.com/mathewmusango/my-portfolio){ target="_blank" rel="noopener" } 发布。
