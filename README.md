@@ -58,7 +58,7 @@ implementation is in [`terraform/README.md`](terraform/README.md).
 | --- | --- |
 | [`docs/`](docs) | the site: pages in en / es / zh, styles, scripts, assets |
 | [`mkdocs.yml`](mkdocs.yml) | the one config the local and deployed sites share |
-| [`containers/`](containers) | `site/` — the dev-server image; `checks/` — the local check driver's containers |
+| `Dockerfile` · `compose.yaml` | the MkDocs dev image and its compose service |
 | [`scripts/`](scripts) | `dev.sh`, the dev server, the MkDocs hooks, the checks and the AWS bootstrap |
 | [`terraform/`](terraform) | `bootstrap/`, `infra/{site,metrics}/` and the per-service modules |
 | [`.github/`](.github) | workflows, composite actions, issue and PR templates, dependabot |
@@ -70,13 +70,12 @@ implementation is in [`terraform/README.md`](terraform/README.md).
   projects, skills, resume.
 - [`terraform/README.md`](terraform/README.md) — the site and metrics stacks, the event
   schema, security and local AWS emulation.
-- [`containers/site/README.md`](containers/site/README.md) ·
-  [`containers/checks/README.md`](containers/checks/README.md) ·
-  [`scripts/checks/README.md`](scripts/checks/README.md) — the dev image and the checks.
+- [`scripts/README.md`](scripts/README.md) — the dev image, the tooling and the check
+  scripts CI runs.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — how a change becomes a merge.
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting.
 - [`CHANGELOG.md`](CHANGELOG.md) — release history.
-- [`rulesets/`](rulesets/README.md) — what the rulesets enforce.
+- [`rulesets/`](rulesets) — the branch and tag rulesets as JSON, with the verification records.
 
 ## License
 

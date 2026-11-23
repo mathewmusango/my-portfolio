@@ -5,11 +5,11 @@ set -eu
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 cd "$ROOT"
 
-COMPOSE="containers/site/compose.yaml"
+COMPOSE="compose.yaml"
 
 usage() {
   printf 'usage: %s {build|start|restart|stop}\n' "$0"
-  printf 'build    build the dev image from containers/site/Dockerfile\n'
+  printf 'build    build the dev image from Dockerfile\n'
   printf 'start    start the dev container, without building\n'
   printf 'restart  recreate the dev container from the compose file\n'
   printf 'stop     stop the dev container\n'

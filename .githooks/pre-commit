@@ -1,4 +1,0 @@
-#!/usr/bin/env sh
-# git pre-commit hook — run the local checks (podman-compose, diff-gated)
-# against the staged changes. Install: git config core.hooksPath .githooks
-exec "$(dirname -- "$0")/../scripts/checks/local.sh"

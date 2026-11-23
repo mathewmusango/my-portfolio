@@ -79,11 +79,11 @@ runs:
 
     - name: Check links
       shell: bash
-      run: python3 scripts/checks/links.py site/
+      run: python3 scripts/links.py site/
 
     - name: Check translations
       shell: bash
-      run: python3 scripts/checks/translations.py
+      run: python3 scripts/translations.py
 
     - name: CSS sanity check
       shell: bash

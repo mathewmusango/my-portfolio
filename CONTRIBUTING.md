@@ -36,13 +36,12 @@ red check is a refusal like any other.
 
 ## Before you push
 
-- **No secrets, no state, no keys.** They are scanned on every push, and again locally by the
-  driver in [`containers/checks`](containers/checks/README.md) before the commit exists.
+- **No secrets, no state, no keys.** GitHub secret scanning runs with push protection, so a
+  credential is refused before it lands; GitGuardian reports on every push.
 - **A page change lands in three languages.** The site is written in `docs/en`, `docs/es` and
   `docs/zh`; a change to one that skips the other two is incomplete, not smaller.
-- **The local driver mirrors the gates.** `scripts/checks/local.sh` runs the same lint, audit
-  and test invocations CI runs, gated on the files a commit actually touches, so the pull
-  request's checks are rarely the first time a change is examined.
+- **The pull request is where a change is checked.** The same surfaces run there, one
+  workflow per group, and a surface with no matching files reports success without running.
 
 ## Reporting rather than changing
 
