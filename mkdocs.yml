@@ -16,6 +16,7 @@ nav:
       - Projects:
           - Projects: projects/index.md
           - The Platform Behind This Site: projects/portfolio-platform.md
+          - "Open Source & Emuplane": projects/open-source-emuplane.md
           - Cloud & Migrations: projects/cloud-migrations.md
           - Observability & Monitoring: projects/observability.md
           - Security & Resilience: projects/security-resilience.md
@@ -187,6 +188,7 @@ plugins:
             Platform Engineering: Ingeniería de Plataformas
             Knowledge & Collaboration: Conocimiento y Colaboración
             The Platform Behind This Site: La Plataforma Detrás de Este Sitio
+            Open Source & Emuplane: Código Abierto y Emuplane
             Platform Architecture: Arquitectura de la Plataforma
         - locale: zh
           name: 中文
@@ -211,6 +213,7 @@ plugins:
             Platform Engineering: 平台工程
             Knowledge & Collaboration: 知识与协作
             The Platform Behind This Site: 本站背后的平台
+            Open Source & Emuplane: 开源与 Emuplane
             Platform Architecture: 平台架构
   - search:
       separator: '[\s\u200b\-_,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
