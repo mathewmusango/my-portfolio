@@ -75,6 +75,8 @@ A lo largo de mi carrera, he diseñado y operado plataformas empresariales que r
 
 Mi pasión está en la Ingeniería de Plataformas: crear plataformas internas que hagan la entrega de software más rápida, segura y confiable. Disfruto resolver problemas difíciles de infraestructura, automatizar trabajo repetitivo y diseñar sistemas que sigan funcionando a medida que crecen de un puñado de servicios a entornos grandes y de misión crítica.
 
+En abierto, mantengo [Emuplane](https://github.com/mathewmusango/emuplane), una consola y un plano de control para emuladores compatibles con AWS — donde aplico las mismas prácticas de entrega, seguridad y código en mi propio tiempo.
+
 </div>
 
 ### Lejos del Teclado

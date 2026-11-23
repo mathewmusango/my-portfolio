@@ -92,7 +92,7 @@ tags:
 
 ### :material-account-group: 工程领导力
 
-<p class="skill-focus"><strong>专注</strong>平台战略 · 技术路线图 · 团队领导 · 工程指导 · 基础设施治理 · 卓越运营 · 利益相关者协作 · 预算规划 · 事件领导 · 持续改进</p>
+<p class="skill-focus"><strong>专注</strong>平台战略 · 技术路线图 · 团队领导 · 工程指导 · 基础设施治理 · 卓越运营 · 利益相关者协作 · 预算规划 · 事件领导 · 持续改进 · 开源维护 · 发布工程</p>
 
 </div>
 

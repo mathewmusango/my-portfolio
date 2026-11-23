@@ -31,11 +31,11 @@ Hello, I am a Platform Engineering Manager & Infrastructure Engineer from Nairob
 
 ## Featured Project
 
-### Migration of Client Infra to AWS
+### [Open Source & Emuplane](projects/open-source-emuplane.md)
 
-<p class="stack-line"><strong>Stack:</strong> <span class="stack-tag">AWS</span><span class="stack-tag">Security Groups</span><span class="stack-tag">VPN</span><span class="stack-tag">FortiGate</span><span class="stack-tag">DR</span></p>
+<p class="stack-line"><strong>Stack:</strong> <span class="stack-tag">Python</span><span class="stack-tag">React</span><span class="stack-tag">AWS Cloudscape</span><span class="stack-tag">DynamoDB</span><span class="stack-tag">Docker</span><span class="stack-tag">GitHub Actions</span></p>
 
-Responsible for migrating client infra to AWS, including design and implementation of scalable &amp; secure cloud architecture.
+My own open-source project: a console and control plane that make an AWS-compatible emulator usable by more than one person — real accounts, logins and access keys in front of the emulator, instead of one implicit account on a laptop.
 
 [View all projects :material-rocket-launch:](projects/){ .md-button .md-button--primary }
 

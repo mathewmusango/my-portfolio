@@ -92,7 +92,7 @@ My expertise spans Platform Engineering, Cloud Infrastructure, Kubernetes, DevSe
 
 ### :material-account-group: Engineering Leadership
 
-<p class="skill-focus"><strong>Focus</strong>Platform Strategy · Technology Roadmaps · Team Leadership · Engineering Mentorship · Infrastructure Governance · Operational Excellence · Stakeholder Collaboration · Budget Planning · Incident Leadership · Continuous Improvement</p>
+<p class="skill-focus"><strong>Focus</strong>Platform Strategy · Technology Roadmaps · Team Leadership · Engineering Mentorship · Infrastructure Governance · Operational Excellence · Stakeholder Collaboration · Budget Planning · Incident Leadership · Continuous Improvement · Open-Source Maintenance · Release Engineering</p>
 
 </div>
 

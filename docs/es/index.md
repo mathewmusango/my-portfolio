@@ -31,11 +31,11 @@ Hola, soy un Gerente de Ingeniería de Plataformas e Ingeniero de Infraestructur
 
 ## Proyecto Destacado
 
-### Migración de Infraestructura de Clientes a AWS
+### [Código Abierto y Emuplane](projects/open-source-emuplane.md)
 
-<p class="stack-line"><strong>Stack:</strong> <span class="stack-tag">AWS</span><span class="stack-tag">Security Groups</span><span class="stack-tag">VPN</span><span class="stack-tag">FortiGate</span><span class="stack-tag">DR</span></p>
+<p class="stack-line"><strong>Stack:</strong> <span class="stack-tag">Python</span><span class="stack-tag">React</span><span class="stack-tag">AWS Cloudscape</span><span class="stack-tag">DynamoDB</span><span class="stack-tag">Docker</span><span class="stack-tag">GitHub Actions</span></p>
 
-Responsable de migrar la infraestructura de clientes a AWS, incluyendo el diseño e implementación de una arquitectura de nube escalable y segura.
+Mi propio proyecto de código abierto: una consola y un plano de control que hacen que un emulador compatible con AWS sea usable por más de una persona — cuentas, inicios de sesión y claves de acceso reales delante del emulador, en lugar de una única cuenta implícita en un portátil.
 
 [Ver todos los proyectos :material-rocket-launch:](projects/){ .md-button .md-button--primary }
 
