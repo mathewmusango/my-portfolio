@@ -191,6 +191,5 @@ como [cronología de versiones](../../atlas/releases/).
 
 - **[README del repositorio](https://github.com/mathewmusango/my-portfolio/blob/main/README.md){ target="_blank" rel="noopener" }** — la vista del sistema: arquitectura, ejecución local.
 - **[`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }** — implementación y justificación de la infraestructura.
-- **[`CONTRIBUTING.md`](https://github.com/mathewmusango/my-portfolio/blob/main/CONTRIBUTING.md){ target="_blank" rel="noopener" }** — cómo un cambio se convierte en una fusión.
 - **[Atlas del sitio](../../atlas/)** — cronología de versiones, etiquetas y el mapa de estructura del sitio.
 - **[GitHub Actions](https://github.com/mathewmusango/my-portfolio/actions){ target="_blank" rel="noopener" }** — el pipeline en vivo.

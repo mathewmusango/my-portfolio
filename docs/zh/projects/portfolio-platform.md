@@ -166,6 +166,5 @@ Ruleset 即代码，保护两个关键的 ref
 
 - **[仓库 README](https://github.com/mathewmusango/my-portfolio/blob/main/README.md){ target="_blank" rel="noopener" }** — 系统视图：架构、本地运行。
 - **[`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }** — 基础设施实现与依据。
-- **[`CONTRIBUTING.md`](https://github.com/mathewmusango/my-portfolio/blob/main/CONTRIBUTING.md){ target="_blank" rel="noopener" }** — 变更如何变成合并。
 - **[站点图谱](../../atlas/)** — 版本时间线、标签和站点结构图。
 - **[GitHub Actions](https://github.com/mathewmusango/my-portfolio/actions){ target="_blank" rel="noopener" }** — 实时流水线。

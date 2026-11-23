@@ -60,10 +60,8 @@ implementation is in [`terraform/README.md`](terraform/README.md).
   schema, security and local AWS emulation.
 - [`scripts/README.md`](scripts/README.md) — the dev image, the tooling and the check
   scripts CI runs.
-- [`CONTRIBUTING.md`](CONTRIBUTING.md) — how a change becomes a merge.
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting.
 - [`CHANGELOG.md`](CHANGELOG.md) — release history.
-- [`rulesets/`](rulesets) — the branch and tag rulesets as JSON, with the verification records.
 
 ## License
 
