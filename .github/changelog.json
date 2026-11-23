@@ -1,0 +1,24 @@
+{
+  "sections": [
+    { "title": "Added", "labels": ["enhancement", "feature", "added"] },
+    { "title": "Changed", "labels": ["improvement", "changed", "ci", "infra", "platform", "dependencies", "github-actions"] },
+    { "title": "Deprecated", "labels": ["deprecated"] },
+    { "title": "Removed", "labels": ["removed"] },
+    { "title": "Fixed", "labels": ["bug", "fixed"] },
+    { "title": "Security", "labels": ["security", "devsecops", "supply-chain"] }
+  ],
+  "exclude_labels": [
+    "documentation",
+    "governance",
+    "chore",
+    "internal",
+    "question",
+    "duplicate",
+    "invalid",
+    "wontfix",
+    "good first issue",
+    "help wanted",
+    "skip-changelog"
+  ],
+  "unlabelled": "Changed"
+}
