@@ -28,6 +28,9 @@ requests are all real, and shared.
 - **The image:** [`ghcr.io/mathewmusango/emuplane`](https://github.com/mathewmusango/emuplane/pkgs/container/emuplane)
 - **The licence:** [MIT](https://github.com/mathewmusango/emuplane/blob/main/LICENSE)
 
+![The Emuplane console](../../assets/img/emuplane-console.png){ loading=lazy }
+*The Emuplane console after sign-in — the services menu, built on AWS Cloudscape.*
+
 ## Why an emulator needs a control plane
 
 Local emulators are genuinely useful: they make S3, IAM, or DynamoDB available

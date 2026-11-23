@@ -25,6 +25,9 @@ AWS 模拟器能让一名开发者的笔记本用起来像 AWS，却不能让它
 - **镜像：** [`ghcr.io/mathewmusango/emuplane`](https://github.com/mathewmusango/emuplane/pkgs/container/emuplane)
 - **许可证：** [MIT](https://github.com/mathewmusango/emuplane/blob/main/LICENSE)
 
+![Emuplane 控制台](../../assets/img/emuplane-console.png){ loading=lazy }
+*登录后的 Emuplane 控制台 —— 服务菜单，基于 AWS Cloudscape 构建。*
+
 ## 为什么模拟器需要一个控制平面？
 
 本地模拟器确实有用：不用 AWS 账户、不产生账单，就能把 S3、IAM 或 DynamoDB 放进
