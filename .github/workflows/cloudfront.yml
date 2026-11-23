@@ -40,6 +40,9 @@ on:
           - "off"
           - "on"
 
+permissions:
+  contents: read
+
 jobs:
   detect:
     runs-on: ubuntu-latest

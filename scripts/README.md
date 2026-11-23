@@ -61,6 +61,7 @@ installed.
 | [`links.py`](links.py) | `build-site`, inside `CI: Build` | every internal link in the built site resolves |
 | [`translations.py`](translations.py) | `build-site`, inside `CI: Build` | the en / es / zh pages keep the same headings and nav |
 | [`browser.py`](browser.py) | `build`, inside `CI: Build` | the viewer pages still render, in headless Firefox |
+| [`policy.py`](policy.py) | `CI: Policy` | workflows declare top-level permissions, no `write-all`, every `uses:` pinned to a SHA; no public bucket ACL and no wildcard IAM statement in `terraform/` |
 | [`actions.py`](actions.py) | `build`, inside `CI: Build` | a composite's `run:` body executes under the runner's flags — `if:` evaluated against step outputs, a stub `aws` on `PATH` — and a job using a local action checks out first |
 
 The dependency audits belong to `CI: Security`, and `dependency-review` stays CI-only because its
