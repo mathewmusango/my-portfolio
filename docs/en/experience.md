@@ -16,6 +16,10 @@ Each role expanded my technical expertise, leadership responsibilities, and abil
 
 As Deputy IT Manager, I lead the engineering teams responsible for enterprise infrastructure, Platform Engineering, DevSecOps, cloud transformation, and operational excellence. Working across multiple business units, I help define technology strategy while ensuring the platforms supporting critical financial and enterprise systems remain secure, highly available, and resilient.
 
+### Open Source
+
+Alongside the day job I maintain **[Emuplane](https://github.com/mathewmusango/emuplane)**, an open-source console and control plane for AWS emulators — sixteen tagged releases in three weeks behind a 400-test suite, Trivy-gated CI, SBOM and checksum artifacts, and a 100% OpenSSF Best Practices badge — and a reusable GitHub Actions library used across my repositories.
+
 ### Engineering Leadership
 
 - Lead Platform Engineering, Infrastructure, and Systems Engineering teams responsible for enterprise technology platforms.

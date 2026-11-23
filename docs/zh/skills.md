@@ -44,7 +44,7 @@ tags:
 
 <p class="skill-focus"><strong>专注</strong>基础设施即代码 · GitOps · CI/CD 平台设计 · 安全软件交付 · 基础设施自动化 · 合规自动化 · 漏洞管理 · 机密管理</p>
 
-<p class="skill-tags"><strong>技术栈</strong><span class="skill-tag skill-tag--stack">GitLab</span><span class="skill-tag skill-tag--stack">GitLab CI/CD</span><span class="skill-tag skill-tag--stack">Jenkins</span><span class="skill-tag skill-tag--stack">Git</span><span class="skill-tag skill-tag--stack">SonarQube</span><span class="skill-tag skill-tag--stack">Artifactory</span><span class="skill-tag skill-tag--stack">HashiCorp Vault</span><span class="skill-tag skill-tag--stack">Trivy</span><span class="skill-tag skill-tag--stack">Clair</span><span class="skill-tag skill-tag--stack">Terraform</span><span class="skill-tag skill-tag--stack">Ansible</span><span class="skill-more">+8 更多</span></p>
+<p class="skill-tags"><strong>技术栈</strong><span class="skill-tag skill-tag--stack">GitLab</span><span class="skill-tag skill-tag--stack">GitLab CI/CD</span><span class="skill-tag skill-tag--stack">Jenkins</span><span class="skill-tag skill-tag--stack">Git</span><span class="skill-tag skill-tag--stack">SonarQube</span><span class="skill-tag skill-tag--stack">Artifactory</span><span class="skill-tag skill-tag--stack">HashiCorp Vault</span><span class="skill-tag skill-tag--stack">Trivy</span><span class="skill-tag skill-tag--stack">Clair</span><span class="skill-tag skill-tag--stack">Terraform</span><span class="skill-tag skill-tag--stack">Ansible</span><span class="skill-more">+10 更多</span><span class="skill-tag skill-tag--stack">OPA / Conftest</span><span class="skill-tag skill-tag--stack">OpenSSF Scorecard</span></p>
 
 </div>
 
