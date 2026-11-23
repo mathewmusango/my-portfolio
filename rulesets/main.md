@@ -38,6 +38,11 @@
 
 **Secrets are not a CI context here (2026-10-21).** The library dropped its gitleaks leaf (`my-workflows#24`): GitHub secret scanning with push protection already blocks a credential before the commit lands, and GitGuardian reports on every push, so a third scanner added a required context without adding detection. There is no local secret scan: the two server-side scanners are the gate.
 
+**Remediation windows are enforced, not implied (#230).** The audit gate stops a *new*
+high or critical advisory at merge; `CI: Dependency SLA` is the other half — a weekly job
+that fails when an open alert is older than its window (critical 7 days, high 30, moderate
+90). The windows live in `SECURITY.md`.
+
 **Audit thresholds, written down because the leaf alone does not explain them.** `npm audit` runs `--package-lock-only --audit-level=high` and deliberately **omits** `--omit=dev`: every npm package here is a `devDependency`, but their `dist` bundles are exactly what the browser runs, so `--omit=dev` would audit an empty tree and always pass. `pip-audit` is pinned inside the leaf, because a gate should not change under the repositories it judges. Both match `dependency-review`'s `fail-on-severity: high`, so an advisory with no fix cannot block every pull request.
 
 ## Applying
