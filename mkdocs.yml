@@ -15,8 +15,8 @@ nav:
       - Technical Expertise: skills.md
       - Projects:
           - Projects: projects/index.md
-          - The Platform Behind This Site: projects/portfolio-platform.md
           - "Open Source & Emuplane": projects/open-source-emuplane.md
+          - The Platform Behind This Site: projects/portfolio-platform.md
           - Cloud & Migrations: projects/cloud-migrations.md
           - Observability & Monitoring: projects/observability.md
           - Security & Resilience: projects/security-resilience.md
