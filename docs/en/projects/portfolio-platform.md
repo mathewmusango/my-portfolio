@@ -183,6 +183,5 @@ that keeps it from recurring — the same loop this site documents as the
 
 - **[Repo README](https://github.com/mathewmusango/my-portfolio/blob/main/README.md){ target="_blank" rel="noopener" }** — the system view: architecture, running it locally.
 - **[`terraform/README.md`](https://github.com/mathewmusango/my-portfolio/blob/main/terraform/README.md){ target="_blank" rel="noopener" }** — infrastructure implementation and rationale.
-- **[`CONTRIBUTING.md`](https://github.com/mathewmusango/my-portfolio/blob/main/CONTRIBUTING.md){ target="_blank" rel="noopener" }** — how a change becomes a merge.
 - **[Site Atlas](../../atlas/)** — release timeline, tags, and the site structure map.
 - **[GitHub Actions](https://github.com/mathewmusango/my-portfolio/actions){ target="_blank" rel="noopener" }** — the pipeline live.

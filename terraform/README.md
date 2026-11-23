@@ -1,370 +1,46 @@
-# Terraform — Portfolio Platform Infrastructure
+# terraform
 
-Terraform defines the AWS infrastructure behind the portfolio product: **static-site delivery**
-(private S3 bucket + CloudFront via OAC, serving at `/`) and **privacy-first visitor analytics**
-(geo CloudFront edge → API Gateway → Lambda → DynamoDB) — `terraform/infra/metrics/`. It is split into
-three roots — `bootstrap` and `infra/{site,metrics}` — over a library of generic service modules.
-Both staging and prod run the full stack.
+The AWS behind the site, in three roots that are applied independently.
 
-It does **not** build the MkDocs application: GitHub Actions builds the site artifact; Terraform
-provisions and manages the infrastructure that serves it and collects telemetry.
+| Root | State key | What it owns |
+| --- | --- | --- |
+| `bootstrap/` | `ci/terraform.tfstate` | the state backends, the OIDC provider and the per-job roles — run once, by a person, with an AWS user |
+| `infra/site/` | `site/terraform.tfstate` | the private S3 bucket, the CloudFront distribution and its response-headers policy |
+| `infra/metrics/` | `metrics/terraform.tfstate` | the visitor analytics: API Gateway, writer/reader Lambdas, DynamoDB, its own distribution and headers policy |
 
-```mermaid
-flowchart TB
-    subgraph OOB[Out-of-band — once per environment, as an AWS user]
-        U[AWS user] -->|scripts/bootstraps/aws.sh| CI[terraform/bootstrap<br/>OIDC provider · state backends · roles]
-    end
-    CI --> STATE[(state backends — S3 + DynamoDB lock<br/>staging · prod · local Ministack)]
-    CI --> ROLES[OIDC roles — least privilege, one per job<br/>-terraform · -deploy · -invalidate · -toggle]
-    subgraph GHA[GitHub Actions]
-        WF[terraform.yml] -->|assumes| ROLES
-    end
-    ROLES -->|plan · apply| SITE[site — S3 + CloudFront OAC<br/>staging · prod]
-    ROLES -->|plan · apply| MET[metrics — CF geo → API GW<br/>→ Lambda writer + reader → DynamoDB<br/>staging own stack · one prod stack]
-```
-
-The AWS-side picture at a glance — the details follow. (A `v*` release ships the site onto the
-**prod** stack; the GitHub Pages plane is separate and not Terraform-managed.)
-
-## Layout — the four axes
-
-Read the folder along four axes. They are a *reading order*, not folders: Terraform's unit of
-composition is the directory, so a "folder per concern" inside one root is impossible — a folder
-means a separate root, with its own state and its own provider pin.
-
-| Axis | Where it lives |
-| --- | --- |
-| Infrastructure definition | the `infra/site` and `infra/metrics` roots (composition only) over the generic service leaves in `modules/` |
-| Security | `bootstrap/` — its own root, applied out-of-band, because the OIDC role and the state bucket must exist before any workflow can run |
-| Configuration | `variables.tf` / `versions.tf` / `outputs.tf`, the same shape in every root |
-| Verification | `CI: Checks` / `CI: Security`: `fmt`, `validate`, TFLint, Checkov |
-
-### Service modules — generic, one AWS service each
-
-`modules/` holds one **generic** wrapper per AWS service — `iam`, `s3`, `cloudfront`, `dynamodb`,
-`lambda`, `api-gateway`, `vpc`, `waf`. Each is secure-by-construction and carries no portfolio
-vocabulary: the `s3` module always blocks public access and keeps the bucket private, `cloudfront`
-always serves through an OAC-scoped bucket policy, and `lambda` builds a function whose role and
-policies all come from the `iam` module. A leaf can be lifted into any other Terraform root
-unchanged.
-
-All product wiring lives in the two **roots**: **`infra/site`** (S3 + CloudFront, with the
-directory-index and localized-error functions supplied to `cloudfront` as data) and
-**`infra/metrics`** (VPC · DynamoDB · Lambda writer + reader · API Gateway · WAF, plus the metrics
-CloudFront edge). The roots are what name the portfolio; the leaves are what could be shared.
-
-### Roots own the pin; modules declare a floor
-
-- The **roots** are `terraform/bootstrap/`, `terraform/infra/site/` and `terraform/infra/metrics/`.
-  They are the only directories Dependabot tracks, and they own the provider **pin** (`aws ~> 6.65`;
-  `metrics` also pins `archive ~> 2.0`).
-- Each root has its **own state**: `site/terraform.tfstate`, `metrics/terraform.tfstate`, and
-  bootstrap's `ci/terraform.tfstate` (kept despite the rename from `terraform/ci` — the key is where
-  the live state lives).
-- `modules/*` are **child modules**. Each declares a **floor** (`aws >= 6.0`) and never a ceiling: a
-  module pinning the same major as its caller makes the per-directory Dependabot PRs mutually
-  unsatisfiable, so neither can land (see the CHANGELOG).
-- A child module is **not** a root — no `validate` stage of its own, no lockfile, no Dependabot
-  entry. The root that calls it compiles it during `validate`, so there is nothing to keep in step.
-
-### The security-headers policy is per root
-
-Each root creates its own `aws_cloudfront_response_headers_policy` (`-site-headers`,
-`-metrics-headers`) and passes it to its distribution. The two roots no longer share one policy —
-with separate states they cannot, and checkov resolves a root-local policy cleanly (`CKV2_AWS_32`).
-
-### Moving resources between a root and a module (`moved` blocks)
-
-Relocating a resource changes its state address. `moved` blocks re-address it during the next
-apply, so live infrastructure is never replaced — a module carries the blocks for the resources it
-extracted (e.g. `lambda`'s role/policies into `modules/iam`). Treat a non-empty plan after such a
-change as a bug — a no-op plan is the proof the addresses are right. Once **staging and prod** have
-both applied a root's moves, its blocks can be deleted, since their state is separate — the
-`modules/iam` extraction's blocks were removed on 2026-10-08, once both environments had applied.
-
-Critical resources — the site bucket, the DynamoDB table and both CloudFront distributions — carry a
-literal `prevent_destroy` in their module, so an accidental destroy fails the plan instead of
-deleting them. `prevent_destroy` cannot be driven by a variable, so it is hard-coded; remove the
-`lifecycle` block in the module to allow a deliberate teardown.
-
-> One trap worth keeping: `.gitignore` anchors `/site/` rather than `site/`. A bare `site/` matches a
-> directory of that name at **any** depth, so it would silently ignore `terraform/infra/site/` — the
-> root would simply never have been committed.
-
-## Design principles
-
-1. **No long-lived CI credentials** — GitHub Actions assumes OIDC roles, one per job; only the
-   one-time `terraform/bootstrap` bootstrap runs as an AWS user (see the map above).
-2. **Least-privilege IAM** — roles split by responsibility, scoped to their own resources.
-3. **Private object storage** — site buckets are never public; served only through CloudFront OAC.
-4. **Privacy-first telemetry** — geo from CloudFront headers only, no IPs stored, bounded retention (DynamoDB TTL).
-5. **Low operating overhead** — free-tier-leaning defaults; hardening (WAF / VPC) is opt-in.
-
-> Single repo (`mathewmusango/my-portfolio`). `terraform.yml` plans on any change to
-> `terraform/**`. It runs two jobs (`site`, `metrics`), each on the environment resolved by a
-> `detect` job that declares `environment:` from it, so a prod apply sits behind the required
-> reviewer and a prod run must itself come from a `v*` tag ref. A manual dispatch may also target a
-> single root (`stack`: `both` · `site` · `metrics`, default `both`), so one stack can be re-applied
-> without the other. **Apply is automatic**: a push to `main` applies staging, a `v*` tag applies
-> prod behind the reviewer, and `workflow_dispatch` remains for a plan-only run or a targeted apply.
-> Local dev applies against Ministack; real-AWS applies happen via the workflow (OIDC) or the
-> CLI. The manual ops extra is `cloudfront.yml` (invalidate / switch, both jobs declaring
-> `environment:` and reading their role ARN from it).
-
-> **On `prod`:** a `v*` release ships one artifact to two prod planes — the AWS **prod**
-> stack documented here (site + CloudFront, plus the prod metrics stack), and GitHub Pages (the
-> canonical site). Both are gated by the required reviewer on the `prod` environment. There is no
-> separate `pre-prod` environment: the AWS plane has always *been* prod — same bucket, same roles.
-
-## Why CloudFront?
-
-The requirement is **geographic location** (country/city) per visit. API Gateway
-alone can't tell you where a viewer is — but CloudFront can, and it injects the
-location as **request headers** that Lambda reads:
-
-- `CloudFront-Viewer-Country` / `CloudFront-Viewer-Country-Name`
-- `CloudFront-Viewer-City` / `CloudFront-Viewer-City-Name`
-- `CloudFront-Viewer-Region`
-
-That keeps the whole geo pipeline AWS-native: no GeoIP database, no license keys,
-**no IP address ever stored** (the function only ever sees the headers CloudFront
-provides — the visitor's raw IP never reaches DynamoDB).
-
-Pipeline map: the root README's [Metrics section](../README.md#metrics--visitor-analytics) shows
-the two-lambda flow (writer/reader) end to end.
-
-## Resources
-
-| Resource | Notes |
-|---|---|
-| `aws_dynamodb_table.metrics` | PK `date`, SK `evt#<uuid>`; GSI `page-date-index`; TTL on `ttl`; PAY_PER_REQUEST |
-| `aws_lambda_function.metrics_writer` | Python 3.12, 128 MB / 10 s — `POST /event`; role grants `dynamodb:PutItem` only |
-| `aws_lambda_function.metrics_reader` | Python 3.12, 128 MB / 10 s — `GET /summary` · `GET /views` · `GET /health`; role grants `dynamodb:Scan` + `dynamodb:Query` (table + GSI) |
-| `aws_apigatewayv2_api.metrics` | HTTP API, CORS for the site origin, auto-deploy `$default` stage |
-| `aws_apigatewayv2_route` ×4 | `POST /event` → writer · `GET /summary` · `GET /views` · `GET /health` → reader |
-| `aws_cloudfront_distribution.metrics` | Edge + geo headers, CachingDisabled, HTTPS only |
-| `aws_cloudfront_origin_request_policy.geo` | Whitelists geo + CORS + Content-Type headers |
-| `aws_wafv2_web_acl.metrics` (real AWS, opt-in) | Default-block; allows only the site Origin/Referer + IP rate limit — **off by default (Free Tier)**; the Lambda origin gate is the free equivalent |
-| VPC (real AWS, opt-in) | 2 private subnets, lambda SG (logs prefix-list egress), DynamoDB Gateway + Logs Interface endpoints — **off by default (Free Tier)**; the Logs interface endpoint is ~$7/mo |
-| IAM | **Least privilege**: writer role = `AWSLambdaBasicExecutionRole` + `dynamodb:PutItem` on the table only; reader role = `AWSLambdaBasicExecutionRole` + `dynamodb:Scan` + `dynamodb:Query` (table + GSI); each function is invoked only by its own API route; + `AWSLambdaVPCAccessExecutionRole` when `enable_vpc` |
-
-## Event schema (what's stored)
-
-The beacon sends a tiny JSON body; the collector whitelists fields and enriches:
-
-```jsonc
-// POST /event  (body, ≤ 2 KB)
-{ "type": "pageview", "page": "/metrics/", "lang": "en", "ref": "https://github.com/..." }
-
-// event types: pageview · click (target: linkedin.com/…/email) ·
-//              webvitals (metric: LCP/INP/CLS + value) · timing (ttfb/dcl/load)
-// every event may carry: visitor (anonymous localStorage uuid) · device (mobile/desktop/tablet)
-
-// stored item (DynamoDB)
-{
-  "date": "2026-08-22", "sk": "evt#<hex>", "ts": 1787350000,
-  "type": "pageview", "page": "/metrics/", "lang": "en",
-  "ref": "github.com",                      // hostname only — full referrers dropped
-  "visitor": "<uuid>", "device": "mobile",   // anonymous id + coarse class — no cookies, no UA
-  "country": "KE", "country_name": "Kenya", "city": "Nairobi", "region": "Nairobi County",
-  "ttl": 1788100000                          // auto-deleted after EVENT_RETENTION days
-}
-```
-
-- **Geo comes only from CloudFront headers** — never from the request's IP.
-- Referrers are reduced to hostname; unknown body fields are ignored.
-- Raw events expire via DynamoDB TTL (`event_retention_days`, default 90).
-
-## Read path (`GET /summary`)
-
-The collector scans recent events and aggregates in memory — `total`, `by_country`,
-`by_page`, `by_lang`, `by_ref`, `by_hour`/`by_day`, `by_device`, `by_type`, and
-`clicks`. Fine at portfolio traffic levels (scan cap 5000). **Follow-up**: a counters table fed by DynamoDB Streams, so
-`/summary` becomes O(1) point reads — no scan.
+`modules/` holds the per-service leaves (`s3`, `cloudfront`, `dynamodb`, `lambda`, `api-gateway`,
+`iam`, `vpc`, `waf`) the roots compose. The two composites keep portfolio vocabulary; the leaves
+are generic and reusable.
 
 ## Deploy
 
-### Credentials & endpoints — from the machine's AWS config (portable)
+`terraform.yml` runs on `terraform/**` changes: a push to `main` applies **staging**, a `v*` tag
+applies **prod** behind the `prod` environment's reviewer, and a dispatch can plan only or target
+one root with `stack`. A prod run must come from a tag that points at a commit on `main`.
 
-Nothing in this directory hardcodes an endpoint or a credential, and no env file
-is needed. The provider is stock and reads the standard AWS chain:
+No workflow holds a key. Each job assumes its own role through OIDC — `-terraform`, `-deploy`,
+`-invalidate`, `-toggle` — and staging cannot read prod's role, because the ARN lives in the
+environment the job declares.
 
-- **Local Ministack** — `~/.aws/config` already carries everything:
-  `endpoint_url = http://127.0.0.1:4566`, `region = us-east-1`; the keys
-  (`test`/`test`) live in `~/.aws/credentials`. The provider honors the shared
-  config `endpoint_url`, so `terraform` just works.
-- **Real AWS** — your normal chain (`~/.aws/credentials` / SSO / CI secrets);
-  no endpoint set. The same code targets real AWS unchanged.
+## Security posture
 
-The per-environment values the AWS config can't carry live in each root's
-`local.tfvars` (`environment`, `allowed_origin` for metrics, plus the required
-`project` / `aws_region` / `tags`) — passed explicitly with `-var-file`, never
-auto-loaded. Real AWS gets the same values from CI secrets at plan time; nothing
-is hardcoded in `*.tf`.
+Free Tier only: no WAF, no interface endpoints, no customer-managed keys on the critical path.
+Buckets are private and served through CloudFront with OAC; the site bucket, both distributions
+and the metrics table carry `prevent_destroy`, and the metrics table and the lock table refuse
+deletion at the AWS API as well. The metrics API is public but origin-gated — CloudFront supplies
+the geo headers, so no IP address reaches a Lambda, and raw events expire after 90 days.
 
-**Credentials never live in the repo.** And **the site itself needs no
-credentials at all** — CloudFront is a public HTTPS edge; the browser beacon
-just `POST`s to it, allowed by CORS from the site origin.
+## Why CloudFront?
 
-### Applying to real AWS
+It is the only edge that hands a Lambda the visitor's country without the IP: the geo headers are
+set at the edge and the request arrives without the address. That is what makes the analytics
+privacy-first rather than policy-first.
 
-Real-AWS applies run through GitHub Actions (`terraform.yml`), via OIDC — no keys in workflows.
-**Apply is automatic** — a push to `main` applies staging and a `v*` tag applies prod behind the
-`prod` reviewer; the two-root split and its state migration are **done**, and both environments
-re-plan clean. `workflow_dispatch` remains for a plan-only run or a single-root apply. Manual CLI
-applies exist only for rare out-of-band work (e.g., a catch-up) and are documented in the project's
-**private runbook** — intentionally not in this public repo.
+## Local work
 
-CloudFront is ON by default (`enable_cloudfront = true`) — it is what adds the geo headers.
+`terraform/local.tfvars` points the metrics root at MiniStack — an AWS-compatible emulator — with
+`environment = "test"`. Everything else is exercised through the same roots CI applies; the checks
+(`fmt`, `validate`, TFLint, Checkov) run in `CI: Checks` and `CI: Security`.
 
-### Local dev (Ministack / LocalStack)
-
-The dev machine runs **Ministack** (LocalStack-compatible) at `127.0.0.1:4566`.
-Everything AWS comes from `~/.aws/config` + `~/.aws/credentials` (endpoint,
-region, `test` keys) — no env file to source:
-
-```sh
-# Two roots, two states. Site first — the metrics root reads its state for the site origin:
-cd terraform/infra/site
-# Point state at Ministack S3 (recreate the bucket after a reset: aws s3 mb s3://my-portfolio-tfstate)
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
-  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=site/terraform.tfstate" \
-  -backend-config="region=us-east-1" -backend-config="encrypt=true"
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
-# Then metrics (reads the site state above via site_state_bucket in its local.tfvars):
-cd ../metrics
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform init \
-  -backend-config="bucket=my-portfolio-tfstate" -backend-config="key=metrics/terraform.tfstate" \
-  -backend-config="region=us-east-1" -backend-config="encrypt=true"
-AWS_ENDPOINT_URL=http://127.0.0.1:4566 terraform apply -var-file=local.tfvars
-export METRICS_ENDPOINT=$(terraform output -raw api_gateway_url)  # for the site beacon
-```
-
-Ordering is a convenience, not a hard requirement: the metrics root reads the site state
-only when the state object exists (`data "aws_s3_objects"`), so planning it before the site
-root has been applied does not fail — it warns, through a `check` block naming the missing
-key, and omits the site origin until the site root is applied.
-
-Each root has its own `local.tfvars`, mirroring staging/prod (the same flags the
-`terraform.yml` plan step passes): `site` sets `enable_site` ON; `metrics` sets
-`enable_cloudfront` ON with VPC/WAF OFF.
-
-CloudFront is created here too (Ministack implements the management plane), but
-it has **no real edge locally** — `https://<dist>.cloudfront.net` only resolves
-on real AWS. So the local site beacon uses `api_gateway_url`
-(`http://<api-id>.execute-api.localhost:4566`) and geo fields read `"unknown"`.
-
-Then verify the pipeline (Ministack's own `/health` on 4566 shadows the API's
-`GET /health` locally — test with `/event` and `/summary` instead; `/health` is
-reachable on real AWS):
-
-```sh
-# The origin gate is HTTPS-only — cleartext origins are always rejected. The
-# dev site is HTTPS (mkcert CA, certs/), so use its https origin — the same
-# one local.tfvars allows — to exercise the pipeline locally:
-curl -X POST http://<api-id>.execute-api.localhost:4566/event \
-  -H 'Content-Type: application/json' -H 'Origin: https://portfolio.mathewmusango.test:8000' \
-  -d '{"type":"pageview","page":"/","lang":"en"}'
-curl http://<api-id>.execute-api.localhost:4566/summary -H 'Origin: https://portfolio.mathewmusango.test:8000'
-```
-
-### Backend (state)
-
-**Portable S3 backend** — `versions.tf` declares `backend "s3" {}` with no values:
-bucket, key, region and the DynamoDB lock table are supplied at init via
-`-backend-config`, so the module works for any project/region. Per-environment
-buckets (`<project>-<env>-tfstate` + `<project>-<env>-tfstate-lock`) are created
-by the `terraform/bootstrap` module (`scripts/bootstraps/aws.sh`). Each root picks its own key
-(`site/` or `metrics/`). Example init:
-
-```sh
-# Bucket/lock names derive from <project>-<env> — set the shared values once:
-export PROJECT=my-portfolio
-export ENVIRONMENT=prod        # main → staging · v* tags → prod
-terraform init \
-  -backend-config="bucket=${PROJECT}-${ENVIRONMENT}-tfstate" \
-  -backend-config="key=site/terraform.tfstate" \
-  -backend-config="region=us-east-1" \
-  -backend-config="dynamodb_table=${PROJECT}-${ENVIRONMENT}-tfstate-lock" \
-  -backend-config="encrypt=true"
-```
-
-CI does the same automatically: bucket and lock names are derived from the
-shared project secret + the trigger-resolved environment (main → staging, `v*` tags →
-prod), region from the AWS-region secret — all secrets, nothing in the repo.
-Local dev points at the bucket via `AWS_ENDPOINT_URL` (Ministack) or real S3.
-
-## Site integration
-
-The backend is wired to the site:
-
-- **Beacon** — `docs/javascripts/metrics-beacon.js` (site-wide) POSTs a pageview
-  on every page load: `{ type, page, lang }`. It reads the endpoint from a
-  `<meta name="metrics-endpoint">` tag, which `overrides/main.html` emits only
-  when `METRICS_ENDPOINT` is set at build/serve time (mkdocs.yml `!ENV`).
-  Empty endpoint = beacon no-ops (prod, until the real stack deploys). The dev
-  container passes the host's `METRICS_ENDPOINT` through (`compose.yaml`).
-  **Endpoint by environment:** local dev → `terraform output api_gateway_url`
-  (Ministack has no real edge); real AWS staging and prod → `terraform output api_url`
-  (`https://<cloudfront>.cloudfront.net`) — the public edge the browser hits.
-- **Per-page counter** — `GET /views?page=<path>` exists (a Query on the
-  `page-date-index` GSI — no full scan per page load) for per-page counts;
-  the tab/footer counters that used it were removed from the UI (2026-08-25).
-- **Dashboard** — `docs/javascripts/metrics-live.js` (metrics page only) fetches
-  `GET /summary` and renders live totals + top pages; labels stay in the page
-  markup so they translate per language. The "Visitor analytics" card is Live.
-
-Uptime = external probes hitting `/health`. `type: "webvitals"` events are already captured by
-the writer (`metric`/`value`, timings); surfacing them on the metrics page is future work.
-
-## Security (Free-Tier defaults, opt-in hardening)
-
-**The API is public by design, restricted to requests presenting the configured site origin** —
-an application-layer origin gate, enforced for free. It is **not authentication** — any client
-can set an `Origin`/`Referer` header; optional WAF / rate limiting adds edge protection.
-
-1. **Lambda origin gate** (all environments, incl. local): the writer and reader
-   reject any request whose `Origin`/`Referer` host doesn't equal
-   `allowed_origin` — including requests with **no** header at all (403).
-   `/health` is exempt (uptime probes carry no Origin/Referer and return no data).
-2. **Least-privilege IAM**: writer = `dynamodb:PutItem` on the table only;
-   reader = `dynamodb:Scan` + `dynamodb:Query` (table + GSI — per-page `/views`);
-   each function is invoked only by its own API route.
-
-**Opt-in hardening (outside the Free Tier — ~$14/mo total):**
-
-- **WAF on the CloudFront edge** (`enable_waf`): request filtering on the configured site origin
-  (derived from `allowed_origin` — the WAF search string is the module's first allowed host) plus
-  an IP rate-limit rule (300 req / 5 min), default *block*. Origin/Referer filtering here is an
-  **abuse-control measure, not authentication**. ~$7/mo.
-- **Private VPC** (`enable_vpc`): lambdas with **no internet path** — egress only
-  to the DynamoDB **Gateway** (free) and CloudWatch Logs **Interface** endpoints.
-  The Logs endpoint is ~$7/mo; cold starts gain ~0.5–1 s from the ENI attach.
-
-**Cost note (real AWS):** designed for very low operating cost at portfolio-scale traffic — the
-defaults (both opt-ins off) minimize fixed-cost services: CloudFront, API Gateway, Lambda, and
-DynamoDB free-tier usage cover typical traffic. WAF and the Logs interface endpoint are the only
-always-billable components.
-
-**Local (Ministack):** `local.tfvars` sets `enable_vpc = false` and
-`enable_waf = false` — matching the Free-Tier default; the lambda origin gate
-still applies.
-
-## Operations
-
-- **CORS**: configured on the HTTP API for `allowed_origin` (default the live
-  site). API responses carry `Access-Control-Allow-*` regardless.
-- **No auth on the API** — it's a public beacon by design; payloads are validated
-  and size-capped, and the origin gate (plus WAF when enabled) restrict who can call it.
-- **No secrets** in this directory; AWS access comes from the machine's credential
-  chain.
-- **Test vs prod**: local dev applies with `environment = "test"` (see each
-  root's `local.tfvars`) — resource names and the table are prefixed, so both can
-  coexist. **Terraform runs via GitHub Actions** — `terraform.yml` plans on
-  `terraform/**` changes; **apply is automatic** (a push to `main` applies staging, a
-  `v*` tag applies prod behind the `prod` reviewer), and a dispatch can plan only or
-  target one root (see the map above for roles/secrets).
-
-## TFLint
-
-The rules live in the repo-root [`.tflint.hcl`](../.tflint.hcl) rather than here, because TFLint discovers its config by walking up from the working directory and the shared CI leaf runs from the root — the `--recursive` pass over `terraform/` then inherits it. The plugin set is deliberately minimal: the repo was retrofitted, so rules are tuned as findings surface, starting with the audit backlog on `iam:PassRole` scope, site-bucket versioning, and the WAF/VPC opt-ins.
+State and secrets are never committed. `.terraform.lock.hcl` files are, and a provider bump moves
+them through a pull request.
