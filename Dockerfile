@@ -24,7 +24,8 @@ WORKDIR /app
 RUN --mount=type=cache,target=/var/cache/apt/archives,sharing=locked \
     apt-get update && \
     apt-get install -y --no-install-recommends git && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    useradd --uid 1000 --create-home app
 
 COPY requirements.txt .
 RUN --mount=type=cache,target=/root/.cache/pip pip install --no-compile -r requirements.txt
@@ -34,6 +35,10 @@ COPY --from=js /vendor/node_modules ./node_modules
 COPY mkdocs.yml .
 COPY docs ./docs
 COPY overrides ./overrides
+
+RUN chown -R 1000:1000 /app
+
+USER 1000
 
 EXPOSE 8000
 

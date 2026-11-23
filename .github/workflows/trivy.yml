@@ -1,0 +1,37 @@
+name: "CI: Trivy"
+
+on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - "compose*.yml"
+      - "compose*.yaml"
+      - ".github/workflows/trivy.yml"
+  push:
+    branches: [main]
+    paths:
+      - "Dockerfile"
+      - "compose*.yml"
+      - "compose*.yaml"
+      - ".github/workflows/trivy.yml"
+  schedule:
+    - cron: "43 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Scan the Dockerfile and the compose files
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          skip-dirs: docs,site,terraform,.git
+          hide-progress: true
