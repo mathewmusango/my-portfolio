@@ -14,6 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Check the pull request closes one labelled issue
+        if: ${{ !endsWith(github.event.pull_request.user.login, '[bot]') }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR: ${{ github.event.pull_request.number }}
