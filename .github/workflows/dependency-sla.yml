@@ -7,17 +7,25 @@ on:
 
 permissions:
   contents: read
-  security-events: read
 
 jobs:
-  sla:
+  audits:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-      - name: Check open alerts against their windows
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.repository }}
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "22"
+
+      - name: pip-audit
         run: |
-          gh api --paginate "repos/$REPO/dependabot/alerts?state=open&per_page=100" > alerts.json
-          python3 scripts/dependency_sla.py alerts.json
+          pip install --quiet pip-audit==2.10.1
+          pip-audit -r requirements.txt
+
+      - name: npm audit
+        run: npm audit --package-lock-only --audit-level=high
