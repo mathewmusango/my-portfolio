@@ -38,6 +38,9 @@ red check is a refusal like any other.
 
 - **No secrets, no state, no keys.** GitHub secret scanning runs with push protection, so a
   credential is refused before it lands; GitGuardian reports on every push.
+- **An issue carries one changelog label** (`enhancement`, `bug`, `security`, …). `CI: Changelog`
+  checks that a pull request closes exactly one labelled issue, and the released section is
+  written from those issues with `scripts/changelog.py --draft`.
 - **A page change lands in three languages.** The site is written in `docs/en`, `docs/es` and
   `docs/zh`; a change to one that skips the other two is incomplete, not smaller.
 - **The pull request is where a change is checked.** The same surfaces run there, one

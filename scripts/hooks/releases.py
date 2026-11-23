@@ -31,6 +31,7 @@ RELEASE_RE = re.compile(r"^## \[([^\]]+)\] - (\d{4}-\d{2}-\d{2})$", re.MULTILINE
 
 RECENT_LIMIT = 10
 CHANGELOG_NAME = "CHANGELOG.md"
+ARCHIVE_NAME = "CHANGELOG-archive.md"
 TAG_RE = re.compile(r"^v\d+\.\d+\.\d+Z?$")
 
 
@@ -60,12 +61,17 @@ def _current_tag():
 
 def _releases_from_changelog(changelog_path):
     """[(version, date)] newest first, skipping the [Unreleased] section."""
-    text = Path(changelog_path).read_text(encoding="utf-8")
-    return [
-        (version, date)
-        for version, date in RELEASE_RE.findall(text)
-        if version.lower() != "unreleased"
-    ]
+    base = Path(changelog_path).parent
+    text = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (base / CHANGELOG_NAME, base / ARCHIVE_NAME)
+        if path.is_file()
+    )
+    seen = {}
+    for version, date in RELEASE_RE.findall(text):
+        if version.lower() != "unreleased":
+            seen.setdefault(version, date)
+    return sorted(seen.items(), key=lambda row: row[1], reverse=True)
 
 
 def _with_tag_promotion(releases, changelog_path):
