@@ -40,8 +40,9 @@
 
 **Remediation windows are enforced, not implied (#230).** The audit gate stops a *new*
 high or critical advisory at merge; `CI: Dependency SLA` is the other half — a weekly job
-that fails when an open alert is older than its window (critical 7 days, high 30, moderate
-90). The windows live in `SECURITY.md`.
+that runs both audits on a schedule — the case the gate cannot see is an advisory published
+after a dependency merged. The windows are **critical 7 days · high 30 · moderate 90 · low at
+the next dependency refresh**.
 
 **Audit thresholds, written down because the leaf alone does not explain them.** `npm audit` runs `--package-lock-only --audit-level=high` and deliberately **omits** `--omit=dev`: every npm package here is a `devDependency`, but their `dist` bundles are exactly what the browser runs, so `--omit=dev` would audit an empty tree and always pass. `pip-audit` is pinned inside the leaf, because a gate should not change under the repositories it judges. Both match `dependency-review`'s `fail-on-severity: high`, so an advisory with no fix cannot block every pull request.
 
