@@ -1,0 +1,23 @@
+name: "CI: Dependency SLA"
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: read
+
+jobs:
+  sla:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Check open alerts against their windows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$REPO/dependabot/alerts?state=open&per_page=100" > alerts.json
+          python3 scripts/dependency_sla.py alerts.json
