@@ -25,6 +25,11 @@ Se sitúa delante del emulador — MiniStack, en mi caso — para que las cuenta
 los inicios de sesión dentro de ellas y los clientes que firman las peticiones
 sean reales, y compartidos.
 
+- **El proyecto:** [github.com/mathewmusango/emuplane](https://github.com/mathewmusango/emuplane)
+- **La documentación:** [mathewmusango.github.io/emuplane](https://mathewmusango.github.io/emuplane/?utm_source=mathewmusango.github.io)
+- **La imagen:** [`ghcr.io/mathewmusango/emuplane`](https://github.com/mathewmusango/emuplane/pkgs/container/emuplane)
+- **La licencia:** [MIT](https://github.com/mathewmusango/emuplane/blob/main/LICENSE)
+
 ## ¿Por qué un emulador necesita un plano de control?
 
 Los emuladores locales son genuinamente útiles: ponen S3, IAM o DynamoDB en el

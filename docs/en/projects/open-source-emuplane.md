@@ -23,6 +23,11 @@ control plane I built to close that gap. It fronts the emulator — MiniStack, i
 my setup — so the accounts, the logins inside them, and the clients that sign
 requests are all real, and shared.
 
+- **The project:** [github.com/mathewmusango/emuplane](https://github.com/mathewmusango/emuplane)
+- **The docs:** [mathewmusango.github.io/emuplane](https://mathewmusango.github.io/emuplane/?utm_source=mathewmusango.github.io)
+- **The image:** [`ghcr.io/mathewmusango/emuplane`](https://github.com/mathewmusango/emuplane/pkgs/container/emuplane)
+- **The licence:** [MIT](https://github.com/mathewmusango/emuplane/blob/main/LICENSE)
+
 ## Why an emulator needs a control plane
 
 Local emulators are genuinely useful: they make S3, IAM, or DynamoDB available
