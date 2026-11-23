@@ -31,11 +31,11 @@ icon: material/home
 
 ## 重点项目
 
-### 客户基础设施迁移至 AWS
+### [开源与 Emuplane](projects/open-source-emuplane.md)
 
-<p class="stack-line"><strong>技术栈：</strong> <span class="stack-tag">AWS</span><span class="stack-tag">Security Groups</span><span class="stack-tag">VPN</span><span class="stack-tag">FortiGate</span><span class="stack-tag">DR</span></p>
+<p class="stack-line"><strong>技术栈：</strong> <span class="stack-tag">Python</span><span class="stack-tag">React</span><span class="stack-tag">AWS Cloudscape</span><span class="stack-tag">DynamoDB</span><span class="stack-tag">Docker</span><span class="stack-tag">GitHub Actions</span></p>
 
-负责将客户基础设施迁移至 AWS，包括可扩展且安全的云架构的设计与实施。
+我自己的开源项目：一个控制台和控制平面，让兼容 AWS 的模拟器可以被多人使用 —— 在模拟器前端提供真实的账户、登录和访问密钥，而不是笔记本电脑上的一个隐含账户。
 
 [查看所有项目 :material-rocket-launch:](projects/){ .md-button .md-button--primary }
 

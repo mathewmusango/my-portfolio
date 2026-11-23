@@ -33,7 +33,7 @@ flowchart LR
 （S3 + CloudFront）和 GitHub Pages（规范站点）— 两者都要等待 `prod` GitHub
 环境中的必需审阅者，因此没有任何东西未经审阅就到达 prod。两条交付平面各有
 自己的闸门：**内容** — `main` → staging · `v*` → prod（经审阅）；
-**基础设施** — `main` → staging 自动 apply · `v*` → prod 仅 plan。
+**基础设施** — `main` → staging 自动 apply · `v*` → prod 自动 apply（经审阅）。
 
 ## 指标 — 访客分析
 
@@ -79,6 +79,6 @@ flowchart LR
     A -->|workflow_run · main| S[deploy → staging]
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
-    T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
+    T[tf change] --> TP[terraform plan] -->|apply · reviewed| AP[apply]
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```

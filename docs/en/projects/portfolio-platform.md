@@ -83,7 +83,7 @@ Two delivery planes, each with its own gate:
 | Plane | Path | Gate |
 |---|---|---|
 | **Content** | `main` → staging · `v*` → prod (AWS mirror + Pages), both reviewed | required reviewer on `prod` |
-| **Infrastructure** | `main` → staging auto-applies · `v*` → prod plan-only | manual `terraform apply` |
+| **Infrastructure** | `main` → staging auto-applies · `v*` → prod auto-applies, reviewed | `prod` reviewer |
 
 Deploys run on every successful CI build of the right ref
 ([#20](https://github.com/mathewmusango/my-portfolio/pull/20){ target="_blank" rel="noopener" } split
@@ -107,8 +107,9 @@ Getting-started steps: [the repo README](https://github.com/mathewmusango/my-por
 A change ships through four phases:
 
 1. **ci** — strict `mkdocs build` (broken links, stale translations and CSS
-   imbalance fail the build), `pip-audit`, and a built-site artifact on every
-   push/PR to `main` and every `v*` tag.
+   imbalance fail the build), and a built-site artifact on every push/PR to `main` and
+   every `v*` tag. The dependency audits are not here: `pip-audit` and `npm audit` are
+   required checks in the security gate.
 2. **Checks** — one aggregator workflow (`checks.yml`) calls the shared
    workflow library `mathewmusango/my-workflows` (pinned to a commit SHA). Each reusable
    gates itself by changed paths
@@ -118,7 +119,8 @@ A change ships through four phases:
 3. **Deploy** — `workflow_run` on `build` success (`deploy.yml`): `main` → staging, `v*` →
    prod on both planes (reviewed) (see [Delivery model](#delivery-model)).
 4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
-   SBOM; Terraform plans on every infra change (apply stays manual); `cloudfront.yml` —
+   SBOM; Terraform runs on every infra change — `main` applies staging, a `v*` tag applies
+   prod behind the `prod` reviewer; `cloudfront.yml` —
    invalidate / switch, both jobs declaring `environment:` and reading their role ARN from it —
    is the manual operational extra.
 
@@ -158,7 +160,8 @@ enforce a seven-part structure
 - **Origin-gated API** — the metrics endpoint is public but restricted to the
   configured site origin; WAF/VPC are opt-in (Free-Tier-first posture).
 - **Dependency hygiene** — [Dependabot](https://github.com/mathewmusango/my-portfolio/security/dependabot){ target="_blank" rel="noopener" },
-  `pip-audit` on every build, a CycloneDX SBOM on every release, Checkov in CI.
+  `pip-audit` and `npm audit` among the required security checks, a CycloneDX SBOM on every
+  release, Checkov in CI.
 - Reporting policy: [SECURITY.md](https://github.com/mathewmusango/my-portfolio/blob/main/SECURITY.md){ target="_blank" rel="noopener" }.
 
 ## Real incidents, and the lessons they left

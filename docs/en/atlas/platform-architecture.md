@@ -36,7 +36,7 @@ flowchart LR
 required reviewer in the `prod` GitHub environment, so nothing reaches prod
 unreviewed. Two delivery planes, each with its own gate: **content** — `main` →
 staging · `v*` → prod (reviewed); **infrastructure** — `main` → staging
-auto-applies · `v*` → prod plan-only.
+auto-applies · `v*` → prod applies, reviewed.
 
 ## Metrics — visitor analytics
 
@@ -83,6 +83,6 @@ flowchart LR
     A -->|workflow_run · main| S[deploy → staging]
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
-    T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
+    T[tf change] --> TP[terraform plan] -->|apply · reviewed| AP[apply]
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```

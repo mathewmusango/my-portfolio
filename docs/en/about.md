@@ -82,6 +82,8 @@ Throughout my career, I've designed and operated enterprise platforms supporting
 
 My passion lies in Platform Engineering—creating internal platforms that make software delivery faster, safer, and more reliable. I enjoy solving difficult infrastructure problems, automating repetitive work, and designing systems that continue performing as they grow from a handful of services to large, mission-critical environments.
 
+In the open, I maintain [Emuplane](https://github.com/mathewmusango/emuplane), a console and control plane for AWS-compatible emulators — where the same delivery, security and code practice is applied on my own time.
+
 </div>
 
 ### Away from the Keyboard

@@ -37,7 +37,7 @@ canónico) — y ambos esperan al revisor obligatorio en el entorno `prod` de
 GitHub, así que nada llega a prod sin revisión. Dos planos de entrega, cada uno
 con su propia puerta: **contenido** — `main` → staging · `v*` → prod
 (revisado); **infraestructura** — `main` → staging se aplica solo · `v*` →
-solo plan en prod.
+prod se aplica solo, revisado.
 
 ## Métricas — analítica de visitas
 
@@ -86,6 +86,6 @@ flowchart LR
     A -->|workflow_run · main| S[deploy → staging]
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
     V --> R[release — tag + SBOM]
-    T[tf change] --> TP[terraform plan] -->|manual apply| AP[apply]
+    T[tf change] --> TP[terraform plan] -->|apply · reviewed| AP[apply]
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```

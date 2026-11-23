@@ -75,7 +75,7 @@ OIDC 角色。**Bootstrap 是唯一带外步骤** — 一个 GitHub Actions 之�
 | 平面 | 路径 | 闸门 |
 |---|---|---|
 | **内容** | `main` → staging · `v*` → prod（AWS 镜像 + Pages），两者均经审阅 | `prod` 上必需审阅者 |
-| **基础设施** | `main` → staging 自动 apply · `v*` → prod 仅 plan | 手动 `terraform apply` |
+| **基础设施** | `main` → staging 自动 apply · `v*` → prod 自动 apply（经审阅） | `prod` 审阅者 |
 
 部署在正确 ref 的每次成功 CI 构建后运行
 （[#20](https://github.com/mathewmusango/my-portfolio/pull/20){ target="_blank" rel="noopener" }
@@ -98,7 +98,8 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
 一个变更分四个阶段发布：
 
 1. **ci** — 严格的 `mkdocs build`（坏链接、过期翻译和 CSS 不平衡都会使构建失败）、
-   `pip-audit`，并在每次 push/PR 到 `main` 及每个 `v*` 标签时产出站点构建产物。
+   并在每次 push/PR 到 `main` 及每个 `v*` 标签时产出站点构建产物。依赖审计不在此处：
+   `pip-audit` 与 `npm audit` 是安全门中的必需检查。
 2. **检查** — 一个聚合工作流（`checks.yml`）调用共享工作流库
    `mathewmusango/my-workflows`（固定到提交 SHA）。每个可复用工作流按变更路径自门控
    （[skip-model, #17](https://github.com/mathewmusango/my-portfolio/pull/17){ target="_blank" rel="noopener" }）：
@@ -106,7 +107,7 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
 3. **部署** — `build` 成功后 `workflow_run`：`main` → staging，`v*` → prod 两条平面
    均经审阅（见[交付模型](#delivery-model)）。
 4. **发布与基础设施** — `v*` 标签创建带 CycloneDX SBOM 的 GitHub Release；每次
-   基础设施变更 Terraform 都会 plan（apply 保持手动）；`cloudfront.yml` —
+   基础设施变更 Terraform 都会运行 — `main` 应用到 staging，`v*` 标签经 `prod` 审阅者应用到 prod；`cloudfront.yml` —
    invalidate / switch，两个 job 都声明 `environment:` 并从其中读取各自的角色 ARN —
    是手动运维附加项。
 
@@ -142,7 +143,7 @@ Ruleset 即代码，保护两个关键的 ref
 - **私有存储** — S3 bucket 从不公开；CloudFront 仅通过 OAC 服务。
 - **来源限制 API** — 指标端点公开但限于配置的站点来源；WAF/VPC 可选（免费层优先姿态）。
 - **依赖卫生** — [Dependabot](https://github.com/mathewmusango/my-portfolio/security/dependabot){ target="_blank" rel="noopener" }、
-  每次构建 `pip-audit`、每次发布 CycloneDX SBOM、CI 中 Checkov。
+  `pip-audit` 与 `npm audit` 属于必需的安全检查、每次发布 CycloneDX SBOM、CI 中 Checkov。
 - 报告政策：[SECURITY.md](https://github.com/mathewmusango/my-portfolio/blob/main/SECURITY.md){ target="_blank" rel="noopener" }。
 
 ## 真实事故与留下的教训

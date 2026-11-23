@@ -92,7 +92,7 @@ Mi experiencia abarca Ingeniería de Plataformas, Infraestructura en la Nube, Ku
 
 ### :material-account-group: Liderazgo de Ingeniería
 
-<p class="skill-focus"><strong>Enfoque</strong>Estrategia de Plataformas · Hojas de Ruta Tecnológicas · Liderazgo de Equipos · Mentoría de Ingeniería · Gobernanza de Infraestructura · Excelencia Operativa · Colaboración con Partes Interesadas · Planificación Presupuestaria · Liderazgo de Incidentes · Mejora Continua</p>
+<p class="skill-focus"><strong>Enfoque</strong>Estrategia de Plataformas · Hojas de Ruta Tecnológicas · Liderazgo de Equipos · Mentoría de Ingeniería · Gobernanza de Infraestructura · Excelencia Operativa · Colaboración con Partes Interesadas · Planificación Presupuestaria · Liderazgo de Incidentes · Mejora Continua · Mantenimiento de Código Abierto · Ingeniería de Releases</p>
 
 </div>
 

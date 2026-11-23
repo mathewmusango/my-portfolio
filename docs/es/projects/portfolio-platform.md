@@ -87,7 +87,7 @@ Dos planos de entrega, cada uno con su propia puerta:
 | Plano | Ruta | Puerta |
 |---|---|---|
 | **Contenido** | `main` → staging · `v*` → prod (espejo AWS + Pages), ambos revisados | revisor obligatorio en `prod` |
-| **Infraestructura** | `main` → staging se aplica solo · `v*` → solo plan en prod | `terraform apply` manual |
+| **Infraestructura** | `main` → staging se aplica solo · `v*` → prod se aplica solo, revisado | revisor en `prod` |
 
 Los despliegues se ejecutan en cada build de CI correcto de la ref adecuada
 ([#20](https://github.com/mathewmusango/my-portfolio/pull/20){ target="_blank" rel="noopener" }
@@ -112,8 +112,9 @@ Pasos de inicio: [el README del repositorio](https://github.com/mathewmusango/my
 Un cambio se publica en cuatro fases:
 
 1. **ci** — `mkdocs build` estricto (enlaces rotos, traducciones desactualizadas
-   y desequilibrio de CSS rompen el build), `pip-audit` y un artefacto del sitio
-   construido en cada push/PR a `main` y en cada etiqueta `v*`.
+   y desequilibrio de CSS rompen el build) y un artefacto del sitio construido en cada
+   push/PR a `main` y en cada etiqueta `v*`. Las auditorías de dependencias no están aquí:
+   `pip-audit` y `npm audit` son verificaciones obligatorias de la puerta de seguridad.
 2. **Verificaciones** — un workflow agregador (`checks.yml`) llama a la
    biblioteca compartida de workflows `mathewmusango/my-workflows` (fijada a un
    SHA de commit). Cada reutilizable se autogatea según las rutas
@@ -123,8 +124,8 @@ Un cambio se publica en cuatro fases:
 3. **Deploy** — `workflow_run` al éxito de `build`: `main` → staging, `v*` → prod en
    ambos planos, revisados (ver [Modelo de entrega](#delivery-model)).
 4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
-   CycloneDX; Terraform planifica en cada cambio de infra (el apply sigue siendo
-   manual); `cloudfront.yml` — invalidate / switch, ambos jobs declaran `environment:` y leen de
+   CycloneDX; Terraform corre en cada cambio de infra — `main` aplica staging y una etiqueta
+   `v*` aplica prod tras el revisor de `prod`; `cloudfront.yml` — invalidate / switch, ambos jobs declaran `environment:` y leen de
    ahí el ARN de su rol — es el extra operativo manual.
 
 Los nombres de las verificaciones son los nombres de las puertas — las
@@ -167,7 +168,8 @@ una estructura de siete partes
   limitado al origen configurado del sitio; WAF/VPC son opcionales (postura de
   Free Tier primero).
 - **Higiene de dependencias** — [Dependabot](https://github.com/mathewmusango/my-portfolio/security/dependabot){ target="_blank" rel="noopener" },
-  `pip-audit` en cada build, un SBOM CycloneDX en cada release, Checkov en CI.
+  `pip-audit` y `npm audit` entre las verificaciones de seguridad obligatorias, un SBOM
+  CycloneDX en cada release, Checkov en CI.
 - Política de reporte: [SECURITY.md](https://github.com/mathewmusango/my-portfolio/blob/main/SECURITY.md){ target="_blank" rel="noopener" }.
 
 ## Incidentes reales y las lecciones que dejaron
