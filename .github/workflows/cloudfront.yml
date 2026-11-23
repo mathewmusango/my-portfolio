@@ -54,6 +54,8 @@ jobs:
           TARGET: ${{ github.event.inputs.environment }}
           REF_TYPE: ${{ github.ref_type }}
           REF: ${{ github.ref }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           case "$TARGET" in
             staging | prod) ;;
@@ -62,6 +64,13 @@ jobs:
           if [ "$TARGET" = "prod" ] && [ "$REF_TYPE" != "tag" ]; then
             echo "prod runs must be dispatched on a v* tag — got $REF"
             exit 1
+          fi
+          if [ "$TARGET" = "prod" ]; then
+            STATE=$(gh api "repos/$REPO/compare/main...$REF" --jq .status)
+            if [ "$STATE" != "behind" ] && [ "$STATE" != "identical" ]; then
+              echo "::error::$REF does not point at a commit on main (compare: $STATE)"
+              exit 1
+            fi
           fi
           echo "environment=$TARGET" >> "$GITHUB_OUTPUT"
           echo "target environment=$TARGET (ref $REF)"

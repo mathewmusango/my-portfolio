@@ -25,3 +25,8 @@ gh api repos/mathewmusango/my-portfolio/rulesets/22227856
 # they are read-only, and the id lives in the URL.
 gh api --method PUT repos/mathewmusango/my-portfolio/rulesets/22227856 --input rulesets/tags.json
 ```
+
+**A tag that is not on `main` cannot reach prod (2026-11-23, #242).** A ruleset cannot express
+ancestry, so the check lives where the tag has effect: `Deploy: Code`'s `detect`, and the
+prod gates in `Deploy: Infra` and `Override: CloudFront`, ask the compare API for
+`main...<tag>` and refuse anything that is not `behind` or `identical`.
