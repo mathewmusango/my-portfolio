@@ -32,6 +32,11 @@ jobs:
             if [ "$HEAD" = "main" ]; then
               staging=true
             elif gh api --silent "repos/$REPO/git/ref/tags/$HEAD" 2>/dev/null; then
+              STATE=$(gh api "repos/$REPO/compare/main...$HEAD" --jq .status)
+              if [ "$STATE" != "behind" ] && [ "$STATE" != "identical" ]; then
+                echo "::error::tag $HEAD does not point at a commit on main (compare: $STATE)"
+                exit 1
+              fi
               prod=true
             fi
           fi

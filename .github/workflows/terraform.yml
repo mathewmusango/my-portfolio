@@ -55,6 +55,8 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF_TYPE: ${{ github.ref_type }}
           REF: ${{ github.ref }}
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           ENV="$INPUT_ENV"
           if [ -z "$ENV" ] || [ "$ENV" = "auto" ]; then
@@ -67,6 +69,13 @@ jobs:
           if [ "$ENV" = "prod" ] && [ "$REF_TYPE" != "tag" ]; then
             echo "prod runs must come from a v* tag — got $REF"
             exit 1
+          fi
+          if [ "$ENV" = "prod" ]; then
+            STATE=$(gh api "repos/$REPO/compare/main...$REF" --jq .status)
+            if [ "$STATE" != "behind" ] && [ "$STATE" != "identical" ]; then
+              echo "::error::$REF does not point at a commit on main (compare: $STATE)"
+              exit 1
+            fi
           fi
           STACK="${INPUT_STACK:-both}"
           case "$STACK" in
