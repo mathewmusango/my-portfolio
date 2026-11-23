@@ -14,8 +14,8 @@
   <img alt="pdf.js 6.4.299" src="https://img.shields.io/badge/pdf.js-6.4.299-b30b00">
   <img alt="Mermaid" src="https://img.shields.io/badge/Mermaid-ff3670?logo=mermaid&logoColor=white">
   <img alt="Terraform" src="https://img.shields.io/badge/Terraform-7B42BC?logo=terraform&logoColor=white">
-  <img alt="AWS: S3, CloudFront, API Gateway, Lambda, DynamoDB" src="https://img.shields.io/badge/AWS-S3_%C2%B7_CloudFront_%C2%B7_API_Gateway_%C2%B7_Lambda_%C2%B7_DynamoDB-FF9900?logo=amazonwebservices&logoColor=white">
   <img alt="GitHub Actions" src="https://img.shields.io/badge/GitHub_Actions-2088FF?logo=githubactions&logoColor=white">
+  <img alt="AWS: S3, CloudFront, API Gateway, Lambda, DynamoDB" src="https://img.shields.io/badge/AWS-S3_%C2%B7_CloudFront_%C2%B7_API_Gateway_%C2%B7_Lambda_%C2%B7_DynamoDB-FF9900?logo=amazonwebservices&logoColor=white">
 </p>
 
 ![Site preview](docs/assets/site-preview.png)
@@ -51,18 +51,6 @@ analytics that never store an IP address.
 **[Platform Architecture](https://mathewmusango.github.io/my-portfolio/atlas/platform-architecture/)**
 on the site shows how the three parts fit together, diagrams included; the AWS
 implementation is in [`terraform/README.md`](terraform/README.md).
-
-## Repository layout
-
-| Path | What it is |
-| --- | --- |
-| [`docs/`](docs) | the site: pages in en / es / zh, styles, scripts, assets |
-| [`mkdocs.yml`](mkdocs.yml) | the one config the local and deployed sites share |
-| `Dockerfile` · `compose.yaml` | the MkDocs dev image and its compose service |
-| [`scripts/`](scripts) | `dev.sh`, the dev server, the MkDocs hooks, the checks and the AWS bootstrap |
-| [`terraform/`](terraform) | `bootstrap/`, `infra/{site,metrics}/` and the per-service modules |
-| [`.github/`](.github) | workflows, composite actions, issue and PR templates, dependabot |
-| [`rulesets/`](rulesets) | the branch and tag rulesets as JSON, with the verification records |
 
 ## Documentation
 
