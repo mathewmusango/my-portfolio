@@ -170,26 +170,6 @@ LCP、INP、CLS——访客最近一次访问的体验。
 
 </div>
 
-<div class="metrics-stat" markdown>
-
-### :material-heart-pulse: 可用性
-
-对在线站点的可用性检查，以30天滚动平均值报告。
-
-<span class="metrics-badge">计划中</span>
-
-</div>
-
-<div class="metrics-stat" markdown>
-
-### :material-gauge: 性能
-
-性能预算——每次发布的构建时检查。
-
-<span class="metrics-badge">计划中</span>
-
-</div>
-
 </div>
 
 [返回站点指标 :material-chart-line:](../){ .md-button }

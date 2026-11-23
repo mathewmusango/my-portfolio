@@ -170,26 +170,6 @@ Engagement depth per visit — 30 minutes of inactivity breaks a session.
 
 </div>
 
-<div class="metrics-stat" markdown>
-
-### :material-heart-pulse: Uptime
-
-Availability checks against the live site, reported as a rolling 30-day average.
-
-<span class="metrics-badge">Planned</span>
-
-</div>
-
-<div class="metrics-stat" markdown>
-
-### :material-gauge: Performance
-
-Performance budgets — build-time checks per release.
-
-<span class="metrics-badge">Planned</span>
-
-</div>
-
 </div>
 
 [Back to Site Metrics :material-chart-line:](../){ .md-button }

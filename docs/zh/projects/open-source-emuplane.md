@@ -20,6 +20,11 @@ AWS 模拟器能让一名开发者的笔记本用起来像 AWS，却不能让它
 为填补这个缺口而构建的控制平面。它挡在模拟器之前——在我的环境里是 MiniStack
 ——让账户、账户里的登录，以及为请求签名的客户端都成为真实且共享的东西。
 
+- **项目：** [github.com/mathewmusango/emuplane](https://github.com/mathewmusango/emuplane)
+- **文档：** [mathewmusango.github.io/emuplane](https://mathewmusango.github.io/emuplane/?utm_source=mathewmusango.github.io)
+- **镜像：** [`ghcr.io/mathewmusango/emuplane`](https://github.com/mathewmusango/emuplane/pkgs/container/emuplane)
+- **许可证：** [MIT](https://github.com/mathewmusango/emuplane/blob/main/LICENSE)
+
 ## 为什么模拟器需要一个控制平面？
 
 本地模拟器确实有用：不用 AWS 账户、不产生账单，就能把 S3、IAM 或 DynamoDB 放进

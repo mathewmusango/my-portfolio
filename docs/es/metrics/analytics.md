@@ -170,26 +170,6 @@ Profundidad de interacción por visita — 30 minutos de inactividad cortan una 
 
 </div>
 
-<div class="metrics-stat" markdown>
-
-### :material-heart-pulse: Disponibilidad
-
-Comprobaciones de disponibilidad del sitio en vivo, reportadas como promedio móvil de 30 días.
-
-<span class="metrics-badge">Planificado</span>
-
-</div>
-
-<div class="metrics-stat" markdown>
-
-### :material-gauge: Rendimiento
-
-Presupuestos de rendimiento — comprobaciones de compilación por release.
-
-<span class="metrics-badge">Planificado</span>
-
-</div>
-
 </div>
 
 [Volver a Métricas del sitio :material-chart-line:](../){ .md-button }
