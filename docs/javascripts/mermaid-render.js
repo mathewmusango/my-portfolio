@@ -3,33 +3,8 @@
   if (!bundle || !bundle.mermaid) return;
   var api = bundle.mermaid;
 
-  var PALETTES = {
-    default: {
-      primaryColor: "#e8f4f2",
-      primaryTextColor: "#1a1a1a",
-      primaryBorderColor: "#00897b",
-      lineColor: "#48606b",
-      clusterBkg: "#f1f7f6",
-      clusterBorder: "#b6d8d2",
-      edgeLabelBackground: "#ffffff",
-      titleColor: "#1a1a1a",
-    },
-    slate: {
-      primaryColor: "#16323a",
-      primaryTextColor: "#e6edf3",
-      primaryBorderColor: "#26a69a",
-      lineColor: "#9fb3c8",
-      clusterBkg: "#0f1b22",
-      clusterBorder: "#2b4b52",
-      edgeLabelBackground: "#0f1b22",
-      titleColor: "#e6edf3",
-    },
-  };
-
   function scheme() {
-    var attribute = document.documentElement.getAttribute("data-md-color-scheme");
-    if (attribute === "slate" || attribute === "default") return attribute;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "slate" : "default";
+    return "default";
   }
 
   function render(pre, index) {
@@ -40,7 +15,6 @@
       startOnLoad: false,
       theme: "base",
       securityLevel: "loose",
-      themeVariables: PALETTES[key],
       flowchart: { htmlLabels: false },
     });
     api
