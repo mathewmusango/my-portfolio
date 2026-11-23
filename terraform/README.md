@@ -37,7 +37,7 @@ means a separate root, with its own state and its own provider pin.
 | Infrastructure definition | the `infra/site` and `infra/metrics` roots (composition only) over the generic service leaves in `modules/` |
 | Security | `bootstrap/` — its own root, applied out-of-band, because the OIDC role and the state bucket must exist before any workflow can run |
 | Configuration | `variables.tf` / `versions.tf` / `outputs.tf`, the same shape in every root |
-| Verification | the check stack (`containers/checks/`): `fmt`, `validate`, TFLint, Checkov |
+| Verification | `CI: Checks` / `CI: Security`: `fmt`, `validate`, TFLint, Checkov |
 
 ### Service modules — generic, one AWS service each
 
@@ -303,7 +303,7 @@ The backend is wired to the site:
   `<meta name="metrics-endpoint">` tag, which `overrides/main.html` emits only
   when `METRICS_ENDPOINT` is set at build/serve time (mkdocs.yml `!ENV`).
   Empty endpoint = beacon no-ops (prod, until the real stack deploys). The dev
-  container passes the host's `METRICS_ENDPOINT` through (`containers/site/compose.yaml`).
+  container passes the host's `METRICS_ENDPOINT` through (`compose.yaml`).
   **Endpoint by environment:** local dev → `terraform output api_gateway_url`
   (Ministack has no real edge); real AWS staging and prod → `terraform output api_url`
   (`https://<cloudfront>.cloudfront.net`) — the public edge the browser hits.
@@ -367,4 +367,4 @@ still applies.
 
 ## TFLint
 
-The rules live in the repo-root [`.tflint.hcl`](../.tflint.hcl) rather than here, because TFLint discovers its config by walking up from the working directory and both the shared CI leaf and `scripts/checks/local.sh` run from the root — the `--recursive` pass over `terraform/` then inherits it. The plugin set is deliberately minimal: the repo was retrofitted, so rules are tuned as findings surface, starting with the audit backlog on `iam:PassRole` scope, site-bucket versioning, and the WAF/VPC opt-ins.
+The rules live in the repo-root [`.tflint.hcl`](../.tflint.hcl) rather than here, because TFLint discovers its config by walking up from the working directory and the shared CI leaf runs from the root — the `--recursive` pass over `terraform/` then inherits it. The plugin set is deliberately minimal: the repo was retrofitted, so rules are tuned as findings surface, starting with the audit backlog on `iam:PassRole` scope, site-bucket versioning, and the WAF/VPC opt-ins.

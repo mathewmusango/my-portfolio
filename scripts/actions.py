@@ -21,7 +21,7 @@ from pathlib import Path
 
 import yaml
 
-REPO = Path(__file__).resolve().parents[2]
+REPO = Path(__file__).resolve().parents[1]
 ACTIONS = REPO / ".github" / "actions"
 WORKFLOWS = REPO / ".github" / "workflows"
 EXPR = re.compile(r"\$\{\{\s*(.+?)\s*\}\}")
