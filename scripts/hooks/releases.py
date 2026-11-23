@@ -91,11 +91,7 @@ def _with_tag_promotion(releases, changelog_path):
 def _row(version, date):
     tag = f"v{version}"
     base = "https://github.com/mathewmusango/my-portfolio"
-    return (
-        f"| [{tag}]({base}/releases/tag/{tag}) | {date} | "
-        f"[Release]({base}/releases/tag/{tag}) · "
-        f"[SBOM]({base}/releases/download/{tag}/sbom.cdx.json) |"
-    )
+    return f"| {tag} | {date} | [Source]({base}/tree/{tag}) |" 
 
 
 def _body(releases, limit=None):

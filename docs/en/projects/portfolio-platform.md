@@ -38,7 +38,7 @@ a public repository, at portfolio scale, where every trade-off is visible:
 - **Every environment is a real environment** — dev, staging, prod.
 - **Security is designed in** — no long-lived credentials, private storage, least privilege.
 - **Privacy is an architectural property** — visitor analytics collect geo only, never IPs.
-- **History is honest** — a [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }, tagged releases, and an [SBOM per release](https://github.com/mathewmusango/my-portfolio/releases){ target="_blank" rel="noopener" }.
+- **History is honest** — a [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }, and tags that mark each release.
 
 The value is not the scale — it is the discipline. This page documents the
 platform: its architecture, its delivery model, its governance, its security
@@ -118,8 +118,7 @@ A change ships through four phases:
    never block an unrelated PR.
 3. **Deploy** — `workflow_run` on `build` success (`deploy.yml`): `main` → staging, `v*` →
    prod on both planes (reviewed) (see [Delivery model](#delivery-model)).
-4. **Release & infra** — `v*` tags create a GitHub Release with a CycloneDX
-   SBOM; Terraform runs on every infra change — `main` applies staging, a `v*` tag applies
+4. **Tag & infra** — a `v*` tag marks the release; Terraform runs on every infra change — `main` applies staging, a `v*` tag applies
    prod behind the `prod` reviewer; `cloudfront.yml` —
    invalidate / switch, both jobs declaring `environment:` and reading their role ARN from it —
    is the manual operational extra.
@@ -160,8 +159,7 @@ enforce a seven-part structure
 - **Origin-gated API** — the metrics endpoint is public but restricted to the
   configured site origin; WAF/VPC are opt-in (Free-Tier-first posture).
 - **Dependency hygiene** — [Dependabot](https://github.com/mathewmusango/my-portfolio/security/dependabot){ target="_blank" rel="noopener" },
-  `pip-audit` and `npm audit` among the required security checks, a CycloneDX SBOM on every
-  release, Checkov in CI.
+  `pip-audit` and `npm audit` among the required security checks, and Checkov in CI.
 - Reporting policy: [SECURITY.md](https://github.com/mathewmusango/my-portfolio/blob/main/SECURITY.md){ target="_blank" rel="noopener" }.
 
 ## Real incidents, and the lessons they left

@@ -4,7 +4,7 @@ icon: material/timeline-clock
 
 # 版本时间线 {#release-timeline}
 
-[查看所有发布 :material-rocket-launch:](https://github.com/mathewmusango/my-portfolio/releases){ .md-button .md-button--primary }
+[查看所有标签 :material-tag:](https://github.com/mathewmusango/my-portfolio/tags){ .md-button .md-button--primary }
 
 | 版本 | 日期 | 链接 |
 |---|---|---|
