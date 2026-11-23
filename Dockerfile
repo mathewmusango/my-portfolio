@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.npm \
     xargs -r -a /tmp/vendor-list cp --parents -t /vendor && \
     rm -rf node_modules /tmp/vendor-list
 
-FROM python:3.12-slim
+FROM python:3.15-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
