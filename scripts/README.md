@@ -24,3 +24,18 @@ scripts/dev.sh stop       # stop the container
 - [`bootstraps/aws.sh`](bootstraps/aws.sh) — one-command AWS bootstrap per environment: OIDC role, state bucket, lock table, deploy policies
 - [`hooks/`](hooks/) — the MkDocs build hooks `mkdocs.yml` loads: [`site_metrics.py`](hooks/site_metrics.py) fills the Site Metrics facts, [`releases.py`](hooks/releases.py) generates the release rows from `CHANGELOG.md`, and [`vendor.py`](hooks/vendor.py) copies the minified JavaScript bundles from `node_modules` into the site. `vendor.py` reads [`vendor.json`](hooks/vendor.json), the source→destination map the dev image also uses to copy just those bundles out of `node_modules`
 - [`checks/`](checks/README.md) — the local check driver, mirroring CI
+
+## Local setup
+
+Once per machine, before the first `build`:
+
+```sh
+mkcert -install                                  # trust the local root CA
+mkdir -p certs
+mkcert -cert-file certs/portfolio.pem -key-file certs/portfolio-key.pem \
+  portfolio.mathewmusango.test localhost 127.0.0.1
+echo "127.0.0.1 portfolio.mathewmusango.test" | sudo tee -a /etc/hosts
+```
+
+`serve.py` falls back to plain HTTP with a warning if the certificates are missing, so
+the site still serves — the browser just complains.
