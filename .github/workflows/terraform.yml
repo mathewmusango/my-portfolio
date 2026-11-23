@@ -36,6 +36,9 @@ on:
           - site
           - metrics
 
+permissions:
+  contents: read
+
 jobs:
   detect:
     runs-on: ubuntu-latest
