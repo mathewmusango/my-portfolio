@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: my-portfolio
+    userns_mode: keep-id
     stop_signal: SIGINT
     ports:
       - "8000:8000"
