@@ -1,4 +1,4 @@
-FROM node:22-slim AS js
+FROM node:22.23.4-slim AS js
 
 WORKDIR /js
 
