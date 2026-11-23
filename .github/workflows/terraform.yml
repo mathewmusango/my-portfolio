@@ -142,21 +142,29 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Init (S3 backend — bucket derived from the env; S3-native locking)
+        env:
+          TF_BUCKET: ${{ vars.PROJECT }}-${{ matrix.environment }}-tfstate
+          TF_REGION: ${{ vars.AWS_REGION }}
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ vars.PROJECT }}-${{ matrix.environment }}-tfstate" \
+            -backend-config="bucket=$TF_BUCKET" \
             -backend-config="key=site/terraform.tfstate" \
-            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="region=$TF_REGION" \
             -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
       - name: Plan (${{ matrix.environment }})
+        env:
+          TF_ENVIRONMENT: ${{ matrix.environment }}
+          TF_PROJECT: ${{ vars.PROJECT }}
+          TF_REGION: ${{ vars.AWS_REGION }}
+          TF_TAGS: '{"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}'
         run: |
           terraform plan -input=false -no-color -out=tf.plan \
-            -var "environment=${{ matrix.environment }}" \
-            -var "project=${{ vars.PROJECT }}" \
-            -var "aws_region=${{ vars.AWS_REGION }}" \
-            -var 'tags={"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}'
+            -var "environment=$TF_ENVIRONMENT" \
+            -var "project=$TF_PROJECT" \
+            -var "aws_region=$TF_REGION" \
+            -var "tags=$TF_TAGS"
 
       - name: Apply
         if: ${{ needs.detect.outputs.apply == 'true' }}
@@ -206,22 +214,31 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
 
       - name: Init (S3 backend — bucket derived from the env; S3-native locking)
+        env:
+          TF_BUCKET: ${{ vars.PROJECT }}-${{ matrix.environment }}-tfstate
+          TF_REGION: ${{ vars.AWS_REGION }}
         run: |
           terraform init -input=false \
-            -backend-config="bucket=${{ vars.PROJECT }}-${{ matrix.environment }}-tfstate" \
+            -backend-config="bucket=$TF_BUCKET" \
             -backend-config="key=metrics/terraform.tfstate" \
-            -backend-config="region=${{ vars.AWS_REGION }}" \
+            -backend-config="region=$TF_REGION" \
             -backend-config="use_lockfile=true" \
             -backend-config="encrypt=true"
 
       - name: Plan (${{ matrix.environment }})
+        env:
+          TF_ENVIRONMENT: ${{ matrix.environment }}
+          TF_PROJECT: ${{ vars.PROJECT }}
+          TF_REGION: ${{ vars.AWS_REGION }}
+          TF_ALLOWED_ORIGIN: ${{ vars.ALLOWED_ORIGIN }}
+          TF_TAGS: '{"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}'
         run: |
           terraform plan -input=false -no-color -out=tf.plan \
-            -var "environment=${{ matrix.environment }}" \
-            -var "project=${{ vars.PROJECT }}" \
-            -var "aws_region=${{ vars.AWS_REGION }}" \
-            -var "allowed_origin=${{ vars.ALLOWED_ORIGIN }}" \
-            -var 'tags={"project":"${{ vars.PROJECT }}","managed_by":"terraform","repo":"${{ github.repository }}"}'
+            -var "environment=$TF_ENVIRONMENT" \
+            -var "project=$TF_PROJECT" \
+            -var "aws_region=$TF_REGION" \
+            -var "allowed_origin=$TF_ALLOWED_ORIGIN" \
+            -var "tags=$TF_TAGS"
 
       - name: Apply
         if: ${{ needs.detect.outputs.apply == 'true' }}
