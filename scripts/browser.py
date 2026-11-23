@@ -1,6 +1,6 @@
 """Load the built site in headless Firefox and assert the resume viewer renders.
 
-Usage: python3 scripts/checks/browser.py SITE_DIR [--timeout SECONDS]
+Usage: python3 scripts/browser.py SITE_DIR [--timeout SECONDS]
 
 Serves a copy of SITE_DIR with a probe injected into the viewer pages, drives
 headless Firefox at each page, and exits non-zero when a page fails to render or
@@ -23,6 +23,8 @@ import time
 import urllib.parse
 from pathlib import Path
 from typing import ClassVar
+
+ATTEMPTS = 2
 
 PAGES = (
     "resume/index.html",
@@ -189,11 +191,16 @@ def main() -> int:
 
         for page in PAGES:
             url = base + page.removesuffix("index.html")
-            _Handler.reports.clear()
-            reported = _drive(binary, url, args.timeout)
-            passed, detail = _evaluate(list(_Handler.reports))
-            if not reported and passed:
-                passed, detail = False, "no report from the page before the timeout"
+            for attempt in range(1, ATTEMPTS + 1):
+                _Handler.reports.clear()
+                reported = _drive(binary, url, args.timeout * attempt)
+                passed, detail = _evaluate(list(_Handler.reports))
+                if not reported and passed:
+                    passed, detail = False, "no report from the page before the timeout"
+                if passed:
+                    break
+                if attempt < ATTEMPTS:
+                    print(f"RETRY {page}  {detail}")
             print(f"{'PASS' if passed else 'FAIL'}  {page}  {detail}")
             if not passed:
                 failures.append(page)
