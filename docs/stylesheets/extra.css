@@ -49,6 +49,17 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
+pre.mermaid--rendered {
+  background: none;
+  border: 0;
+  padding: 0;
+}
+
+pre.mermaid--rendered svg {
+  max-width: 100%;
+  height: auto;
+}
+
 /* Light-gray page background, like the reference template */
 [data-md-color-scheme="default"] {
   --md-default-bg-color: #f8f9fa;

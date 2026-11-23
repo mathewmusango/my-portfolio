@@ -25,8 +25,3 @@ en tiempo de compilación — el último es siempre el sitio actual. Consulta la
 - [**Arquitectura de la Plataforma**](platform-architecture.md) — los diagramas de entrega, métricas y del plano de control de Terraform.
 - [**Estructura del Sitio**](structure.md) — un mapa interactivo de las páginas del sitio y de la pila de analítica que hay detrás.
 - [**Etiquetas**](tags.md) — explora el sitio por tema.
-
-## El Repositorio {#the-repository}
-
-El sitio se desarrolla en abierto y se publica desde el repositorio público
-[`mathewmusango/my-portfolio`](https://github.com/mathewmusango/my-portfolio){ target="_blank" rel="noopener" }.
