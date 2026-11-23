@@ -16,6 +16,10 @@ Cada rol amplió mi experiencia técnica, mis responsabilidades de liderazgo y m
 
 Como Subdirector de TI, lidero los equipos de ingeniería responsables de la infraestructura empresarial, la Ingeniería de Plataformas, DevSecOps, la transformación a la nube y la excelencia operativa. Trabajando con múltiples unidades de negocio, ayudo a definir la estrategia tecnológica mientras garantizo que las plataformas que respaldan sistemas financieros y empresariales críticos permanezcan seguras, altamente disponibles y resilientes.
 
+### Código Abierto
+
+Además de mi trabajo diario mantengo **[Emuplane](https://github.com/mathewmusango/emuplane)**, una consola y plano de control de código abierto para emuladores de AWS — dieciséis versiones etiquetadas en tres semanas con una suite de 400 pruebas, CI con compuerta Trivy, artefactos SBOM y de sumas de verificación, e insignia OpenSSF Best Practices al 100% — y una biblioteca reutilizable de GitHub Actions usada en mis repositorios.
+
 ### Liderazgo de Ingeniería
 
 - Lidero equipos de Ingeniería de Plataformas, Infraestructura y Sistemas responsables de las plataformas tecnológicas empresariales.

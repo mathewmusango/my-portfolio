@@ -16,6 +16,10 @@ icon: material/briefcase
 
 作为信息技术副经理，我领导负责企业基础设施、平台工程、DevSecOps、云转型和卓越运营的工程团队。在与多个业务部门合作时，我帮助制定技术战略，同时确保支撑关键金融和企业系统的平台保持安全、高可用且有弹性。
 
+### 开源
+
+在工作之余，我维护 **[Emuplane](https://github.com/mathewmusango/emuplane)** —— 一个面向 AWS 模拟器的开源控制台与控制平面：三周内十六个带标签的版本，依托 400 项测试的测试套件、Trivy 门控 CI、SBOM 与校验和产物，以及 100% 的 OpenSSF Best Practices 徽章；此外还维护一个在我的仓库中复用的 GitHub Actions 库。
+
 ### 工程领导
 
 - 领导负责企业技术平台的平台工程、基础设施和系统工程团队。
