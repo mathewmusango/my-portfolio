@@ -4,7 +4,7 @@ icon: material/timeline-clock
 
 # Cronología de Versiones {#release-timeline}
 
-[Ver todos los lanzamientos :material-rocket-launch:](https://github.com/mathewmusango/my-portfolio/releases){ .md-button .md-button--primary }
+[Ver todas las etiquetas :material-tag:](https://github.com/mathewmusango/my-portfolio/tags){ .md-button .md-button--primary }
 
 | Versión | Fecha | Enlaces |
 |---|---|---|

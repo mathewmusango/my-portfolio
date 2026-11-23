@@ -1,9 +1,9 @@
 # Changelog
 
 All notable changes to this project are documented here. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), releases are timestamp tags
-(`v<YYYY>.<MMDD>.<HHMM>Z`), and a released section is written from the issues that release
-closed — one line per issue, the label deciding the section.
+[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), a tag (`v<YYYY>.<MMDD>.<HHMM>Z`)
+marks a release, and its section is written from the issues that release closed — one line
+per issue, the label deciding the section.
 
 Hand-written history from before 2026-11-23 is in
 [CHANGELOG-archive.md](CHANGELOG-archive.md).

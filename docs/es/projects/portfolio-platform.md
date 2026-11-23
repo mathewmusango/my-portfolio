@@ -40,7 +40,7 @@ donde cada decisión es visible:
 - **Cada entorno es un entorno real** — dev, staging, prod.
 - **La seguridad está diseñada desde el inicio** — sin credenciales de larga duración, almacenamiento privado, mínimo privilegio.
 - **La privacidad es una propiedad arquitectónica** — la analítica de visitas recoge solo geo, nunca IPs.
-- **La historia es honesta** — un [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }, releases etiquetados y un [SBOM por release](https://github.com/mathewmusango/my-portfolio/releases){ target="_blank" rel="noopener" }.
+- **La historia es honesta** — un [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }, y etiquetas que marcan cada release.
 
 El valor no está en la escala — está en la disciplina. Esta página documenta la
 plataforma: su arquitectura, su modelo de entrega, su gobernanza, su postura de
@@ -123,8 +123,7 @@ Un cambio se publica en cuatro fases:
    verificaciones obligatorias nunca bloquean un PR no relacionado.
 3. **Deploy** — `workflow_run` al éxito de `build`: `main` → staging, `v*` → prod en
    ambos planos, revisados (ver [Modelo de entrega](#delivery-model)).
-4. **Release e infra** — las etiquetas `v*` crean un GitHub Release con un SBOM
-   CycloneDX; Terraform corre en cada cambio de infra — `main` aplica staging y una etiqueta
+4. **Etiqueta e infra** — una etiqueta `v*` marca la release; Terraform corre en cada cambio de infra — `main` aplica staging y una etiqueta
    `v*` aplica prod tras el revisor de `prod`; `cloudfront.yml` — invalidate / switch, ambos jobs declaran `environment:` y leen de
    ahí el ARN de su rol — es el extra operativo manual.
 
@@ -168,8 +167,7 @@ una estructura de siete partes
   limitado al origen configurado del sitio; WAF/VPC son opcionales (postura de
   Free Tier primero).
 - **Higiene de dependencias** — [Dependabot](https://github.com/mathewmusango/my-portfolio/security/dependabot){ target="_blank" rel="noopener" },
-  `pip-audit` y `npm audit` entre las verificaciones de seguridad obligatorias, un SBOM
-  CycloneDX en cada release, Checkov en CI.
+  `pip-audit` y `npm audit` entre las verificaciones de seguridad obligatorias, y Checkov en CI.
 - Política de reporte: [SECURITY.md](https://github.com/mathewmusango/my-portfolio/blob/main/SECURITY.md){ target="_blank" rel="noopener" }.
 
 ## Incidentes reales y las lecciones que dejaron

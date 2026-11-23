@@ -35,7 +35,7 @@ tags:
 - **每个环境都是真实环境** — dev、staging、prod。
 - **安全是设计出来的** — 没有长期凭证、私有存储、最小权限。
 - **隐私是架构属性** — 访客分析只采集地理信息，绝不采集 IP。
-- **历史是诚实的** — [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }、带标签的发布，以及[每次发布的 SBOM](https://github.com/mathewmusango/my-portfolio/releases){ target="_blank" rel="noopener" }。
+- **历史是诚实的** — [CHANGELOG](https://github.com/mathewmusango/my-portfolio/blob/main/CHANGELOG.md){ target="_blank" rel="noopener" }、以及标记每次发布的标签。
 
 价值不在于规模 — 而在于纪律。本页记录平台本身：它的架构、交付模型、治理、
 安全态势，以及塑造它的真实事故。
@@ -106,7 +106,7 @@ bucket（[#29](https://github.com/mathewmusango/my-portfolio/pull/29){ target="_
    未触及的表面**跳过并报告成功**，因此必需检查永远不会阻塞无关 PR。
 3. **部署** — `build` 成功后 `workflow_run`：`main` → staging，`v*` → prod 两条平面
    均经审阅（见[交付模型](#delivery-model)）。
-4. **发布与基础设施** — `v*` 标签创建带 CycloneDX SBOM 的 GitHub Release；每次
+4. **标签与基础设施** — `v*` 标签标记发布；每次
    基础设施变更 Terraform 都会运行 — `main` 应用到 staging，`v*` 标签经 `prod` 审阅者应用到 prod；`cloudfront.yml` —
    invalidate / switch，两个 job 都声明 `environment:` 并从其中读取各自的角色 ARN —
    是手动运维附加项。
@@ -143,7 +143,7 @@ Ruleset 即代码，保护两个关键的 ref
 - **私有存储** — S3 bucket 从不公开；CloudFront 仅通过 OAC 服务。
 - **来源限制 API** — 指标端点公开但限于配置的站点来源；WAF/VPC 可选（免费层优先姿态）。
 - **依赖卫生** — [Dependabot](https://github.com/mathewmusango/my-portfolio/security/dependabot){ target="_blank" rel="noopener" }、
-  `pip-audit` 与 `npm audit` 属于必需的安全检查、每次发布 CycloneDX SBOM、CI 中 Checkov。
+  `pip-audit` 与 `npm audit` 属于必需的安全检查、以及 CI 中 Checkov。
 - 报告政策：[SECURITY.md](https://github.com/mathewmusango/my-portfolio/blob/main/SECURITY.md){ target="_blank" rel="noopener" }。
 
 ## 真实事故与留下的教训
