@@ -27,9 +27,9 @@
   };
 
   function scheme() {
-    return document.documentElement.getAttribute("data-md-color-scheme") === "slate"
-      ? "slate"
-      : "default";
+    var attribute = document.documentElement.getAttribute("data-md-color-scheme");
+    if (attribute === "slate" || attribute === "default") return attribute;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "slate" : "default";
   }
 
   function render(pre, index) {
@@ -76,6 +76,8 @@
   } else {
     renderAll();
   }
+
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerenderAll);
 
   new MutationObserver(function (records) {
     var changed = records.some(function (record) {
