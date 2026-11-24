@@ -61,9 +61,11 @@ pre.mermaid--rendered svg {
   height: auto;
 }
 
+pre.mermaid--rendered svg foreignObject *,
 pre.mermaid--rendered svg text,
 pre.mermaid--rendered svg tspan,
 pre.mermaid--rendered svg .label {
+  color: #1a1a1a !important;
   fill: #1a1a1a !important;
 }
 
