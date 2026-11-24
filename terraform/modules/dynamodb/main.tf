@@ -4,7 +4,6 @@ resource "aws_dynamodb_table" "this" {
   hash_key                    = var.hash_key
   range_key                   = var.range_key
   deletion_protection_enabled = var.deletion_protection
-  # checkov:skip=CKV_AWS_119:Default AWS-managed KMS encryption suffices — raw events hold no PII (privacy-first beacon)
   # checkov:skip=CKV_AWS_28:Point-in-time recovery not needed — raw events are ephemeral (90-day TTL by design)
 
   dynamic "attribute" {
@@ -38,6 +37,10 @@ resource "aws_dynamodb_table" "this" {
     content {
       enabled = true
     }
+  }
+
+  server_side_encryption {
+    enabled = true
   }
 
   lifecycle {
