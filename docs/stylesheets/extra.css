@@ -61,6 +61,12 @@ pre.mermaid--rendered svg {
   height: auto;
 }
 
+pre.mermaid--rendered svg text,
+pre.mermaid--rendered svg tspan,
+pre.mermaid--rendered svg .label {
+  fill: #1a1a1a !important;
+}
+
 /* Light-gray page background, like the reference template */
 [data-md-color-scheme="default"] {
   --md-default-bg-color: #f8f9fa;
