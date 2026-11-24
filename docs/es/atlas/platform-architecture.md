@@ -85,7 +85,6 @@ flowchart LR
     B --> A[site artifact]
     A -->|workflow_run · main| S[deploy → staging]
     A -->|workflow_run · v*| P[deploy → prod · reviewed]
-    V --> R[release — tag + SBOM]
     T[tf change] --> TP[terraform plan] -->|apply · reviewed| AP[apply]
     X[workflow_dispatch] --> CF[cloudfront.yml · invalidate/switch]
 ```

@@ -98,6 +98,14 @@ Mi experiencia abarca Ingeniería de Plataformas, Infraestructura en la Nube, Ku
 
 <div class="skill-card" markdown>
 
+### :material-source-branch: Código Abierto
+
+<p class="skill-focus"><strong>Enfoque</strong>Custodia de Proyectos · Disciplina de Versiones · Etiquetado de Versiones · Procedencia de SBOM y Sumas de Verificación · Seguridad de la Cadena de Suministro · OpenSSF Best Practices · Higiene de Licencias · Hojas de Ruta Basadas en Issues · Documentación para Colaboradores</p>
+
+</div>
+
+<div class="skill-card" markdown>
+
 ### :material-robot: Inteligencia Artificial
 
 <p class="skill-focus"><strong>Enfoque</strong>Agentes de IA · Generación Aumentada por Recuperación (RAG) · Operaciones Asistidas por IA (AIOps) · Protocolo de Contexto de Modelos (MCP) · Plataformas Locales de IA · Automatización Inteligente · Ingeniería de Prompts</p>
