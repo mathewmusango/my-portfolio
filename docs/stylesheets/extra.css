@@ -49,7 +49,8 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
-.md-typeset .mermaid {
+.md-typeset .mermaid,
+.md-typeset .mermaid-pending {
   background: #f8fafc;
   border: 1px solid rgba(0, 137, 123, 0.25);
   border-radius: 0.5rem;

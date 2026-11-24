@@ -1,6 +1,8 @@
 (function () {
   Array.prototype.forEach.call(document.querySelectorAll(".mermaid"), function (el) {
     if (!el.dataset.source) el.dataset.source = el.textContent;
+    el.classList.remove("mermaid");
+    el.classList.add("mermaid-pending");
   });
 
   function api() {
@@ -14,9 +16,9 @@
     theme: "base",
     look: "classic",
     securityLevel: "loose",
-    flowchart: { htmlLabels: false, look: "classic" },
+    flowchart: { htmlLabels: true, look: "classic" },
     themeVariables: {
-      fontFamily: "inherit",
+      fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif",
       fontSize: "14px",
       primaryColor: "#e0f2f1",
       primaryTextColor: "#00332e",
@@ -38,7 +40,7 @@
     if (!mermaid) return false;
     var pending = [];
 
-    Array.prototype.forEach.call(document.querySelectorAll(".mermaid"), function (el, index) {
+    Array.prototype.forEach.call(document.querySelectorAll(".mermaid-pending"), function (el, index) {
       if (el.dataset.rendered === "1" || !el.dataset.source) return;
       pending.push({ el: el, index: index });
     });
@@ -57,7 +59,8 @@
           .then(function (result) {
             item.el.innerHTML = result.svg;
             item.el.dataset.rendered = "1";
-            item.el.classList.add("mermaid--rendered");
+            item.el.classList.remove("mermaid-pending");
+            item.el.classList.add("mermaid", "mermaid--rendered");
           })
           .catch(function (error) {
             console.error("mermaid render failed", error);
