@@ -73,16 +73,20 @@ runs:
     - name: Decide whether to deploy (content-hash skip)
       id: check
       shell: bash
+      env:
+        HASH_SKIP: ${{ inputs.hash_skip }}
+        PROJECT: ${{ inputs.project }}
+        TARGET_ENV: ${{ inputs.env }}
       run: |
         # A release always deploys; only a hash_skip caller can skip.
-        if [ "${{ inputs.hash_skip }}" != "true" ]; then
+        if [ "$HASH_SKIP" != "true" ]; then
           echo "changed=true" >> "$GITHUB_OUTPUT"
           exit 0
         fi
         HASH="$(find site -type f | sort | xargs sha256sum | sha256sum | awk '{print $1}')"
         # Existence check only (ListBucket) — the deploy role has no s3:GetObject,
         # so the marker is a zero-byte object keyed by the content hash.
-        if aws s3 ls "s3://${{ inputs.project }}-${{ inputs.env }}-site/.deploy-hash/$HASH" 2>/dev/null | grep -q .; then
+        if aws s3 ls "s3://$PROJECT-$TARGET_ENV-site/.deploy-hash/$HASH" 2>/dev/null | grep -q .; then
           echo "Site content unchanged since the last deploy — skipping sync + invalidation."
           echo "changed=false" >> "$GITHUB_OUTPUT"
         else
@@ -94,12 +98,16 @@ runs:
     - name: Sync site to S3 (bucket root — the site serves at /)
       if: steps.check.outputs.changed == 'true'
       shell: bash
+      env:
+        HASH: ${{ steps.check.outputs.hash }}
+        PROJECT: ${{ inputs.project }}
+        TARGET_ENV: ${{ inputs.env }}
       run: |
-        aws s3 sync site/ "s3://${{ inputs.project }}-${{ inputs.env }}-site/" --delete --no-progress --exclude ".deploy-hash/*"
+        aws s3 sync site/ "s3://$PROJECT-$TARGET_ENV-site/" --delete --no-progress --exclude ".deploy-hash/*"
         # Plant the marker for the next run's skip check (hash is set only on the
         # hash_skip path, so a release plants nothing).
-        if [ -n "${{ steps.check.outputs.hash }}" ]; then
-          aws s3api put-object --bucket "${{ inputs.project }}-${{ inputs.env }}-site" --key ".deploy-hash/${{ steps.check.outputs.hash }}"
+        if [ -n "$HASH" ]; then
+          aws s3api put-object --bucket "$PROJECT-$TARGET_ENV-site" --key ".deploy-hash/$HASH"
         fi
 
     - name: Assume edge-invalidate role (least privilege)
@@ -111,8 +119,11 @@ runs:
     - name: Invalidate CloudFront (lookup by comment convention)
       if: steps.check.outputs.changed == 'true'
       shell: bash
+      env:
+        PROJECT: ${{ inputs.project }}
+        TARGET_ENV: ${{ inputs.env }}
       run: |
-        ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='${{ inputs.project }}-${{ inputs.env }}-site'].Id" --output text)"
+        ID="$(aws cloudfront list-distributions --query "DistributionList.Items[?Comment=='$PROJECT-$TARGET_ENV-site'].Id" --output text)"
         if [ -n "$ID" ]; then
           aws cloudfront create-invalidation --distribution-id "$ID" --paths "/*"
         else
