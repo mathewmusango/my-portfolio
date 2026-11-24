@@ -10,15 +10,21 @@ Cada rol amplió mi experiencia técnica, mis responsabilidades de liderazgo y m
 
 <div class="exp-item" markdown>
 
+## Código Abierto
+
+<p class="exp-meta"><span class="exp-company">Proyecto independiente</span><span class="exp-meta-sep">·</span><span class="exp-dates">Continuo</span></p>
+
+Mantengo **[Emuplane](https://github.com/mathewmusango/emuplane)** en mi tiempo libre, de forma independiente de mi empleador y de mi puesto: una consola y plano de control que pone cuentas, inicios de sesión y claves de acceso reales delante de un emulador compatible con AWS. Cuenta con dieciséis versiones etiquetadas en tres semanas, respaldadas por una suite de 400 pruebas, CI con compuerta Trivy, artefactos SBOM y de sumas de verificación, e insignia OpenSSF Best Practices al 100%, además de una biblioteca reutilizable de GitHub Actions usada en mis repositorios.
+
+</div>
+
+<div class="exp-item" markdown>
+
 ## Subdirector de TI
 
 <p class="exp-meta"><span class="exp-company">Eclectics International</span><span class="exp-meta-sep">·</span><span class="exp-dates">Abril 2021 – Actualidad</span></p>
 
 Como Subdirector de TI, lidero los equipos de ingeniería responsables de la infraestructura empresarial, la Ingeniería de Plataformas, DevSecOps, la transformación a la nube y la excelencia operativa. Trabajando con múltiples unidades de negocio, ayudo a definir la estrategia tecnológica mientras garantizo que las plataformas que respaldan sistemas financieros y empresariales críticos permanezcan seguras, altamente disponibles y resilientes.
-
-### Código Abierto
-
-Además de mi trabajo diario mantengo **[Emuplane](https://github.com/mathewmusango/emuplane)**, una consola y plano de control de código abierto para emuladores de AWS — dieciséis versiones etiquetadas en tres semanas con una suite de 400 pruebas, CI con compuerta Trivy, artefactos SBOM y de sumas de verificación, e insignia OpenSSF Best Practices al 100% — y una biblioteca reutilizable de GitHub Actions usada en mis repositorios.
 
 ### Liderazgo de Ingeniería
 

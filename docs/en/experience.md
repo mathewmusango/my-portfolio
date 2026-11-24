@@ -10,15 +10,21 @@ Each role expanded my technical expertise, leadership responsibilities, and abil
 
 <div class="exp-item" markdown>
 
+## Open Source
+
+<p class="exp-meta"><span class="exp-company">Independent project</span><span class="exp-meta-sep">·</span><span class="exp-dates">Ongoing</span></p>
+
+I maintain **[Emuplane](https://github.com/mathewmusango/emuplane)** on my own time, independently of my employer and my job title: a console and control plane that puts real accounts, logins and access keys in front of an AWS-compatible emulator. It has sixteen tagged releases in three weeks behind a 400-test suite, Trivy-gated CI, SBOM and checksum artifacts, and a 100% OpenSSF Best Practices badge, alongside a reusable GitHub Actions library used across my repositories.
+
+</div>
+
+<div class="exp-item" markdown>
+
 ## Deputy IT Manager
 
 <p class="exp-meta"><span class="exp-company">Eclectics International</span><span class="exp-meta-sep">·</span><span class="exp-dates">April 2021 – Present</span></p>
 
 As Deputy IT Manager, I lead the engineering teams responsible for enterprise infrastructure, Platform Engineering, DevSecOps, cloud transformation, and operational excellence. Working across multiple business units, I help define technology strategy while ensuring the platforms supporting critical financial and enterprise systems remain secure, highly available, and resilient.
-
-### Open Source
-
-Alongside the day job I maintain **[Emuplane](https://github.com/mathewmusango/emuplane)**, an open-source console and control plane for AWS emulators — sixteen tagged releases in three weeks behind a 400-test suite, Trivy-gated CI, SBOM and checksum artifacts, and a 100% OpenSSF Best Practices badge — and a reusable GitHub Actions library used across my repositories.
 
 ### Engineering Leadership
 
