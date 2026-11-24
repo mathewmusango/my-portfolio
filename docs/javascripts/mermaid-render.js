@@ -22,6 +22,15 @@
       .then(function (result) {
         pre.innerHTML = result.svg;
         pre.classList.add("mermaid--rendered");
+        Array.prototype.forEach.call(
+          pre.querySelectorAll(
+            "svg text, svg tspan, svg foreignObject div, svg foreignObject span"
+          ),
+          function (element) {
+            element.style.fill = "#1a1a1a";
+            element.style.color = "#1a1a1a";
+          }
+        );
       })
       .catch(function (error) {
         console.error("mermaid render failed", error);
