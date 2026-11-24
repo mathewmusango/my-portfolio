@@ -49,24 +49,32 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
-pre.mermaid--rendered {
+.md-typeset .mermaid {
   background: #f8fafc;
   border: 1px solid rgba(0, 137, 123, 0.25);
   border-radius: 0.5rem;
   padding: 1rem;
 }
 
-pre.mermaid--rendered svg {
+.md-typeset .mermaid svg {
   max-width: 100%;
   height: auto;
 }
 
-pre.mermaid--rendered svg foreignObject *,
-pre.mermaid--rendered svg text,
-pre.mermaid--rendered svg tspan,
-pre.mermaid--rendered svg .label {
+.md-typeset .mermaid svg foreignObject *,
+.md-typeset .mermaid svg text,
+.md-typeset .mermaid svg tspan,
+.md-typeset .mermaid svg .label,
+.md-typeset .mermaid svg .nodeLabel,
+.md-typeset .mermaid svg .edgeLabel {
   color: #1a1a1a !important;
   fill: #1a1a1a !important;
+}
+
+.md-typeset .mermaid svg .edgeLabel rect,
+.md-typeset .mermaid svg .edgeLabel .labelBkg {
+  fill: #f1f5f9 !important;
+  opacity: 1 !important;
 }
 
 /* Light-gray page background, like the reference template */

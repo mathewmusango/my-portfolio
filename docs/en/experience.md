@@ -14,7 +14,7 @@ Each role expanded my technical expertise, leadership responsibilities, and abil
 
 <p class="exp-meta"><span class="exp-company">Independent project</span><span class="exp-meta-sep">·</span><span class="exp-dates">Ongoing</span></p>
 
-I maintain **[Emuplane](https://github.com/mathewmusango/emuplane)** on my own time, independently of my employer and my job title: a console and control plane that puts real accounts, logins and access keys in front of an AWS-compatible emulator. It has sixteen tagged releases in three weeks behind a 400-test suite, Trivy-gated CI, SBOM and checksum artifacts, and a 100% OpenSSF Best Practices badge, alongside a reusable GitHub Actions library used across my repositories.
+I maintain **[Emuplane](https://github.com/mathewmusango/emuplane)**: a console and control plane that puts real accounts, logins and access keys in front of an AWS-compatible emulator. It has sixteen tagged releases in three weeks behind a 400-test suite, Trivy-gated CI, SBOM and checksum artifacts, and a 100% OpenSSF Best Practices badge, alongside a reusable GitHub Actions library used across my repositories.
 
 </div>
 

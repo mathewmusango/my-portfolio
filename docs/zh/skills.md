@@ -98,6 +98,14 @@ tags:
 
 <div class="skill-card" markdown>
 
+### :material-source-branch: 开源
+
+<p class="skill-focus"><strong>专注</strong>项目维护 · 发布纪律 · 版本标记 · SBOM 与校验和溯源 · 供应链安全 · OpenSSF Best Practices · 许可证管理 · 问题驱动的路线图 · 贡献者文档</p>
+
+</div>
+
+<div class="skill-card" markdown>
+
 ### :material-robot: 人工智能
 
 <p class="skill-focus"><strong>专注</strong>AI 代理 · 检索增强生成（RAG）· AI 辅助运营（AIOps）· 模型上下文协议（MCP）· 本地 AI 平台 · 智能自动化 · 提示工程</p>

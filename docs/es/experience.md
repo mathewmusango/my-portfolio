@@ -14,7 +14,7 @@ Cada rol amplió mi experiencia técnica, mis responsabilidades de liderazgo y m
 
 <p class="exp-meta"><span class="exp-company">Proyecto independiente</span><span class="exp-meta-sep">·</span><span class="exp-dates">Continuo</span></p>
 
-Mantengo **[Emuplane](https://github.com/mathewmusango/emuplane)** en mi tiempo libre, de forma independiente de mi empleador y de mi puesto: una consola y plano de control que pone cuentas, inicios de sesión y claves de acceso reales delante de un emulador compatible con AWS. Cuenta con dieciséis versiones etiquetadas en tres semanas, respaldadas por una suite de 400 pruebas, CI con compuerta Trivy, artefactos SBOM y de sumas de verificación, e insignia OpenSSF Best Practices al 100%, además de una biblioteca reutilizable de GitHub Actions usada en mis repositorios.
+Mantengo **[Emuplane](https://github.com/mathewmusango/emuplane)**: una consola y plano de control que pone cuentas, inicios de sesión y claves de acceso reales delante de un emulador compatible con AWS. Cuenta con dieciséis versiones etiquetadas en tres semanas, respaldadas por una suite de 400 pruebas, CI con compuerta Trivy, artefactos SBOM y de sumas de verificación, e insignia OpenSSF Best Practices al 100%, además de una biblioteca reutilizable de GitHub Actions usada en mis repositorios.
 
 </div>
 

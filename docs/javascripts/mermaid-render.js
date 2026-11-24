@@ -1,68 +1,85 @@
 (function () {
-  var bundle = window.__esbuild_esm_mermaid_nm;
-  if (!bundle || !bundle.mermaid) return;
-  var api = bundle.mermaid;
+  Array.prototype.forEach.call(document.querySelectorAll(".mermaid"), function (el) {
+    if (!el.dataset.source) el.dataset.source = el.textContent;
+  });
 
-  function scheme() {
-    return "default";
+  function api() {
+    var bundle = window.__esbuild_esm_mermaid_nm;
+    if (!bundle || !bundle.mermaid) return null;
+    return bundle.mermaid.default || bundle.mermaid;
   }
 
-  function render(pre, index) {
-    var source = pre.dataset.source || pre.textContent;
-    pre.dataset.source = source;
-    var key = scheme();
-    api.initialize({
-      startOnLoad: false,
-      theme: "base",
-      securityLevel: "loose",
-      flowchart: { htmlLabels: false },
-    });
-    api
-      .render("mermaid-" + index + "-" + Math.random().toString(36).slice(2), source)
-      .then(function (result) {
-        pre.innerHTML = result.svg;
-        pre.classList.add("mermaid--rendered");
-      })
-      .catch(function (error) {
-        console.error("mermaid render failed", error);
-      });
-  }
+  var CONFIG = {
+    startOnLoad: false,
+    theme: "base",
+    look: "classic",
+    securityLevel: "loose",
+    flowchart: { htmlLabels: false, look: "classic" },
+    themeVariables: {
+      fontFamily: "inherit",
+      fontSize: "14px",
+      primaryColor: "#e0f2f1",
+      primaryTextColor: "#00332e",
+      primaryBorderColor: "#00897b",
+      lineColor: "#4db6ac",
+      textColor: "#00332e",
+      nodeBorder: "#00897b",
+      clusterBkg: "#f1f8f7",
+      clusterBorder: "#b2dfdb",
+      edgeLabelBackground: "#ffffff",
+      labelColor: "#00332e",
+    },
+  };
+
+  if (api()) api().initialize(CONFIG);
 
   function renderAll() {
-    var blocks = document.querySelectorAll("pre.mermaid");
-    Array.prototype.forEach.call(blocks, function (pre, index) {
-      if (pre.querySelector("svg")) return;
-      render(pre, index);
+    var mermaid = api();
+    if (!mermaid) return false;
+    var pending = [];
+
+    Array.prototype.forEach.call(document.querySelectorAll(".mermaid"), function (el, index) {
+      if (el.dataset.rendered === "1" || !el.dataset.source) return;
+      pending.push({ el: el, index: index });
     });
+
+    if (!pending.length) return true;
+
+    mermaid.initialize(CONFIG);
+
+    pending.reduce(function (chain, item) {
+      return chain.then(function () {
+        return mermaid
+          .render(
+            "mermaid-" + item.index + "-" + Math.random().toString(36).slice(2),
+            item.el.dataset.source
+          )
+          .then(function (result) {
+            item.el.innerHTML = result.svg;
+            item.el.dataset.rendered = "1";
+            item.el.classList.add("mermaid--rendered");
+          })
+          .catch(function (error) {
+            console.error("mermaid render failed", error);
+          });
+      });
+    }, Promise.resolve());
+
+    return true;
   }
 
-  function rerenderAll() {
-    var blocks = document.querySelectorAll("pre.mermaid--rendered");
-    Array.prototype.forEach.call(blocks, function (pre, index) {
-      pre.innerHTML = "";
-      pre.classList.remove("mermaid--rendered");
-      render(pre, index);
-    });
+  function boot() {
+    if (renderAll()) return;
+    var tries = 0;
+    var timer = setInterval(function () {
+      tries += 1;
+      if (renderAll() || tries > 60) clearInterval(timer);
+    }, 250);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", renderAll);
+  if (document.readyState === "complete") {
+    boot();
   } else {
-    renderAll();
+    window.addEventListener("load", boot);
   }
-
-  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", rerenderAll);
-
-  new MutationObserver(function (records) {
-    var changed = records.some(function (record) {
-      return record.attributeName === "data-md-color-scheme";
-    });
-    if (changed) rerenderAll();
-    else renderAll();
-  }).observe(document.documentElement, {
-    attributes: true,
-    attributeFilter: ["data-md-color-scheme"],
-    childList: true,
-    subtree: true,
-  });
 })();

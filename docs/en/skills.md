@@ -98,6 +98,14 @@ My expertise spans Platform Engineering, Cloud Infrastructure, Kubernetes, DevSe
 
 <div class="skill-card" markdown>
 
+### :material-source-branch: Open Source
+
+<p class="skill-focus"><strong>Focus</strong>Project Stewardship · Release Discipline · Version Tagging · SBOM and Checksum Provenance · Supply-Chain Security · OpenSSF Best Practices · Licence Hygiene · Issue-Driven Roadmaps · Contributor Documentation</p>
+
+</div>
+
+<div class="skill-card" markdown>
+
 ### :material-robot: Artificial Intelligence
 
 <p class="skill-focus"><strong>Focus</strong>AI Agents · Retrieval-Augmented Generation (RAG) · AI-assisted Operations (AIOps) · Model Context Protocol (MCP) · Local AI Platforms · Intelligent Automation · Prompt Engineering</p>

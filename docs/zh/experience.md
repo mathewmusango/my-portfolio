@@ -14,7 +14,7 @@ icon: material/briefcase
 
 <p class="exp-meta"><span class="exp-company">独立项目</span><span class="exp-meta-sep">·</span><span class="exp-dates">持续进行</span></p>
 
-我在业余时间独立维护 **[Emuplane](https://github.com/mathewmusango/emuplane)**，与我的雇主和工作职位无关：它是一个控制台与控制平面，为兼容 AWS 的模拟器提供真实的账户、登录和访问密钥。它在三周内发布了十六个带标签的版本，依托 400 项测试的测试套件、Trivy 门控 CI、SBOM 与校验和产物，以及 100% 的 OpenSSF Best Practices 徽章；此外还维护一个在我的仓库中复用的 GitHub Actions 库。
+我维护 **[Emuplane](https://github.com/mathewmusango/emuplane)**：一个控制台与控制平面，为兼容 AWS 的模拟器提供真实的账户、登录和访问密钥。它在三周内发布了十六个带标签的版本，依托 400 项测试的测试套件、Trivy 门控 CI、SBOM 与校验和产物，以及 100% 的 OpenSSF Best Practices 徽章；此外还维护一个在我的仓库中复用的 GitHub Actions 库。
 
 </div>
 
