@@ -10,6 +10,15 @@ Hand-written history from before 2026-11-23 is in
 
 ## [Unreleased]
 
+### Changed
+
+- Rebuild the changelog, add Emuplane to the site map, and fix the diagram theming ([#358](https://github.com/mathewmusango/my-portfolio/issues/358))
+
+### Security
+
+- Composite actions interpolate caller-controlled inputs into Bash source ([#360](https://github.com/mathewmusango/my-portfolio/issues/360))
+- Declare DynamoDB server-side encryption instead of skipping the check ([#362](https://github.com/mathewmusango/my-portfolio/issues/362))
+
 ## [2026.1124.1123Z] - 2026-11-24
 
 ### Changed

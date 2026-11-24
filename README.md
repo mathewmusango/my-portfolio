@@ -1,7 +1,6 @@
 # My Portfolio
 
 [![build](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/build.yml?branch=main&label=build)](https://github.com/mathewmusango/my-portfolio/actions/workflows/build.yml)
-[![checks](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/checks.yml?branch=main&label=checks)](https://github.com/mathewmusango/my-portfolio/actions/workflows/checks.yml)
 [![security](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/security.yml?branch=main&label=security)](https://github.com/mathewmusango/my-portfolio/actions/workflows/security.yml)
 [![codeql](https://img.shields.io/github/actions/workflow/status/mathewmusango/my-portfolio/codeql.yml?branch=main&label=codeql)](https://github.com/mathewmusango/my-portfolio/actions/workflows/codeql.yml)
 [![web](https://img.shields.io/badge/web-view-green.svg)](https://mathewmusango.github.io/my-portfolio/)
