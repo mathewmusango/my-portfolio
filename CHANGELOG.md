@@ -10,6 +10,8 @@ Hand-written history from before 2026-11-23 is in
 
 ## [Unreleased]
 
+## [2026.1124.1408Z] - 2026-11-24
+
 ### Changed
 
 - Rebuild the changelog, add Emuplane to the site map, and fix the diagram theming ([#358](https://github.com/mathewmusango/my-portfolio/issues/358))
