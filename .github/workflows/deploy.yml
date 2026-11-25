@@ -141,6 +141,18 @@ jobs:
           metrics_endpoint: ${{ vars.METRICS_ENDPOINT }}
           directory: site
 
+      - name: Add private asset
+        env:
+          ASSET_B64: ${{ secrets.PRIVATE_ASSET_B64 }}
+          ASSET_PATH: ${{ secrets.PRIVATE_ASSET_PATH }}
+        run: |
+          if [ -z "$ASSET_B64" ] || [ -z "$ASSET_PATH" ]; then
+            echo "private asset is not configured; skipping"
+            exit 0
+          fi
+          mkdir -p "site/$(dirname "$ASSET_PATH")"
+          printf '%s' "$ASSET_B64" | base64 -d > "site/$ASSET_PATH"
+
       - name: Configure Pages
         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
 
